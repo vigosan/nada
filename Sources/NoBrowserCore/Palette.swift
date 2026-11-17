@@ -1,0 +1,46 @@
+import Foundation
+
+public enum PaletteAction: Equatable {
+    case open(URL)
+    case newTab
+    case closeTab
+    case reload
+    case back
+    case forward
+    case toggleDevTools
+    case selectTab(Int)
+}
+
+public struct PaletteItem: Equatable {
+    public let title: String
+    public let shortcut: String
+    public let action: PaletteAction
+}
+
+public enum Palette {
+    public static func items(query: String, tabTitles: [String]) -> [PaletteItem] {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let commands = commands(tabTitles: tabTitles)
+        guard !text.isEmpty, let url = AddressResolver.url(for: text) else { return commands }
+        let matches = commands.filter {
+            $0.title.range(of: text, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+        }
+        if AddressResolver.isAddress(text) {
+            return [PaletteItem(title: "Abrir \(text)", shortcut: "↵", action: .open(url))] + matches
+        }
+        return matches + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
+    }
+
+    private static func commands(tabTitles: [String]) -> [PaletteItem] {
+        [
+            PaletteItem(title: "Pestaña nueva", shortcut: "⌘T", action: .newTab),
+            PaletteItem(title: "Cerrar pestaña", shortcut: "⌘W", action: .closeTab),
+            PaletteItem(title: "Recargar", shortcut: "⌘R", action: .reload),
+            PaletteItem(title: "Atrás", shortcut: "⌘[", action: .back),
+            PaletteItem(title: "Adelante", shortcut: "⌘]", action: .forward),
+            PaletteItem(title: "Herramientas de desarrollador", shortcut: "⌥⌘I", action: .toggleDevTools),
+        ] + tabTitles.enumerated().map { index, title in
+            PaletteItem(title: "Ir a pestaña: \(title)", shortcut: index < 9 ? "⌘\(index + 1)" : "", action: .selectTab(index))
+        }
+    }
+}
