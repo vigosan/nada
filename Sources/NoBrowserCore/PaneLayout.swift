@@ -1,11 +1,11 @@
 import CoreGraphics
 
-public enum SplitAxis: Equatable {
+public enum SplitAxis: Equatable, Sendable {
     case horizontal
     case vertical
 }
 
-public enum Direction: Equatable {
+public enum Direction: Equatable, Sendable {
     case left
     case right
     case up

@@ -1,6 +1,6 @@
 import Foundation
 
-public enum PaletteAction: Equatable {
+public enum PaletteAction: Equatable, Sendable {
     case open(URL)
     case newTab
     case closeTab
@@ -52,10 +52,11 @@ public enum Palette {
         query: String,
         tabTitles: [String],
         moduleCommands: [ModuleCommand] = [],
-        searchEngine: SearchEngine = .duckDuckGo
+        searchEngine: SearchEngine = .duckDuckGo,
+        bindings: KeyBindings = KeyBindings(config: "")
     ) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let commands = commands(tabTitles: tabTitles, moduleCommands: moduleCommands)
+        let commands = commands(tabTitles: tabTitles, moduleCommands: moduleCommands, bindings: bindings)
         guard !text.isEmpty, let url = AddressResolver.url(for: text, searchEngine: searchEngine) else { return commands }
         let matches = matching(commands, text)
         if AddressResolver.isAddress(text) {
@@ -74,21 +75,17 @@ public enum Palette {
         items.filter { $0.title.range(of: text, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
     }
 
-    private static func commands(tabTitles: [String], moduleCommands: [ModuleCommand]) -> [PaletteItem] {
-        [
-            PaletteItem(title: "Pestaña nueva", shortcut: "⌘T", action: .newTab),
-            PaletteItem(title: "Cerrar pestaña", shortcut: "⌘W", action: .closeTab),
-            PaletteItem(title: "Recargar", shortcut: "⌘R", action: .reload),
-            PaletteItem(title: "Atrás", shortcut: "⌘[", action: .back),
-            PaletteItem(title: "Adelante", shortcut: "⌘]", action: .forward),
-            PaletteItem(title: "Herramientas de desarrollador", shortcut: "⌥⌘I", action: .toggleDevTools),
-            PaletteItem(title: "Ajustes", shortcut: "⌘,", action: .openSettings),
-            PaletteItem(title: "Dividir a la derecha", shortcut: "⌘D", action: .split(.horizontal)),
-            PaletteItem(title: "Dividir abajo", shortcut: "⇧⌘D", action: .split(.vertical)),
-        ] + moduleCommands.map {
+    private static func commands(tabTitles: [String], moduleCommands: [ModuleCommand], bindings: KeyBindings) -> [PaletteItem] {
+        let hidden: [PaletteAction] = [.togglePalette, .openLocation]
+        return Command.all.filter { command in
+            if case .selectTab = command.action { return false }
+            return !hidden.contains(command.action)
+        }.map {
+            PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: $0.action)
+        } + moduleCommands.map {
             PaletteItem(title: $0.title, shortcut: "", action: .module($0.id))
         } + tabTitles.enumerated().map { index, title in
-            PaletteItem(title: "Ir a pestaña: \(title)", shortcut: index < 9 ? "⌘\(index + 1)" : "", action: .selectTab(index))
+            PaletteItem(title: "Ir a pestaña: \(title)", shortcut: bindings.label(for: .selectTab(index)), action: .selectTab(index))
         }
     }
 }

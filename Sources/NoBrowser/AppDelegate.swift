@@ -10,9 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let browser = BrowserController(modules: [AdBlockModule()])
+        let config = URL.homeDirectory.appending(path: ".config/no-browser/config")
+        let bindings = KeyBindings(config: (try? String(contentsOf: config, encoding: .utf8)) ?? "")
+        bindings.errors.forEach { NSLog("%@ %@", config.path, $0) }
+        let browser = BrowserController(modules: [AdBlockModule()], bindings: bindings)
         self.browser = browser
-        NSApp.mainMenu = mainMenu()
+        NSApp.mainMenu = mainMenu(bindings)
         browser.window.makeKeyAndOrderFront(nil)
         NSApp.activate()
     }
@@ -21,7 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         true
     }
 
-    private func mainMenu() -> NSMenu {
+    private func mainMenu(_ bindings: KeyBindings) -> NSMenu {
         let app = NSMenu()
         app.addItem(withTitle: "Ocultar No Browser", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         app.addItem(withTitle: "Salir de No Browser", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -35,34 +38,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         edit.addItem(withTitle: "Seleccionar todo", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
 
         let navigation = NSMenu(title: "Navegación")
-        let arrows = (left: "\u{F702}", right: "\u{F703}", up: "\u{F700}", down: "\u{F701}")
-        let commands: [(String, String, NSEvent.ModifierFlags, PaletteAction)] = [
-            ("Paleta de órdenes", "k", .command, .togglePalette),
-            ("Abrir dirección", "l", .command, .openLocation),
-            ("Pestaña nueva", "t", .command, .newTab),
-            ("Cerrar", "w", .command, .closeTab),
-            ("Recargar", "r", .command, .reload),
-            ("Atrás", "[", .command, .back),
-            ("Adelante", "]", .command, .forward),
-            ("Herramientas de desarrollador", "i", [.command, .option], .toggleDevTools),
-            ("Ajustes…", ",", .command, .openSettings),
-            ("Dividir a la derecha", "d", .command, .split(.horizontal)),
-            ("Dividir abajo", "d", [.command, .shift], .split(.vertical)),
-            ("Panel de la izquierda", arrows.left, [.command, .option], .focusPane(.left)),
-            ("Panel de la derecha", arrows.right, [.command, .option], .focusPane(.right)),
-            ("Panel de arriba", arrows.up, [.command, .option], .focusPane(.up)),
-            ("Panel de abajo", arrows.down, [.command, .option], .focusPane(.down)),
-            ("Mover divisor a la izquierda", arrows.left, [.command, .control], .resizePane(.left)),
-            ("Mover divisor a la derecha", arrows.right, [.command, .control], .resizePane(.right)),
-            ("Mover divisor arriba", arrows.up, [.command, .control], .resizePane(.up)),
-            ("Mover divisor abajo", arrows.down, [.command, .control], .resizePane(.down)),
-        ] + (0..<9).map { ("Pestaña \($0 + 1)", "\($0 + 1)", .command, .selectTab($0)) }
-        for (title, key, modifiers, action) in commands {
+        let arrows = ["left": "\u{F702}", "right": "\u{F703}", "up": "\u{F700}", "down": "\u{F701}"]
+        let masks: [(KeyCombo.Modifiers, NSEvent.ModifierFlags)] = [
+            (.command, .command), (.shift, .shift), (.option, .option), (.control, .control),
+        ]
+        for binding in bindings.bindings {
+            let title = Command.all.first { $0.action == binding.action }?.title ?? ""
+            let key = arrows[binding.combo.key] ?? binding.combo.key
             let item = navigation.addItem(withTitle: title, action: #selector(runMenuItem(_:)), keyEquivalent: key)
-            item.keyEquivalentModifierMask = modifiers
+            item.keyEquivalentModifierMask = NSEvent.ModifierFlags(
+                masks.filter { binding.combo.modifiers.contains($0.0) }.map(\.1)
+            )
             item.target = self
             item.tag = menuActions.count
-            menuActions.append(action)
+            menuActions.append(binding.action)
         }
 
         let main = NSMenu()

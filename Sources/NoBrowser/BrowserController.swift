@@ -17,6 +17,7 @@ final class BrowserController: NSObject, WKUIDelegate {
     private lazy var progressWidth = progressBar.widthAnchor.constraint(equalToConstant: 0)
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
+    private let bindings: KeyBindings
     private var showingSettings = false
     private var searchEngine: SearchEngine {
         get { UserDefaults.standard.string(forKey: "search.engine").flatMap(SearchEngine.init) ?? .duckDuckGo }
@@ -26,8 +27,9 @@ final class BrowserController: NSObject, WKUIDelegate {
         [Setting(id: "search.engine", title: "Buscador", value: searchEngine.title)] + modules.flatMap(\.settings)
     }
 
-    init(modules: [BrowserModule]) {
+    init(modules: [BrowserModule], bindings: KeyBindings) {
         self.modules = modules
+        self.bindings = bindings
         super.init()
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
@@ -49,7 +51,8 @@ final class BrowserController: NSObject, WKUIDelegate {
                 query: query,
                 tabTitles: tabs.tabs.map(\.title),
                 moduleCommands: self.modules.flatMap(\.commands),
-                searchEngine: searchEngine
+                searchEngine: searchEngine,
+                bindings: self.bindings
             )
         }
         palette.onClose = { [unowned self] in closePalette() }
