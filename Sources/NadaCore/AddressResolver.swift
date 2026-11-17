@@ -18,6 +18,15 @@ public enum SearchEngine: String, CaseIterable {
         return all[((all.firstIndex(of: self) ?? 0) + 1) % all.count]
     }
 
+    public static func isResultsPage(_ url: URL) -> Bool {
+        guard let page = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              page.queryItems?.contains(where: { $0.name == "q" }) == true else { return false }
+        return allCases.contains { engine in
+            guard let results = URLComponents(string: engine.queryPrefix) else { return false }
+            return results.host == page.host && results.path == page.path
+        }
+    }
+
     var queryPrefix: String {
         switch self {
         case .duckDuckGo: "https://duckduckgo.com/?q="

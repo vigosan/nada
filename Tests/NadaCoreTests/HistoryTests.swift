@@ -39,6 +39,46 @@ struct HistoryTests {
         #expect(matches.weak.map(\.url.absoluteString) == ["https://example.org/el-pais-de-nunca-jamas"])
     }
 
+    @Test("las páginas de resultados de un buscador no se proponen: son búsquedas pasadas, no sitios a los que volver")
+    func searchResultPagesAreNotSuggested() {
+        let history = history([
+            ("https://www.google.com/search?sca_esv=1&q=hacker+news", "hacker news - Buscar con Google", 3),
+            ("https://duckduckgo.com/?q=google&ia=web", "google at DuckDuckGo", 3),
+            ("https://search.brave.com/search?q=google", "google - Brave Search", 3),
+            ("https://www.google.com/", "Google", 1),
+        ])
+        let matches = history.matches(for: "goo")
+        #expect(matches.strong.map(\.title) == ["Google"])
+        #expect(matches.weak.isEmpty)
+    }
+
+    @Test("las búsquedas que ya estaban guardadas de antes tampoco se proponen")
+    func storedSearchResultPagesAreIgnored() throws {
+        let stored = """
+        {"capacity":5000,"entries":[{"url":"https://www.google.com/search?q=hacker+news","title":"hacker news","visits":4,"lastVisit":0}]}
+        """
+        let history = try JSONDecoder().decode(History.self, from: Data(stored.utf8))
+        #expect(history.entries.count == 1)
+        #expect(history.matches(for: "goo").strong.isEmpty)
+        #expect(history.matches(for: "hacker").weak.isEmpty)
+    }
+
+    @Test("una búsqueda no se guarda en el historial")
+    func searchResultPagesAreNotRecorded() {
+        var history = History()
+        history.record(url: URL(string: "https://www.google.com/search?q=paella")!, title: "paella", at: Date(), newVisit: true)
+        #expect(history.entries.isEmpty)
+    }
+
+    @Test("al escribir el principio de un sitio gana su portada, aunque una página interior tenga más visitas")
+    func siteRootBeatsDeeperPages() {
+        let history = history([
+            ("https://github.com/vigosan/nada/issues", "Issues", 9),
+            ("https://github.com/", "GitHub", 1),
+        ])
+        #expect(history.matches(for: "git").strong.map(\.title) == ["GitHub", "Issues"])
+    }
+
     @Test("entre coincidencias iguales gana la página más visitada")
     func moreVisitsRankHigher() {
         let history = history([
