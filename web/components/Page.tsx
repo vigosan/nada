@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CONTACT, content, type Content } from "@/content";
+import { CONTACT, content, REPO, type Content } from "@/content";
 import { ThemeToggle } from "./ThemeToggle";
 
 const focus = "rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent";
@@ -36,6 +36,9 @@ export function Page({ c, current, children }: { c: Content; current: Route; chi
         <Link href={c.routes.support} className={quiet}>
           {c.footer.support}
         </Link>
+        <a href={REPO} className={quiet}>
+          {c.footer.github}
+        </a>
         <span className="sm:ml-auto">
           {c.footer.by}{" "}
           <a href="https://vicent.io" className={quiet}>

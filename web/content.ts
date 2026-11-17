@@ -4,6 +4,7 @@ export type Lang = (typeof LANGS)[number];
 export const SITE_URL = "https://nada.vicent.io";
 export const DOWNLOAD: string | null = null;
 export const CONTACT = "hello@vicent.io";
+export const REPO = "https://github.com/vigosan/nada";
 export const UPDATED = "2026-11-17";
 export const CONFIG_SAMPLE = `# ~/.config/nada/config
 keybind = ctrl+h=focus_left
@@ -139,7 +140,7 @@ const en = {
       "Every keyboard shortcut is listed on the home page and can be changed in ~/.config/nada/config.",
     ],
   },
-  footer: { privacy: "Privacy", support: "Support", by: "Made by" },
+  footer: { privacy: "Privacy", support: "Support", github: "GitHub", by: "Made by" },
 };
 
 export type Content = typeof en;
@@ -273,7 +274,7 @@ const es: Content = {
       "Todos los atajos de teclado están en la página de inicio y se pueden cambiar en ~/.config/nada/config.",
     ],
   },
-  footer: { privacy: "Privacidad", support: "Soporte", by: "Hecho por" },
+  footer: { privacy: "Privacidad", support: "Soporte", github: "GitHub", by: "Hecho por" },
 };
 
 export const content: Record<Lang, Content> = { en, es };

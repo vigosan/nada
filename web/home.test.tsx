@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Download } from "./components/Download";
 import { Home } from "./components/Home";
-import { content } from "./content";
+import { content, REPO } from "./content";
 
 describe("home", () => {
   it("shows the demo before the explanations, so the browser is seen before it is described", () => {
@@ -22,6 +22,11 @@ describe("page frame", () => {
     const html = renderToStaticMarkup(<Home c={content.es} />);
     expect(html).toContain('href="/es/privacidad"');
     expect(html).toContain('href="/es/soporte"');
+  });
+
+  it("links the source code, since the repository is public and people will want to read it", () => {
+    const html = renderToStaticMarkup(<Home c={content.en} />);
+    expect(html).toContain(`href="${REPO}"`);
   });
 
   it("lets the visitor switch between system, light and dark", () => {
