@@ -39,7 +39,9 @@ final class AdBlockModule: BrowserModule {
     }
 
     private func load() {
-        let directory = URL.applicationSupportDirectory.appending(path: "Nada/filters")
+        let updated = URL.applicationSupportDirectory.appending(path: "Nada/filters")
+        let bundled = Bundle.main.resourceURL?.appending(path: "filters")
+        let directory = FileManager.default.fileExists(atPath: updated.path) ? updated : bundled ?? updated
         let files = ((try? FileManager.default.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: [.contentModificationDateKey]

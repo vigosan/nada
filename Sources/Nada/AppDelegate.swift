@@ -24,6 +24,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate()
     }
 
+    func application(_ application: NSApplication, open urls: [URL]) {
+        urls.forEach { browser?.open($0) }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         browser?.saveState()
     }

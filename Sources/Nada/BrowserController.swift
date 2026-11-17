@@ -162,6 +162,13 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in self?.followClickedPane() }
     }
 
+    func open(_ url: URL) {
+        let blank = tabs.active?.focused.flatMap { $0.isBlank ? $0 : nil }
+        (blank ?? addTab(configuration: WKWebViewConfiguration())).webView.load(URLRequest(url: url))
+        palette.isHidden = true
+        focusPage()
+    }
+
     func pane(for webView: WKWebView) -> Pane? {
         tabs.tabs.flatMap(\.panes.values).first { $0.webView === webView }
     }
