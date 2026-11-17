@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import NoBrowserCore
+@testable import NadaCore
 
 @Suite("La paleta pone primero lo que la persona quiere hacer al pulsar intro")
 struct PaletteTests {

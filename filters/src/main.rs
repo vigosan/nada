@@ -22,7 +22,7 @@ fn convert(list_text: String) -> Vec<String> {
 
 fn main() {
     let mut args = env::args().skip(1);
-    let out_dir = args.next().expect("usage: nb-filters <out-dir> <list>...");
+    let out_dir = args.next().expect("usage: nada-filters <out-dir> <list>...");
     fs::create_dir_all(&out_dir).expect("output directory is writable");
     for list in args {
         let name = Path::new(&list)

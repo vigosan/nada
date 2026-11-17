@@ -1,5 +1,5 @@
 export PATH := $(HOME)/.cargo/bin:$(PATH)
-FILTERS_DIR := $(HOME)/Library/Application Support/NoBrowser/filters
+FILTERS_DIR := $(HOME)/Library/Application Support/Nada/filters
 LISTS := .build/lists/easylist.txt .build/lists/easyprivacy.txt
 
 .PHONY: build test run filters
@@ -12,7 +12,7 @@ test:
 	cargo test --manifest-path filters/Cargo.toml
 
 run: build
-	.build/release/NoBrowser
+	.build/release/Nada
 
 filters:
 	mkdir -p .build/lists

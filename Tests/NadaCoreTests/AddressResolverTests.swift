@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import NoBrowserCore
+@testable import NadaCore
 
 @Suite("Lo que se escribe en la paleta llega al sitio que la persona esperaba")
 struct AddressResolverTests {

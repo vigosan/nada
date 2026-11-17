@@ -1,5 +1,5 @@
 import AppKit
-import NoBrowserCore
+import NadaCore
 import WebKit
 
 final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
@@ -47,7 +47,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         window.backgroundColor = Theme.window
         window.appearance = NSAppearance(named: .darkAqua)
         window.center()
-        window.setFrameAutosaveName("NoBrowser")
+        window.setFrameAutosaveName("Nada")
         window.delegate = self
 
         let root = NSView()

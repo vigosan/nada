@@ -1,5 +1,5 @@
 import AppKit
-import NoBrowserCore
+import NadaCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var browser: BrowserController?
@@ -10,7 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let config = URL.homeDirectory.appending(path: ".config/no-browser/config")
+        let config = URL.homeDirectory.appending(path: ".config/nada/config")
         let bindings = KeyBindings(config: (try? String(contentsOf: config, encoding: .utf8)) ?? "")
         bindings.errors.forEach { NSLog("%@ %@", config.path, $0) }
         let browser = BrowserController(modules: [AdBlockModule()], bindings: bindings)
@@ -26,8 +26,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func mainMenu(_ bindings: KeyBindings) -> NSMenu {
         let app = NSMenu()
-        app.addItem(withTitle: "Ocultar No Browser", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
-        app.addItem(withTitle: "Salir de No Browser", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        app.addItem(withTitle: "Ocultar Nada", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        app.addItem(withTitle: "Salir de Nada", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
         let edit = NSMenu(title: "Edición")
         edit.addItem(withTitle: "Deshacer", action: Selector(("undo:")), keyEquivalent: "z")

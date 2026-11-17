@@ -1,6 +1,6 @@
 import CoreGraphics
 import Testing
-@testable import NoBrowserCore
+@testable import NadaCore
 
 @Suite("Los paneles se reparten la pestaña y el foco va a donde apunta la flecha")
 struct PaneLayoutTests {

@@ -1,4 +1,4 @@
-import NoBrowserCore
+import NadaCore
 import WebKit
 
 final class AdBlockModule: BrowserModule {
@@ -44,7 +44,7 @@ final class AdBlockModule: BrowserModule {
     }
 
     private func load() {
-        let directory = URL.applicationSupportDirectory.appending(path: "NoBrowser/filters")
+        let directory = URL.applicationSupportDirectory.appending(path: "Nada/filters")
         let files = ((try? FileManager.default.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: [.contentModificationDateKey]

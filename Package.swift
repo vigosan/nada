@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "NoBrowser",
+    name: "Nada",
     platforms: [.macOS(.v14)],
     targets: [
-        .target(name: "NoBrowserCore"),
+        .target(name: "NadaCore"),
         .executableTarget(
-            name: "NoBrowser",
-            dependencies: ["NoBrowserCore"],
+            name: "Nada",
+            dependencies: ["NadaCore"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
-        .testTarget(name: "NoBrowserCoreTests", dependencies: ["NoBrowserCore"]),
+        .testTarget(name: "NadaCoreTests", dependencies: ["NadaCore"]),
     ]
 )

@@ -1,5 +1,5 @@
 import AppKit
-import NoBrowserCore
+import NadaCore
 import WebKit
 
 final class Pane {

@@ -1,5 +1,5 @@
 import Testing
-@testable import NoBrowserCore
+@testable import NadaCore
 
 @Suite("Los atajos son de quien usa el navegador, no del navegador")
 struct KeyBindingsTests {

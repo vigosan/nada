@@ -1,4 +1,4 @@
-import NoBrowserCore
+import NadaCore
 import WebKit
 
 protocol BrowserModule: AnyObject {

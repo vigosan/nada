@@ -1,5 +1,5 @@
 import AppKit
-import NoBrowserCore
+import NadaCore
 
 final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
     var itemsForQuery: (String) -> [PaletteItem] = { _ in [] }

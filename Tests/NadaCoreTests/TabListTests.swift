@@ -1,5 +1,5 @@
 import Testing
-@testable import NoBrowserCore
+@testable import NadaCore
 
 @Suite("Las pestañas nunca dejan a la persona mirando una página que no eligió")
 struct TabListTests {
