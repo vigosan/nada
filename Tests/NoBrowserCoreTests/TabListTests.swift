@@ -39,6 +39,18 @@ struct TabListTests {
         #expect(list.closeActive() == nil)
     }
 
+    @Test("pestaña siguiente y anterior dan la vuelta para recorrerlas todas con una sola tecla")
+    func nextAndPreviousWrapAround() {
+        var list = TabList<String>()
+        ["a", "b", "c"].forEach { list.append($0) }
+        list.selectNext()
+        #expect(list.active == "a")
+        list.selectPrevious()
+        #expect(list.active == "c")
+        list.selectPrevious()
+        #expect(list.active == "b")
+    }
+
     @Test("un atajo a una pestaña que no existe no cambia nada")
     func selectingOutOfRangeIsIgnored() {
         var list = TabList<String>()

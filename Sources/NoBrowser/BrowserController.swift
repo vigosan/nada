@@ -18,7 +18,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
     private let bindings: KeyBindings
-    private var showingSettings = false
+    private enum Mode {
+        case commands
+        case settings
+        case find
+    }
+
+    private var mode = Mode.commands
+    private var lastFind = ""
+    private var closedPages: [URL] = []
     private var searchEngine: SearchEngine {
         get { UserDefaults.standard.string(forKey: "search.engine").flatMap(SearchEngine.init) ?? .duckDuckGo }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: "search.engine") }
@@ -47,7 +55,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         window.contentView = root
         palette.isHidden = true
         palette.itemsForQuery = { [unowned self] query in
-            if showingSettings { return Palette.settingsItems(query: query, settings: settings) }
+            switch mode {
+            case .settings: return Palette.settingsItems(query: query, settings: settings)
+            case .find: return Palette.findItems(query: query)
+            case .commands: break
+            }
             return Palette.items(
                 query: query,
                 tabTitles: tabs.tabs.map(\.title),
@@ -61,6 +73,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             if case .changeSetting(let id) = action {
                 changeSetting(id)
                 palette.reload()
+                return
+            }
+            if case .find = action {
+                run(action)
                 return
             }
             closePalette()
@@ -122,7 +138,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .module(let id):
             modules.first { $0.commands.contains { $0.id == id } }?.run(id)
         case .openSettings:
-            openPalette(settings: true)
+            openPalette(mode: .settings)
         case .changeSetting(let id):
             changeSetting(id)
         case .togglePalette:
@@ -146,6 +162,35 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             showActiveTab()
         case .toggleFullscreen:
             window.toggleFullScreen(nil)
+        case .nextTab:
+            tabs.selectNext()
+            showActiveTab()
+        case .previousTab:
+            tabs.selectPrevious()
+            showActiveTab()
+        case .equalizePanes:
+            tabs.active?.layout.equalize()
+            showActiveTab()
+        case .reopenTab:
+            guard let url = closedPages.popLast() else { return }
+            addTab(configuration: WKWebViewConfiguration()).webView.load(URLRequest(url: url))
+        case .zoomIn:
+            zoomPage(by: 1.1)
+        case .zoomOut:
+            zoomPage(by: 1 / 1.1)
+        case .resetZoom:
+            tabs.active?.focused?.webView.pageZoom = 1
+        case .startFind:
+            openPalette(prefill: lastFind, mode: .find)
+        case .findNext:
+            run(lastFind.isEmpty ? .startFind : .find(lastFind, backwards: false))
+        case .findPrevious:
+            run(lastFind.isEmpty ? .startFind : .find(lastFind, backwards: true))
+        case .find(let text, let backwards):
+            lastFind = text
+            let configuration = WKFindConfiguration()
+            configuration.backwards = backwards
+            tabs.active?.focused?.webView.find(text, configuration: configuration) { _ in }
         }
     }
 
@@ -165,9 +210,17 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         }
     }
 
-    private func openPalette(prefill: String = "", settings: Bool = false) {
-        showingSettings = settings
-        palette.open(prefill: prefill, placeholder: settings ? "Ajustes" : "URL, búsqueda, pestaña u orden…")
+    private func openPalette(prefill: String = "", mode: Mode = .commands) {
+        self.mode = mode
+        let placeholders: [Mode: String] = [
+            .commands: "URL, búsqueda, pestaña u orden…", .settings: "Ajustes", .find: "Buscar en la página",
+        ]
+        palette.open(prefill: prefill, placeholder: placeholders[mode] ?? "")
+    }
+
+    private func zoomPage(by factor: Double) {
+        guard let webView = tabs.active?.focused?.webView else { return }
+        webView.pageZoom = min(3, max(0.5, webView.pageZoom * factor))
     }
 
     private func split(_ axis: SplitAxis) {
@@ -180,6 +233,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private func close() {
         guard let tab = tabs.active else { return }
         let closing = tab.layout.focused
+        tab.focused?.webView.url.map { closedPages.append($0) }
         if tab.layout.closeFocused() {
             tab.panes.removeValue(forKey: closing)
         } else {

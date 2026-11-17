@@ -34,7 +34,9 @@ public struct KeyCombo: Equatable {
         return symbols.filter { modifiers.contains($0.0) }.map(\.1).joined() + (Self.namedKeys[key] ?? key.uppercased())
     }
 
-    private static let namedKeys = ["left": "←", "right": "→", "up": "↑", "down": "↓", "return": "↩"]
+    private static let namedKeys = [
+        "left": "←", "right": "→", "up": "↑", "down": "↓", "return": "↩", "tab": "⇥", "plus": "+",
+    ]
     private static let modifierNames: [String: Modifiers] = [
         "cmd": .command, "command": .command, "super": .command,
         "ctrl": .control, "control": .control,
@@ -70,6 +72,16 @@ public struct Command: Sendable {
         Command(name: "resize_down", title: "Mover divisor abajo", action: .resizePane(.down)),
         Command(name: "zoom_pane", title: "Ampliar o restaurar panel", action: .zoomPane),
         Command(name: "fullscreen", title: "Pantalla completa", action: .toggleFullscreen),
+        Command(name: "next_tab", title: "Pestaña siguiente", action: .nextTab),
+        Command(name: "previous_tab", title: "Pestaña anterior", action: .previousTab),
+        Command(name: "reopen_tab", title: "Reabrir pestaña cerrada", action: .reopenTab),
+        Command(name: "equalize_panes", title: "Igualar paneles", action: .equalizePanes),
+        Command(name: "zoom_in", title: "Acercar página", action: .zoomIn),
+        Command(name: "zoom_out", title: "Alejar página", action: .zoomOut),
+        Command(name: "reset_zoom", title: "Tamaño real de la página", action: .resetZoom),
+        Command(name: "find", title: "Buscar en la página", action: .startFind),
+        Command(name: "find_next", title: "Siguiente coincidencia", action: .findNext),
+        Command(name: "find_previous", title: "Coincidencia anterior", action: .findPrevious),
     ] + (1...9).map { Command(name: "goto_tab:\($0)", title: "Pestaña \($0)", action: .selectTab($0 - 1)) }
 }
 
@@ -126,5 +138,10 @@ public struct KeyBindings {
         ("cmd+ctrl+left", "resize_left"), ("cmd+ctrl+right", "resize_right"),
         ("cmd+ctrl+up", "resize_up"), ("cmd+ctrl+down", "resize_down"),
         ("cmd+shift+return", "zoom_pane"), ("cmd+return", "fullscreen"),
+        ("cmd+shift+]", "next_tab"), ("cmd+shift+[", "previous_tab"),
+        ("ctrl+tab", "next_tab"), ("ctrl+shift+tab", "previous_tab"),
+        ("cmd+shift+t", "reopen_tab"), ("cmd+ctrl+=", "equalize_panes"),
+        ("cmd+=", "zoom_in"), ("cmd+plus", "zoom_in"), ("cmd+-", "zoom_out"), ("cmd+0", "reset_zoom"),
+        ("cmd+f", "find"), ("cmd+g", "find_next"), ("cmd+shift+g", "find_previous"),
     ] + (1...9).map { ("cmd+\($0)", "goto_tab:\($0)") }
 }

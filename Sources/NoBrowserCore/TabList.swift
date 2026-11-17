@@ -18,6 +18,16 @@ public struct TabList<Tab> {
         activeIndex = index
     }
 
+    public mutating func selectNext() {
+        guard let index = activeIndex else { return }
+        activeIndex = (index + 1) % tabs.count
+    }
+
+    public mutating func selectPrevious() {
+        guard let index = activeIndex else { return }
+        activeIndex = (index - 1 + tabs.count) % tabs.count
+    }
+
     public mutating func closeActive() -> Tab? {
         guard let index = activeIndex else { return nil }
         let closed = tabs.remove(at: index)

@@ -85,6 +85,10 @@ public struct PaneLayout {
         focused = nearest?.key ?? focused
     }
 
+    public mutating func equalize() {
+        root = Self.equalized(root)
+    }
+
     public mutating func toggleZoom() {
         zoomed.toggle()
     }
@@ -131,6 +135,18 @@ public struct PaneLayout {
         guard let keptFirst = removing(id, from: first) else { return (second, firstLeaf(of: second)) }
         guard let keptSecond = removing(id, from: second) else { return (first, firstLeaf(of: first)) }
         return (.split(axis, ratio, keptFirst.node, keptSecond.node), keptFirst.next ?? keptSecond.next)
+    }
+
+    private static func equalized(_ node: Node) -> Node {
+        guard case .split(let axis, _, let first, let second) = node else { return node }
+        let firstWeight = weight(of: first, along: axis)
+        let total = firstWeight + weight(of: second, along: axis)
+        return .split(axis, Double(firstWeight) / Double(total), equalized(first), equalized(second))
+    }
+
+    private static func weight(of node: Node, along axis: SplitAxis) -> Int {
+        guard case .split(axis, _, let first, let second) = node else { return 1 }
+        return weight(of: first, along: axis) + weight(of: second, along: axis)
     }
 
     private static func firstLeaf(of node: Node) -> Int {

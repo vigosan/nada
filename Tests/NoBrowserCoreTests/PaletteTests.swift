@@ -76,6 +76,13 @@ struct PaletteTests {
         #expect(Palette.items(query: "dividir abajo", tabTitles: []).first?.action == .split(.vertical))
     }
 
+    @Test("buscar en la página ofrece ir a la siguiente coincidencia con intro y a la anterior debajo")
+    func findOffersNextAndPrevious() {
+        #expect(Palette.findItems(query: "  ").isEmpty)
+        let items = Palette.findItems(query: "paella")
+        #expect(items.map(\.action) == [.find("paella", backwards: false), .find("paella", backwards: true)])
+    }
+
     @Test("solo las nueve primeras pestañas anuncian atajo porque no hay ⌘10")
     func onlyFirstNineTabsShowShortcut() {
         let items = Palette.items(query: "", tabTitles: Array(repeating: "t", count: 10))

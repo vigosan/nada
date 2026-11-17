@@ -127,6 +127,31 @@ struct PaneLayoutTests {
         #expect(layout.frames.count == 2)
     }
 
+    @Test("igualar reparte el espacio entre todos los paneles de una fila, no solo entre dos mitades")
+    func equalizeSharesSpaceEvenly() {
+        var layout = PaneLayout()
+        let middle = layout.split(.horizontal)
+        let right = layout.split(.horizontal)
+        layout.resize(.right)
+        layout.equalize()
+        for id in [0, middle, right] {
+            #expect(abs(layout.frames[id]!.width - 1.0 / 3.0) < 0.0001)
+        }
+    }
+
+    @Test("igualar no deja que un panel partido en vertical cuente doble en su fila")
+    func equalizeTreatsAStackAsOneColumn() {
+        var layout = PaneLayout()
+        let right = layout.split(.horizontal)
+        let bottom = layout.split(.vertical)
+        layout.resize(.left)
+        layout.resize(.down)
+        layout.equalize()
+        #expect(layout.frames[0]!.width == 0.5)
+        #expect(layout.frames[right]!.height == 0.5)
+        #expect(layout.frames[bottom]!.height == 0.5)
+    }
+
     @Test("un clic en otro panel le da el foco")
     func focusCanBeSetDirectly() {
         var layout = PaneLayout()

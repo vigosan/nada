@@ -22,6 +22,26 @@ struct KeyBindingsTests {
         #expect(KeyCombo("cmd+enter") == KeyCombo("cmd+return"))
     }
 
+    @Test("los atajos de navegador más usados vienen de fábrica")
+    func browsingDefaults() {
+        let bindings = KeyBindings(config: "")
+        #expect(bindings.label(for: .nextTab) == "⌃⇥")
+        #expect(bindings.label(for: .previousTab) == "⌃⇧⇥")
+        #expect(bindings.label(for: .equalizePanes) == "⌃⌘=")
+        #expect(bindings.label(for: .reopenTab) == "⇧⌘T")
+        #expect(bindings.label(for: .zoomIn) == "⌘+")
+        #expect(bindings.label(for: .startFind) == "⌘F")
+        #expect(bindings.action(for: KeyCombo("cmd+g")!) == .findNext)
+        #expect(bindings.errors.isEmpty)
+    }
+
+    @Test("la tecla igual se puede reasignar aunque también separe la orden")
+    func equalsKeyCanBeBound() {
+        let bindings = KeyBindings(config: "keybind = cmd+opt+==zoom_in")
+        #expect(bindings.action(for: KeyCombo("cmd+opt+=")!) == .zoomIn)
+        #expect(bindings.errors.isEmpty)
+    }
+
     @Test("una línea keybind añade un atajo propio y la paleta lo anuncia")
     func configAddsABinding() {
         let bindings = KeyBindings(config: "keybind = ctrl+h=focus_left")

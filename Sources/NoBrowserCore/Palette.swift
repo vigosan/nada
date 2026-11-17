@@ -19,6 +19,17 @@ public enum PaletteAction: Equatable, Sendable {
     case resizePane(Direction)
     case toggleFullscreen
     case zoomPane
+    case nextTab
+    case previousTab
+    case equalizePanes
+    case reopenTab
+    case zoomIn
+    case zoomOut
+    case resetZoom
+    case startFind
+    case findNext
+    case findPrevious
+    case find(String, backwards: Bool)
 }
 
 public struct Setting: Equatable {
@@ -71,6 +82,15 @@ public enum Palette {
         let items = settings.map { PaletteItem(title: $0.title, shortcut: $0.value, action: .changeSetting($0.id)) }
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         return text.isEmpty ? items : matching(items, text)
+    }
+
+    public static func findItems(query: String) -> [PaletteItem] {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return [] }
+        return [
+            PaletteItem(title: "Siguiente coincidencia", shortcut: "↵", action: .find(text, backwards: false)),
+            PaletteItem(title: "Coincidencia anterior", shortcut: "", action: .find(text, backwards: true)),
+        ]
     }
 
     private static func matching(_ items: [PaletteItem], _ text: String) -> [PaletteItem] {
