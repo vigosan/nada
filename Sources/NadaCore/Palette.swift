@@ -31,6 +31,7 @@ public enum PaletteAction: Equatable, Sendable {
     case findPrevious
     case find(String, backwards: Bool)
     case clearHistory
+    case editKeyBindings
 }
 
 public struct Setting: Equatable {
@@ -83,8 +84,19 @@ public enum Palette {
         return strong + matches + weak + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
     }
 
-    public static func settingsItems(query: String, settings: [Setting]) -> [PaletteItem] {
+    public static func window(selected: Int, count: Int, size: Int) -> Range<Int> {
+        let start = max(0, min(selected - size / 2, count - size))
+        return start..<min(count, start + size)
+    }
+
+    public static func settingsItems(
+        query: String,
+        settings: [Setting],
+        bindings: KeyBindings = KeyBindings(config: "")
+    ) -> [PaletteItem] {
         let items = settings.map { PaletteItem(title: $0.title, shortcut: $0.value, action: .changeSetting($0.id)) }
+            + [PaletteItem(title: "Editar atajos de teclado", shortcut: "~/.config/nada/config", action: .editKeyBindings)]
+            + Command.all.map { PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: .editKeyBindings) }
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         return text.isEmpty ? items : matching(items, text)
     }

@@ -15,9 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let config = URL.homeDirectory.appending(path: ".config/nada/config")
-        let bindings = KeyBindings(config: (try? String(contentsOf: config, encoding: .utf8)) ?? "")
-        bindings.errors.forEach { NSLog("%@ %@", config.path, $0) }
+        let bindings = KeyBindings(config: (try? String(contentsOf: Config.file, encoding: .utf8)) ?? "")
+        bindings.errors.forEach { NSLog("%@ %@", Config.file.path, $0) }
         let browser = BrowserController(modules: [AdBlockModule()], bindings: bindings)
         self.browser = browser
         NSApp.mainMenu = mainMenu(bindings)

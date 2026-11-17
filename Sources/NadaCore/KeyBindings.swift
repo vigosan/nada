@@ -105,6 +105,17 @@ public struct KeyBindings {
         }
     }
 
+    public static let template = ([
+        "# Atajos de Nada. Quita el # de una línea keybind para activarla y reinicia Nada.",
+        "# keybind = ctrl+h=focus_left",
+        "# keybind = ctrl+shift+v=split_right",
+        "# keybind = cmd+w=unbind",
+        "#",
+        "# Modificadores: cmd, ctrl, opt, shift.",
+        "# Teclas: un carácter, o left, right, up, down, return, tab, plus.",
+        "# Órdenes (unbind libera una combinación):",
+    ] + Command.all.map { "#   \($0.name)  \($0.title)" }).joined(separator: "\n") + "\n"
+
     public func action(for combo: KeyCombo) -> PaletteAction? {
         bindings.first { $0.combo == combo }?.action
     }

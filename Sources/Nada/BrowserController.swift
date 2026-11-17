@@ -2,6 +2,10 @@ import AppKit
 import NadaCore
 import WebKit
 
+enum Config {
+    static let file = URL.homeDirectory.appending(path: ".config/nada/config")
+}
+
 final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     let window = NSWindow(
         contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
@@ -58,7 +62,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         palette.isHidden = true
         palette.itemsForQuery = { [unowned self] query in
             switch mode {
-            case .settings: return Palette.settingsItems(query: query, settings: settings)
+            case .settings: return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings)
             case .find: return Palette.findItems(query: query)
             case .commands: break
             }
@@ -189,6 +193,12 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             run(lastFind.isEmpty ? .startFind : .find(lastFind, backwards: false))
         case .findPrevious:
             run(lastFind.isEmpty ? .startFind : .find(lastFind, backwards: true))
+        case .editKeyBindings:
+            if !FileManager.default.fileExists(atPath: Config.file.path) {
+                try? FileManager.default.createDirectory(at: Config.file.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try? KeyBindings.template.write(to: Config.file, atomically: true, encoding: .utf8)
+            }
+            NSWorkspace.shared.open(Config.file)
         case .clearHistory:
             history.clear()
             saveHistory()

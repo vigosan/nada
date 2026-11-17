@@ -65,7 +65,7 @@ struct PaletteTests {
             Setting(id: "adblock.enabled", title: "Bloqueo de anuncios", value: "Activado"),
         ]
         let all = Palette.settingsItems(query: "", settings: settings)
-        #expect(all.map(\.shortcut) == ["DuckDuckGo", "Activado"])
+        #expect(all.prefix(2).map(\.shortcut) == ["DuckDuckGo", "Activado"])
         let found = Palette.settingsItems(query: "bloq", settings: settings)
         #expect(found.map(\.action) == [.changeSetting("adblock.enabled")])
     }
@@ -81,6 +81,25 @@ struct PaletteTests {
         #expect(Palette.findItems(query: "  ").isEmpty)
         let items = Palette.findItems(query: "paella")
         #expect(items.map(\.action) == [.find("paella", backwards: false), .find("paella", backwards: true)])
+    }
+
+    @Test("los ajustes enseñan cada atajo con su tecla actual, para no tener que abrir un archivo para recordarlo")
+    func settingsListEveryShortcut() {
+        let bindings = KeyBindings(config: "keybind = ctrl+h=focus_left")
+        let items = Palette.settingsItems(query: "", settings: [], bindings: bindings)
+        #expect(items.first?.action == .editKeyBindings)
+        #expect(items.first { $0.title == "Ir al panel de la izquierda" }?.shortcut == "⌃H")
+        #expect(items.first { $0.title == "Dividir a la derecha" }?.shortcut == "⌘D")
+        #expect(items.count == Command.all.count + 1)
+        #expect(items.allSatisfy { $0.action == .editKeyBindings })
+    }
+
+    @Test("la lista se desplaza con la selección, así se llega a cualquier fila aunque no quepan todas")
+    func listWindowFollowsTheSelection() {
+        #expect(Palette.window(selected: 0, count: 30, size: 9) == 0..<9)
+        #expect(Palette.window(selected: 12, count: 30, size: 9) == 8..<17)
+        #expect(Palette.window(selected: 29, count: 30, size: 9) == 21..<30)
+        #expect(Palette.window(selected: 2, count: 3, size: 9) == 0..<3)
     }
 
     @Test("solo las nueve primeras pestañas anuncian atajo porque no hay ⌘10")

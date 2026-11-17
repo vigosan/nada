@@ -89,13 +89,14 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
     }
 
     func reload() {
-        items = Array(itemsForQuery(field.stringValue).prefix(9))
+        items = itemsForQuery(field.stringValue)
         render()
     }
 
     private func render() {
         rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        for (index, item) in items.enumerated() {
+        for index in Palette.window(selected: selected, count: items.count, size: 9) {
+            let item = items[index]
             let row = Theme.row(
                 title: item.title,
                 shortcut: item.shortcut,

@@ -87,6 +87,16 @@ struct KeyBindingsTests {
         #expect(KeyCombo("cmd+,")?.label == "⌘,")
     }
 
+    @Test("el archivo de atajos nace con un ejemplo y todas las órdenes, pero sin cambiar ningún atajo")
+    func templateDocumentsEveryCommandWithoutBindingAnything() {
+        let fromTemplate = KeyBindings(config: KeyBindings.template)
+        #expect(fromTemplate.errors.isEmpty)
+        #expect(fromTemplate.bindings.count == KeyBindings(config: "").bindings.count)
+        for name in ["split_right", "focus_left", "find", "clear_history", "unbind"] {
+            #expect(KeyBindings.template.contains(name))
+        }
+    }
+
     @Test("una línea mal escrita se avisa con su número y no estropea las demás")
     func invalidLinesAreReportedAndSkipped() {
         let config = """
