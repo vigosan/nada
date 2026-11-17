@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
 import { content, SITE_URL, type Content } from "@/content";
 
-export function metadataFor(c: Content): Metadata {
+export function metadataFor(c: Content, route: keyof Content["routes"], title?: string): Metadata {
   return {
     metadataBase: new URL(SITE_URL),
-    title: c.meta.title,
+    title: title ? `${title} · Nada` : c.meta.title,
     description: c.meta.description,
     icons: { icon: "/icon.svg" },
     alternates: {
-      canonical: c.routes.home,
-      languages: { en: content.en.routes.home, es: content.es.routes.home },
+      canonical: c.routes[route],
+      languages: { en: content.en.routes[route], es: content.es.routes[route] },
     },
     openGraph: {
       title: c.meta.title,
       description: c.meta.description,
-      url: c.routes.home,
+      url: c.routes[route],
       siteName: "Nada",
       type: "website",
       locale: c.lang === "en" ? "en_US" : "es_ES",

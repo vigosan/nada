@@ -10,8 +10,10 @@ const heading = "text-2xl font-semibold tracking-tight text-balance text-ink";
 
 export function Home({ c }: { c: Content }) {
   return (
-    <Page c={c}>
-      <div aria-hidden className="loading-line" />
+    <Page c={c} current="home">
+      <div aria-hidden className="scroll-playhead">
+        <div className="scroll-playhead-head" />
+      </div>
       <section className="flex flex-col items-center gap-6 text-center lg:pt-4">
         <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance text-ink sm:text-5xl">{c.home.tagline}</h1>
         <p className="max-w-xl text-lg text-pretty">

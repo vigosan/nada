@@ -17,6 +17,24 @@ describe("home", () => {
   });
 });
 
+describe("page frame", () => {
+  it("links privacy and support from every page footer, in the page's own language", () => {
+    const html = renderToStaticMarkup(<Home c={content.es} />);
+    expect(html).toContain('href="/es/privacidad"');
+    expect(html).toContain('href="/es/soporte"');
+  });
+
+  it("lets the visitor switch between system, light and dark", () => {
+    const html = renderToStaticMarkup(<Home c={content.en} />);
+    expect(html).toContain(`aria-label="${content.en.theme.system}"`);
+  });
+
+  it("keeps the demo window dark in the light page, because the app itself is always dark", () => {
+    const html = renderToStaticMarkup(<Home c={content.en} />);
+    expect(html).toContain('data-testid="demo-window" data-theme="dark"');
+  });
+});
+
 describe("download", () => {
   it("says the download is coming instead of offering a dead link while there is no release", () => {
     const html = renderToStaticMarkup(<Download home={content.en.home} url={null} />);

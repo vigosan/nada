@@ -3,6 +3,8 @@ export type Lang = (typeof LANGS)[number];
 
 export const SITE_URL = "https://nada.vicent.io";
 export const DOWNLOAD: string | null = null;
+export const CONTACT = "hello@vicent.io";
+export const UPDATED = "2026-11-17";
 export const CONFIG_SAMPLE = `# ~/.config/nada/config
 keybind = ctrl+h=focus_left
 keybind = ctrl+shift+v=split_right
@@ -12,7 +14,8 @@ const en = {
   lang: "en" as Lang,
   other: "es" as Lang,
   switchLabel: "Español",
-  routes: { home: "/" },
+  theme: { system: "Theme: system", light: "Theme: light", dark: "Theme: dark" },
+  routes: { home: "/", privacy: "/privacy", support: "/support" },
   meta: {
     title: "Nada: a browser with nothing on it",
     description:
@@ -105,7 +108,38 @@ const en = {
     configText: "Every shortcut can be changed, added or removed from a plain text file.",
     closingTitle: "Nothing to learn but [⌘K]",
   },
-  footer: { by: "Made by" },
+  privacy: {
+    title: "Privacy policy",
+    updated: `Last updated ${UPDATED}`,
+    sections: [
+      {
+        heading: "The app",
+        body: [
+          "Nada does not collect, store or share any personal data. It has no accounts, analytics or telemetry.",
+          "Like any browser, Nada connects to the sites you open and to the search engine you choose in the settings. Those sites receive what any browser sends them, such as your IP address.",
+          "Your history, cookies and site data stay on your Mac, in the app's own storage. Nada never sends them anywhere.",
+          "The ad and tracker filters are lists stored on your Mac. Nada does not report what it blocks or which pages you visit.",
+        ],
+      },
+      {
+        heading: "This website",
+        body: [
+          "This website is hosted on Vercel, which processes technical request data, such as your IP address, to deliver the pages.",
+          "It uses no cookies and no analytics. It remembers whether you chose the light or dark page in your browser's local storage, which never leaves your device.",
+          `For any question about privacy, write to ${CONTACT}.`,
+        ],
+      },
+    ],
+  },
+  support: {
+    title: "Support",
+    email: "Email support",
+    body: [
+      `For help, bug reports or ideas, write to ${CONTACT}. Please include your macOS version and, if a page misbehaves, its address.`,
+      "Every keyboard shortcut is listed on the home page and can be changed in ~/.config/nada/config.",
+    ],
+  },
+  footer: { privacy: "Privacy", support: "Support", by: "Made by" },
 };
 
 export type Content = typeof en;
@@ -114,7 +148,8 @@ const es: Content = {
   lang: "es",
   other: "en",
   switchLabel: "English",
-  routes: { home: "/es" },
+  theme: { system: "Tema: sistema", light: "Tema: claro", dark: "Tema: oscuro" },
+  routes: { home: "/es", privacy: "/es/privacidad", support: "/es/soporte" },
   meta: {
     title: "Nada: un navegador sin nada",
     description:
@@ -207,7 +242,38 @@ const es: Content = {
     configText: "Cada atajo se puede cambiar, añadir o quitar desde un archivo de texto.",
     closingTitle: "Nada que aprender salvo [⌘K]",
   },
-  footer: { by: "Hecho por" },
+  privacy: {
+    title: "Política de privacidad",
+    updated: `Última actualización: ${UPDATED}`,
+    sections: [
+      {
+        heading: "La app",
+        body: [
+          "Nada no recoge, guarda ni comparte ningún dato personal. No tiene cuentas, analítica ni telemetría.",
+          "Como cualquier navegador, Nada se conecta a las webs que abres y al buscador que eliges en los ajustes. Esas webs reciben lo que les envía cualquier navegador, como tu dirección IP.",
+          "Tu historial, tus cookies y los datos de las webs se quedan en tu Mac, en el almacenamiento propio de la app. Nada nunca los envía a ningún sitio.",
+          "Los filtros de anuncios y rastreadores son listas guardadas en tu Mac. Nada no informa de lo que bloquea ni de las páginas que visitas.",
+        ],
+      },
+      {
+        heading: "Esta web",
+        body: [
+          "Esta web está alojada en Vercel, que procesa datos técnicos de las peticiones, como tu dirección IP, para servir las páginas.",
+          "No usa cookies ni analítica. Recuerda si elegiste la página clara u oscura en el almacenamiento local de tu navegador, que nunca sale de tu dispositivo.",
+          `Para cualquier duda sobre privacidad, escribe a ${CONTACT}.`,
+        ],
+      },
+    ],
+  },
+  support: {
+    title: "Soporte",
+    email: "Escribir a soporte",
+    body: [
+      `Para pedir ayuda, avisar de un fallo o proponer ideas, escribe a ${CONTACT}. Incluye tu versión de macOS y, si una página falla, su dirección.`,
+      "Todos los atajos de teclado están en la página de inicio y se pueden cambiar en ~/.config/nada/config.",
+    ],
+  },
+  footer: { privacy: "Privacidad", support: "Soporte", by: "Hecho por" },
 };
 
 export const content: Record<Lang, Content> = { en, es };

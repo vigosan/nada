@@ -8,7 +8,7 @@ export function Download({ home, url }: { home: Content["home"]; url: string | n
       {url ? (
         <a
           href={url}
-          className={`${pill} bg-ink text-ground transition-[background-color,transform] duration-150 ease-out hover:bg-white active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-desk`}
+          className={`${pill} bg-ink text-desk transition-[opacity,transform] duration-150 ease-out hover:opacity-85 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-desk`}
         >
           {home.download}
         </a>

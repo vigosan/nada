@@ -69,7 +69,11 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
 
   return (
     <div data-testid="demo" className="flex flex-col gap-4">
-      <div className="relative overflow-hidden rounded-xl border border-line bg-ground font-mono text-sm shadow-2xl shadow-black/50">
+      <div
+        data-testid="demo-window"
+        data-theme="dark"
+        className="relative overflow-hidden rounded-xl border border-line bg-ground font-mono text-sm shadow-2xl shadow-black/30"
+      >
         <div className="flex items-center gap-3 px-3 py-2">
           <div aria-hidden className="flex gap-2">
             <span className="size-3 rounded-full bg-[#ff5f57]" />
