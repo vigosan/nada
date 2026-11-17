@@ -2,7 +2,7 @@ export PATH := $(HOME)/.cargo/bin:$(PATH)
 FILTERS_DIR := $(HOME)/Library/Application Support/Nada/filters
 LISTS := .build/lists/easylist.txt .build/lists/easyprivacy.txt
 
-.PHONY: build test run filters
+.PHONY: build test run filters web web-dev
 
 build:
 	swift build -c release
@@ -20,3 +20,9 @@ filters:
 	curl -fsSL -o .build/lists/easyprivacy.txt https://easylist.to/easylist/easyprivacy.txt
 	rm -rf "$(FILTERS_DIR)"
 	cargo run --release --manifest-path filters/Cargo.toml -- "$(FILTERS_DIR)" $(LISTS)
+
+web:
+	cd web && npm ci && npm test && npm run build
+
+web-dev:
+	cd web && npm run dev

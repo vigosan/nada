@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-desk: #13141c;
+  --color-ground: #1b1c27;
+  --color-bar: #22232f;
+  --color-raised: #2b2d3b;
+  --color-line: #34364a;
+  --color-ink: #cdd0e6;
+  --color-body: #a3a7c2;
+  --color-dim: #7d819c;
+  --color-accent: #6cc4f2;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+.loading-line {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .loading-line {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      height: 2px;
+      transform-origin: 0 50%;
+      background: var(--color-accent);
+      pointer-events: none;
+      animation: load linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+@keyframes load {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
