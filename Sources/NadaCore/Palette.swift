@@ -37,6 +37,18 @@ public enum PaletteAction: Equatable, Sendable {
 
 public enum SettingsSection: Equatable, Sendable {
     case shortcuts
+    case shortcutGroup(CommandGroup)
+
+    public var parent: SettingsSection? {
+        self == .shortcuts ? nil : .shortcuts
+    }
+
+    public var path: String {
+        switch self {
+        case .shortcuts: "Ajustes › Atajos de teclado"
+        case .shortcutGroup(let group): "Ajustes › Atajos de teclado › \(group.title)"
+        }
+    }
 }
 
 public struct Setting: Equatable {
@@ -101,12 +113,25 @@ public enum Palette {
         section: SettingsSection? = nil
     ) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let shortcuts = [PaletteItem(title: "Editar atajos de teclado", shortcut: "~/.config/nada/config", action: .editKeyBindings)]
-            + Command.all.map { PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: .editKeyBindings) }
-        if section == .shortcuts { return text.isEmpty ? shortcuts : matching(shortcuts, text) }
-        let root = settings.map { PaletteItem(title: $0.title, shortcut: $0.value, action: .changeSetting($0.id)) }
-            + [PaletteItem(title: "Atajos de teclado", shortcut: "›", action: .openSettingsSection(.shortcuts))]
-        return text.isEmpty ? root : matching(root + shortcuts, text)
+        let shortcut: (Command) -> PaletteItem = {
+            PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: .editKeyBindings)
+        }
+        let shortcuts = Command.all.map(shortcut)
+        switch section {
+        case .shortcutGroup(let group):
+            let items = Command.all.filter { $0.group == group }.map(shortcut)
+            return text.isEmpty ? items : matching(items, text)
+        case .shortcuts:
+            let items = [PaletteItem(title: "Editar atajos de teclado", shortcut: "~/.config/nada/config", action: .editKeyBindings)]
+                + CommandGroup.allCases.map {
+                    PaletteItem(title: $0.title, shortcut: "›", action: .openSettingsSection(.shortcutGroup($0)))
+                }
+            return text.isEmpty ? items : matching(items + shortcuts, text)
+        case nil:
+            let root = settings.map { PaletteItem(title: $0.title, shortcut: $0.value, action: .changeSetting($0.id)) }
+                + [PaletteItem(title: "Atajos de teclado", shortcut: "›", action: .openSettingsSection(.shortcuts))]
+            return text.isEmpty ? root : matching(root + shortcuts, text)
+        }
     }
 
     public static func findItems(query: String) -> [PaletteItem] {

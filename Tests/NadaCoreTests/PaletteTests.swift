@@ -91,13 +91,42 @@ struct PaletteTests {
         #expect(root.last?.shortcut == "›")
     }
 
-    @Test("la sección de atajos enseña cada orden con su tecla actual")
-    func shortcutsSectionListsEveryShortcut() {
+    @Test("la sección de atajos se reparte en grupos, para no recorrer cuarenta filas buscando una")
+    func shortcutsSectionIsSplitIntoGroups() {
+        let items = Palette.settingsItems(query: "", settings: [], section: .shortcuts)
+        #expect(items.map(\.action) == [
+            .editKeyBindings,
+            .openSettingsSection(.shortcutGroup(.page)),
+            .openSettingsSection(.shortcutGroup(.tabs)),
+            .openSettingsSection(.shortcutGroup(.panes)),
+            .openSettingsSection(.shortcutGroup(.window)),
+        ])
+        #expect(items.map(\.title).dropFirst() == ["Página", "Pestañas", "Paneles", "Ventana"])
+    }
+
+    @Test("cada grupo enseña sus órdenes con la tecla actual, y ninguna orden se queda sin grupo")
+    func groupsListTheirShortcuts() {
         let bindings = KeyBindings(config: "keybind = ctrl+h=focus_left")
-        let items = Palette.settingsItems(query: "", settings: [], bindings: bindings, section: .shortcuts)
-        #expect(items.first?.action == .editKeyBindings)
-        #expect(items.first { $0.title == "Ir al panel de la izquierda" }?.shortcut == "⌃H")
-        #expect(items.count == Command.all.count + 1)
+        let panes = Palette.settingsItems(query: "", settings: [], bindings: bindings, section: .shortcutGroup(.panes))
+        #expect(panes.first { $0.title == "Ir al panel de la izquierda" }?.shortcut == "⌃H")
+        #expect(panes.contains { $0.title == "Recargar" } == false)
+        let total = CommandGroup.allCases.map {
+            Palette.settingsItems(query: "", settings: [], section: .shortcutGroup($0)).count
+        }.reduce(0, +)
+        #expect(total == Command.all.count)
+    }
+
+    @Test("escape sube un nivel cada vez hasta la raíz")
+    func sectionsKnowTheirParent() {
+        #expect(SettingsSection.shortcutGroup(.panes).parent == .shortcuts)
+        #expect(SettingsSection.shortcuts.parent == nil)
+        #expect(SettingsSection.shortcutGroup(.panes).path == "Ajustes › Atajos de teclado › Paneles")
+    }
+
+    @Test("buscar dentro de atajos encuentra una orden de cualquier grupo")
+    func shortcutsSearchCrossesGroups() {
+        let found = Palette.settingsItems(query: "recargar", settings: [], section: .shortcuts)
+        #expect(found.map(\.title) == ["Recargar"])
     }
 
     @Test("buscar desde la raíz también encuentra atajos, sin tener que entrar antes en su sección")

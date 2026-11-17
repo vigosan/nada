@@ -22,10 +22,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
     private let bindings: KeyBindings
-    private enum Mode {
+    private enum Mode: Equatable {
         case commands
-        case settings
-        case shortcuts
+        case settings(SettingsSection?)
         case find
     }
 
@@ -63,8 +62,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         palette.isHidden = true
         palette.itemsForQuery = { [unowned self] query in
             switch mode {
-            case .settings: return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings)
-            case .shortcuts: return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings, section: .shortcuts)
+            case .settings(let section):
+                return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings, section: section)
             case .find: return Palette.findItems(query: query)
             case .commands: break
             }
@@ -78,8 +77,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             )
         }
         palette.onClose = { [unowned self] in
-            if mode == .shortcuts {
-                openPalette(mode: .settings)
+            if case .settings(let section?) = mode {
+                openPalette(mode: .settings(section.parent))
             } else {
                 closePalette()
             }
@@ -94,8 +93,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 run(action)
                 return
             }
-            if case .openSettingsSection = action {
-                openPalette(mode: .shortcuts)
+            if case .openSettingsSection(let section) = action {
+                openPalette(mode: .settings(section))
                 return
             }
             closePalette()
@@ -157,7 +156,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .module(let id):
             modules.first { $0.commands.contains { $0.id == id } }?.run(id)
         case .openSettings:
-            openPalette(mode: .settings)
+            openPalette(mode: .settings(nil))
         case .changeSetting(let id):
             changeSetting(id)
         case .togglePalette:
@@ -211,8 +210,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 try? KeyBindings.template.write(to: Config.file, atomically: true, encoding: .utf8)
             }
             NSWorkspace.shared.open(Config.file)
-        case .openSettingsSection:
-            openPalette(mode: .shortcuts)
+        case .openSettingsSection(let section):
+            openPalette(mode: .settings(section))
         case .clearHistory:
             history.clear()
             saveHistory()
@@ -242,11 +241,12 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     private func openPalette(prefill: String = "", mode: Mode = .commands) {
         self.mode = mode
-        let placeholders: [Mode: String] = [
-            .commands: "URL, búsqueda, pestaña u orden…", .settings: "Ajustes", .find: "Buscar en la página",
-            .shortcuts: "Ajustes › Atajos de teclado",
-        ]
-        palette.open(prefill: prefill, placeholder: placeholders[mode] ?? "")
+        let placeholder = switch mode {
+        case .commands: "URL, búsqueda, pestaña u orden…"
+        case .find: "Buscar en la página"
+        case .settings(let section): section?.path ?? "Ajustes"
+        }
+        palette.open(prefill: prefill, placeholder: placeholder)
     }
 
     private func zoomPage(by factor: Double) {

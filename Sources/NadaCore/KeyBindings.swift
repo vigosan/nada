@@ -45,45 +45,62 @@ public struct KeyCombo: Equatable {
     ]
 }
 
+public enum CommandGroup: CaseIterable, Equatable, Sendable {
+    case page
+    case tabs
+    case panes
+    case window
+
+    public var title: String {
+        switch self {
+        case .page: "Página"
+        case .tabs: "Pestañas"
+        case .panes: "Paneles"
+        case .window: "Ventana"
+        }
+    }
+}
+
 public struct Command: Sendable {
     public let name: String
+    public let group: CommandGroup
     public let title: String
     public let action: PaletteAction
 
     public static let all: [Command] = [
-        Command(name: "palette", title: "Paleta de órdenes", action: .togglePalette),
-        Command(name: "open_location", title: "Abrir dirección", action: .openLocation),
-        Command(name: "new_tab", title: "Pestaña nueva", action: .newTab),
-        Command(name: "close", title: "Cerrar panel o pestaña", action: .closeTab),
-        Command(name: "reload", title: "Recargar", action: .reload),
-        Command(name: "back", title: "Atrás", action: .back),
-        Command(name: "forward", title: "Adelante", action: .forward),
-        Command(name: "dev_tools", title: "Herramientas de desarrollador", action: .toggleDevTools),
-        Command(name: "settings", title: "Ajustes", action: .openSettings),
-        Command(name: "split_right", title: "Dividir a la derecha", action: .split(.horizontal)),
-        Command(name: "split_down", title: "Dividir abajo", action: .split(.vertical)),
-        Command(name: "focus_left", title: "Ir al panel de la izquierda", action: .focusPane(.left)),
-        Command(name: "focus_right", title: "Ir al panel de la derecha", action: .focusPane(.right)),
-        Command(name: "focus_up", title: "Ir al panel de arriba", action: .focusPane(.up)),
-        Command(name: "focus_down", title: "Ir al panel de abajo", action: .focusPane(.down)),
-        Command(name: "resize_left", title: "Mover divisor a la izquierda", action: .resizePane(.left)),
-        Command(name: "resize_right", title: "Mover divisor a la derecha", action: .resizePane(.right)),
-        Command(name: "resize_up", title: "Mover divisor arriba", action: .resizePane(.up)),
-        Command(name: "resize_down", title: "Mover divisor abajo", action: .resizePane(.down)),
-        Command(name: "zoom_pane", title: "Ampliar o restaurar panel", action: .zoomPane),
-        Command(name: "fullscreen", title: "Pantalla completa", action: .toggleFullscreen),
-        Command(name: "next_tab", title: "Pestaña siguiente", action: .nextTab),
-        Command(name: "previous_tab", title: "Pestaña anterior", action: .previousTab),
-        Command(name: "reopen_tab", title: "Reabrir pestaña cerrada", action: .reopenTab),
-        Command(name: "equalize_panes", title: "Igualar paneles", action: .equalizePanes),
-        Command(name: "zoom_in", title: "Acercar página", action: .zoomIn),
-        Command(name: "zoom_out", title: "Alejar página", action: .zoomOut),
-        Command(name: "reset_zoom", title: "Tamaño real de la página", action: .resetZoom),
-        Command(name: "find", title: "Buscar en la página", action: .startFind),
-        Command(name: "find_next", title: "Siguiente coincidencia", action: .findNext),
-        Command(name: "find_previous", title: "Coincidencia anterior", action: .findPrevious),
-        Command(name: "clear_history", title: "Borrar historial", action: .clearHistory),
-    ] + (1...9).map { Command(name: "goto_tab:\($0)", title: "Pestaña \($0)", action: .selectTab($0 - 1)) }
+        Command(name: "palette", group: .page, title: "Paleta de órdenes", action: .togglePalette),
+        Command(name: "open_location", group: .page, title: "Abrir dirección", action: .openLocation),
+        Command(name: "new_tab", group: .tabs, title: "Pestaña nueva", action: .newTab),
+        Command(name: "close", group: .tabs, title: "Cerrar panel o pestaña", action: .closeTab),
+        Command(name: "reload", group: .page, title: "Recargar", action: .reload),
+        Command(name: "back", group: .page, title: "Atrás", action: .back),
+        Command(name: "forward", group: .page, title: "Adelante", action: .forward),
+        Command(name: "dev_tools", group: .window, title: "Herramientas de desarrollador", action: .toggleDevTools),
+        Command(name: "settings", group: .window, title: "Ajustes", action: .openSettings),
+        Command(name: "split_right", group: .panes, title: "Dividir a la derecha", action: .split(.horizontal)),
+        Command(name: "split_down", group: .panes, title: "Dividir abajo", action: .split(.vertical)),
+        Command(name: "focus_left", group: .panes, title: "Ir al panel de la izquierda", action: .focusPane(.left)),
+        Command(name: "focus_right", group: .panes, title: "Ir al panel de la derecha", action: .focusPane(.right)),
+        Command(name: "focus_up", group: .panes, title: "Ir al panel de arriba", action: .focusPane(.up)),
+        Command(name: "focus_down", group: .panes, title: "Ir al panel de abajo", action: .focusPane(.down)),
+        Command(name: "resize_left", group: .panes, title: "Mover divisor a la izquierda", action: .resizePane(.left)),
+        Command(name: "resize_right", group: .panes, title: "Mover divisor a la derecha", action: .resizePane(.right)),
+        Command(name: "resize_up", group: .panes, title: "Mover divisor arriba", action: .resizePane(.up)),
+        Command(name: "resize_down", group: .panes, title: "Mover divisor abajo", action: .resizePane(.down)),
+        Command(name: "zoom_pane", group: .panes, title: "Ampliar o restaurar panel", action: .zoomPane),
+        Command(name: "fullscreen", group: .window, title: "Pantalla completa", action: .toggleFullscreen),
+        Command(name: "next_tab", group: .tabs, title: "Pestaña siguiente", action: .nextTab),
+        Command(name: "previous_tab", group: .tabs, title: "Pestaña anterior", action: .previousTab),
+        Command(name: "reopen_tab", group: .tabs, title: "Reabrir pestaña cerrada", action: .reopenTab),
+        Command(name: "equalize_panes", group: .panes, title: "Igualar paneles", action: .equalizePanes),
+        Command(name: "zoom_in", group: .page, title: "Acercar página", action: .zoomIn),
+        Command(name: "zoom_out", group: .page, title: "Alejar página", action: .zoomOut),
+        Command(name: "reset_zoom", group: .page, title: "Tamaño real de la página", action: .resetZoom),
+        Command(name: "find", group: .page, title: "Buscar en la página", action: .startFind),
+        Command(name: "find_next", group: .page, title: "Siguiente coincidencia", action: .findNext),
+        Command(name: "find_previous", group: .page, title: "Coincidencia anterior", action: .findPrevious),
+        Command(name: "clear_history", group: .page, title: "Borrar historial", action: .clearHistory),
+    ] + (1...9).map { Command(name: "goto_tab:\($0)", group: .tabs, title: "Pestaña \($0)", action: .selectTab($0 - 1)) }
 }
 
 public struct KeyBindings {
