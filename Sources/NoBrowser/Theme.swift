@@ -5,6 +5,7 @@ enum Theme {
     static let bar = NSColor(srgbRed: 0.133, green: 0.137, blue: 0.184, alpha: 1)
     static let raised = NSColor(srgbRed: 0.169, green: 0.176, blue: 0.231, alpha: 1)
     static let text = NSColor(srgbRed: 0.804, green: 0.816, blue: 0.902, alpha: 1)
+    static let accent = NSColor(srgbRed: 0.424, green: 0.769, blue: 0.949, alpha: 1)
     static let dim = NSColor(srgbRed: 0.490, green: 0.506, blue: 0.612, alpha: 1)
 
     static func label(_ string: String, color: NSColor, font: NSFont) -> NSTextField {

@@ -34,6 +34,8 @@ final class BrowserController: NSObject, WKUIDelegate {
     private let strip = TabStripView()
     private let container = NSView()
     private let palette = PaletteView()
+    private let progressBar = NSView()
+    private lazy var progressWidth = progressBar.widthAnchor.constraint(equalToConstant: 0)
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
 
@@ -63,7 +65,9 @@ final class BrowserController: NSObject, WKUIDelegate {
             closePalette()
             run(action)
         }
-        for view in [strip, container, palette] {
+        progressBar.wantsLayer = true
+        progressBar.layer?.backgroundColor = Theme.accent.cgColor
+        for view in [strip, container, progressBar, palette] {
             view.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview(view)
         }
@@ -76,6 +80,10 @@ final class BrowserController: NSObject, WKUIDelegate {
             container.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             container.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             container.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+            progressBar.topAnchor.constraint(equalTo: container.topAnchor),
+            progressBar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            progressBar.heightAnchor.constraint(equalToConstant: 2),
+            progressWidth,
             palette.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             palette.topAnchor.constraint(equalTo: root.topAnchor, constant: 120),
             palette.widthAnchor.constraint(equalToConstant: 560),
@@ -175,6 +183,8 @@ final class BrowserController: NSObject, WKUIDelegate {
         tab.observations = [
             tab.webView.observe(\.title) { [weak self] _, _ in self?.refresh() },
             tab.webView.observe(\.url) { [weak self] _, _ in self?.refresh() },
+            tab.webView.observe(\.estimatedProgress) { [weak self] _, _ in self?.refresh() },
+            tab.webView.observe(\.isLoading) { [weak self] _, _ in self?.refresh() },
         ]
         tabs.append(tab)
         showActiveTab()
@@ -199,6 +209,9 @@ final class BrowserController: NSObject, WKUIDelegate {
     private func refresh() {
         strip.update(titles: tabs.tabs.map(\.title), active: tabs.activeIndex)
         tabs.active.map { $0.webView.isHidden = $0.isBlank }
+        let webView = tabs.active?.webView
+        progressBar.isHidden = webView?.isLoading != true
+        progressWidth.animator().constant = container.bounds.width * (webView?.estimatedProgress ?? 0)
     }
 
     private func closePalette() {
