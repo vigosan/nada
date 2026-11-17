@@ -7,6 +7,8 @@ final class Pane {
     let webView: WKWebView
     var observations: [NSKeyValueObservation] = []
     var recordedURL: URL?
+    var failedURL: URL?
+    var pending: SessionPage?
 
     init(configuration: WKWebViewConfiguration) {
         configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
@@ -21,12 +23,16 @@ final class Pane {
     }
 
     var isBlank: Bool {
-        webView.url == nil
+        webView.url == nil && pending == nil
+    }
+
+    var address: URL? {
+        failedURL ?? pending?.url ?? webView.url
     }
 
     var title: String {
         if let title = webView.title, !title.isEmpty { return title }
-        return webView.url?.host() ?? "Pestaña nueva"
+        return pending?.title ?? webView.url?.host() ?? "Pestaña nueva"
     }
 }
 

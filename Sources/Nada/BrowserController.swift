@@ -33,6 +33,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var mode = Mode.commands
     private var lastFind = ""
     private var closedPages: [URL] = []
+    var downloads: [ObjectIdentifier: URL] = [:]
+    private let sessionFile = URL.applicationSupportDirectory.appending(path: "Nada/session.json")
     private let historyFile = URL.applicationSupportDirectory.appending(path: "Nada/history.json")
     private lazy var history = (try? JSONDecoder().decode(History.self, from: Data(contentsOf: historyFile))) ?? History()
     private let bookmarksFile = URL.applicationSupportDirectory.appending(path: "Nada/bookmarks.json")
@@ -143,8 +145,34 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             palette.topAnchor.constraint(equalTo: root.topAnchor, constant: 120),
             palette.widthAnchor.constraint(equalToConstant: 560),
         ])
-        addTab(configuration: WKWebViewConfiguration())
+        restoreSession()
         responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in self?.followClickedPane() }
+    }
+
+    func pane(for webView: WKWebView) -> Pane? {
+        tabs.tabs.flatMap(\.panes.values).first { $0.webView === webView }
+    }
+
+    func saveSession() {
+        let pages = tabs.tabs.map { tab in
+            tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title) } }
+        }
+        save(Session(pages: pages, active: tabs.activeIndex ?? 0), to: sessionFile)
+    }
+
+    private func restoreSession() {
+        let session = try? JSONDecoder().decode(Session.self, from: Data(contentsOf: sessionFile))
+        for page in session?.tabs ?? [] {
+            let pane = makePane(configuration: WKWebViewConfiguration())
+            pane.pending = page
+            tabs.append(Tab(pane: pane))
+        }
+        guard let session, !session.tabs.isEmpty else {
+            addTab(configuration: WKWebViewConfiguration())
+            return
+        }
+        tabs.select(session.active)
+        showActiveTab()
     }
 
     func run(_ action: PaletteAction) {
@@ -158,7 +186,12 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .closeTab:
             close()
         case .reload:
-            tabs.active?.focused?.webView.reload()
+            guard let pane = tabs.active?.focused else { return }
+            if let failed = pane.failedURL {
+                pane.webView.load(URLRequest(url: failed))
+            } else {
+                pane.webView.reload()
+            }
         case .back:
             tabs.active?.focused?.webView.goBack()
         case .forward:
@@ -181,7 +214,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 closePalette()
             }
         case .openLocation:
-            openPalette(prefill: tabs.active?.focused?.webView.url?.absoluteString ?? "")
+            openPalette(prefill: tabs.active?.focused?.address?.absoluteString ?? "")
         case .split(let axis):
             split(axis)
         case .focusPane(let direction):
@@ -296,7 +329,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private func close() {
         guard let tab = tabs.active else { return }
         let closing = tab.layout.focused
-        tab.focused?.webView.url.map { closedPages.append($0) }
+        tab.focused?.address.map { closedPages.append($0) }
         if tab.layout.closeFocused() {
             tab.panes.removeValue(forKey: closing)
         } else {
@@ -343,6 +376,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         modules.forEach { $0.configure(configuration) }
         let pane = Pane(configuration: configuration)
         pane.webView.uiDelegate = self
+        pane.webView.navigationDelegate = self
         pane.observations = [
             pane.webView.observe(\.title) { [weak self, weak pane] _, _ in
                 pane.map { self?.record($0) }
@@ -374,6 +408,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     private func showActiveTab() {
         let tab = tabs.active
+        for pane in tab?.panes.values ?? [:].values {
+            guard let page = pane.pending else { continue }
+            pane.pending = nil
+            pane.webView.load(URLRequest(url: page.url))
+        }
         container.show(tab?.layout.frames.compactMap { id, frame in
             tab?.panes[id].map { (view: $0.view, frame: frame) }
         } ?? [])
