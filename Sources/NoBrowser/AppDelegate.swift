@@ -1,12 +1,18 @@
 import AppKit
+import NoBrowserCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var browser: BrowserController?
+    private var menuActions: [PaletteAction] = []
+
+    @objc private func runMenuItem(_ sender: NSMenuItem) {
+        browser?.run(menuActions[sender.tag])
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let browser = BrowserController(modules: [AdBlockModule()])
         self.browser = browser
-        NSApp.mainMenu = mainMenu(for: browser)
+        NSApp.mainMenu = mainMenu()
         browser.window.makeKeyAndOrderFront(nil)
         NSApp.activate()
     }
@@ -15,9 +21,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         true
     }
 
-    private func mainMenu(for browser: BrowserController) -> NSMenu {
+    private func mainMenu() -> NSMenu {
         let app = NSMenu()
-        app.addItem(withTitle: "Ajustes…", action: #selector(BrowserController.openSettings(_:)), keyEquivalent: ",").target = browser
         app.addItem(withTitle: "Ocultar No Browser", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         app.addItem(withTitle: "Salir de No Browser", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
@@ -30,29 +35,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         edit.addItem(withTitle: "Seleccionar todo", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
 
         let navigation = NSMenu(title: "Navegación")
-        let commands: [(String, Selector, String, NSEvent.ModifierFlags)] = [
-            ("Paleta de órdenes", #selector(BrowserController.togglePalette(_:)), "k", .command),
-            ("Abrir dirección", #selector(BrowserController.openLocation(_:)), "l", .command),
-            ("Pestaña nueva", #selector(BrowserController.newTab(_:)), "t", .command),
-            ("Cerrar pestaña", #selector(BrowserController.closeTab(_:)), "w", .command),
-            ("Recargar", #selector(BrowserController.reload(_:)), "r", .command),
-            ("Atrás", #selector(BrowserController.goBack(_:)), "[", .command),
-            ("Adelante", #selector(BrowserController.goForward(_:)), "]", .command),
-            ("Herramientas de desarrollador", #selector(BrowserController.toggleDevTools(_:)), "i", [.command, .option]),
-        ]
-        for (title, action, key, modifiers) in commands {
-            let item = navigation.addItem(withTitle: title, action: action, keyEquivalent: key)
+        let arrows = (left: "\u{F702}", right: "\u{F703}", up: "\u{F700}", down: "\u{F701}")
+        let commands: [(String, String, NSEvent.ModifierFlags, PaletteAction)] = [
+            ("Paleta de órdenes", "k", .command, .togglePalette),
+            ("Abrir dirección", "l", .command, .openLocation),
+            ("Pestaña nueva", "t", .command, .newTab),
+            ("Cerrar", "w", .command, .closeTab),
+            ("Recargar", "r", .command, .reload),
+            ("Atrás", "[", .command, .back),
+            ("Adelante", "]", .command, .forward),
+            ("Herramientas de desarrollador", "i", [.command, .option], .toggleDevTools),
+            ("Ajustes…", ",", .command, .openSettings),
+            ("Dividir a la derecha", "d", .command, .split(.horizontal)),
+            ("Dividir abajo", "d", [.command, .shift], .split(.vertical)),
+            ("Panel de la izquierda", arrows.left, [.command, .option], .focusPane(.left)),
+            ("Panel de la derecha", arrows.right, [.command, .option], .focusPane(.right)),
+            ("Panel de arriba", arrows.up, [.command, .option], .focusPane(.up)),
+            ("Panel de abajo", arrows.down, [.command, .option], .focusPane(.down)),
+            ("Mover divisor a la izquierda", arrows.left, [.command, .control], .resizePane(.left)),
+            ("Mover divisor a la derecha", arrows.right, [.command, .control], .resizePane(.right)),
+            ("Mover divisor arriba", arrows.up, [.command, .control], .resizePane(.up)),
+            ("Mover divisor abajo", arrows.down, [.command, .control], .resizePane(.down)),
+        ] + (0..<9).map { ("Pestaña \($0 + 1)", "\($0 + 1)", .command, .selectTab($0)) }
+        for (title, key, modifiers, action) in commands {
+            let item = navigation.addItem(withTitle: title, action: #selector(runMenuItem(_:)), keyEquivalent: key)
             item.keyEquivalentModifierMask = modifiers
-            item.target = browser
-        }
-        for index in 0..<9 {
-            let item = navigation.addItem(
-                withTitle: "Pestaña \(index + 1)",
-                action: #selector(BrowserController.selectTab(_:)),
-                keyEquivalent: "\(index + 1)"
-            )
-            item.tag = index
-            item.target = browser
+            item.target = self
+            item.tag = menuActions.count
+            menuActions.append(action)
         }
 
         let main = NSMenu()

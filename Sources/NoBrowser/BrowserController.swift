@@ -2,28 +2,6 @@ import AppKit
 import NoBrowserCore
 import WebKit
 
-final class Tab {
-    let webView: WKWebView
-    var observations: [NSKeyValueObservation] = []
-
-    init(configuration: WKWebViewConfiguration) {
-        configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
-        configuration.applicationNameForUserAgent = "Version/26.0 Safari/605.1.15"
-        webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.isInspectable = true
-        webView.translatesAutoresizingMaskIntoConstraints = false
-    }
-
-    var isBlank: Bool {
-        webView.url == nil
-    }
-
-    var title: String {
-        if let title = webView.title, !title.isEmpty { return title }
-        return webView.url?.host() ?? "Pestaña nueva"
-    }
-}
-
 final class BrowserController: NSObject, WKUIDelegate {
     let window = NSWindow(
         contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
@@ -32,7 +10,8 @@ final class BrowserController: NSObject, WKUIDelegate {
         defer: false
     )
     private let strip = TabStripView()
-    private let container = NSView()
+    private let container = PanesView()
+    private var responderObservation: NSKeyValueObservation?
     private let palette = PaletteView()
     private let progressBar = NSView()
     private lazy var progressWidth = progressBar.widthAnchor.constraint(equalToConstant: 0)
@@ -112,39 +91,54 @@ final class BrowserController: NSObject, WKUIDelegate {
             palette.widthAnchor.constraint(equalToConstant: 560),
         ])
         addTab(configuration: WKWebViewConfiguration())
+        responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in self?.followClickedPane() }
     }
 
     func run(_ action: PaletteAction) {
         switch action {
         case .open(let url):
-            tabs.active?.webView.load(URLRequest(url: url))
+            tabs.active?.focused?.webView.load(URLRequest(url: url))
             focusPage()
         case .newTab:
-            newTab(nil)
+            addTab(configuration: WKWebViewConfiguration())
+            openPalette()
         case .closeTab:
-            closeTab(nil)
+            close()
         case .reload:
-            tabs.active?.webView.reload()
+            tabs.active?.focused?.webView.reload()
         case .back:
-            tabs.active?.webView.goBack()
+            tabs.active?.focused?.webView.goBack()
         case .forward:
-            tabs.active?.webView.goForward()
+            tabs.active?.focused?.webView.goForward()
         case .toggleDevTools:
-            toggleDevTools(nil)
+            toggleDevTools()
         case .selectTab(let index):
             tabs.select(index)
             showActiveTab()
         case .module(let id):
             modules.first { $0.commands.contains { $0.id == id } }?.run(id)
         case .openSettings:
-            openSettings(nil)
+            openPalette(settings: true)
         case .changeSetting(let id):
             changeSetting(id)
+        case .togglePalette:
+            if palette.isHidden {
+                openPalette()
+            } else {
+                closePalette()
+            }
+        case .openLocation:
+            openPalette(prefill: tabs.active?.focused?.webView.url?.absoluteString ?? "")
+        case .split(let axis):
+            split(axis)
+        case .focusPane(let direction):
+            tabs.active?.layout.moveFocus(direction)
+            refresh()
+            focusPage()
+        case .resizePane(let direction):
+            tabs.active?.layout.resize(direction)
+            showActiveTab()
         }
-    }
-
-    @objc func openSettings(_ sender: Any?) {
-        openPalette(settings: true)
     }
 
     private func changeSetting(_ id: String) {
@@ -160,54 +154,39 @@ final class BrowserController: NSObject, WKUIDelegate {
         palette.open(prefill: prefill, placeholder: settings ? "Ajustes" : "URL, búsqueda, pestaña u orden…")
     }
 
-    @objc func newTab(_ sender: Any?) {
-        addTab(configuration: WKWebViewConfiguration())
+    private func split(_ axis: SplitAxis) {
+        guard let tab = tabs.active else { return }
+        tab.panes[tab.layout.split(axis)] = makePane(configuration: WKWebViewConfiguration())
+        showActiveTab()
         openPalette()
     }
 
-    @objc func closeTab(_ sender: Any?) {
-        tabs.closeActive()?.webView.removeFromSuperview()
-        if tabs.active == nil {
-            addTab(configuration: WKWebViewConfiguration())
+    private func close() {
+        guard let tab = tabs.active else { return }
+        let closing = tab.layout.focused
+        if tab.layout.closeFocused() {
+            tab.panes.removeValue(forKey: closing)
         } else {
-            showActiveTab()
+            _ = tabs.closeActive()
+            if tabs.active == nil { addTab(configuration: WKWebViewConfiguration()) }
         }
+        showActiveTab()
     }
 
-    @objc func togglePalette(_ sender: Any?) {
-        if palette.isHidden {
-            openPalette()
-        } else {
-            closePalette()
-        }
-    }
-
-    @objc func openLocation(_ sender: Any?) {
-        openPalette(prefill: tabs.active?.webView.url?.absoluteString ?? "")
-    }
-
-    @objc func reload(_ sender: Any?) {
-        run(.reload)
-    }
-
-    @objc func goBack(_ sender: Any?) {
-        run(.back)
-    }
-
-    @objc func goForward(_ sender: Any?) {
-        run(.forward)
-    }
-
-    @objc func selectTab(_ sender: NSMenuItem) {
-        run(.selectTab(sender.tag))
-    }
-
-    @objc func toggleDevTools(_ sender: Any?) {
+    private func toggleDevTools() {
         let accessor = Selector(("_inspector"))
-        guard let webView = tabs.active?.webView, webView.responds(to: accessor),
+        guard let webView = tabs.active?.focused?.webView, webView.responds(to: accessor),
               let inspector = webView.perform(accessor)?.takeUnretainedValue() as? NSObject else { return }
         let visible = inspector.value(forKey: "isVisible") as? Bool ?? false
         inspector.perform(Selector((visible ? "close" : "show")))
+    }
+
+    private func followClickedPane() {
+        guard let tab = tabs.active, let responder = window.firstResponder as? NSView,
+              let clicked = tab.panes.first(where: { responder.isDescendant(of: $0.value.webView) })?.key,
+              clicked != tab.layout.focused else { return }
+        tab.layout.focus(clicked)
+        refresh()
     }
 
     func webView(
@@ -220,40 +199,44 @@ final class BrowserController: NSObject, WKUIDelegate {
     }
 
     @discardableResult
-    private func addTab(configuration: WKWebViewConfiguration) -> Tab {
-        modules.forEach { $0.configure(configuration) }
-        let tab = Tab(configuration: configuration)
-        tab.webView.uiDelegate = self
-        tab.observations = [
-            tab.webView.observe(\.title) { [weak self] _, _ in self?.refresh() },
-            tab.webView.observe(\.url) { [weak self] _, _ in self?.refresh() },
-            tab.webView.observe(\.estimatedProgress) { [weak self] _, _ in self?.refresh() },
-            tab.webView.observe(\.isLoading) { [weak self] _, _ in self?.refresh() },
-        ]
-        tabs.append(tab)
+    private func addTab(configuration: WKWebViewConfiguration) -> Pane {
+        let pane = makePane(configuration: configuration)
+        tabs.append(Tab(pane: pane))
         showActiveTab()
-        return tab
+        return pane
+    }
+
+    private func makePane(configuration: WKWebViewConfiguration) -> Pane {
+        modules.forEach { $0.configure(configuration) }
+        let pane = Pane(configuration: configuration)
+        pane.webView.uiDelegate = self
+        pane.observations = [
+            pane.webView.observe(\.title) { [weak self] _, _ in self?.refresh() },
+            pane.webView.observe(\.url) { [weak self] _, _ in self?.refresh() },
+            pane.webView.observe(\.estimatedProgress) { [weak self] _, _ in self?.refresh() },
+            pane.webView.observe(\.isLoading) { [weak self] _, _ in self?.refresh() },
+        ]
+        return pane
     }
 
     private func showActiveTab() {
-        container.subviews.forEach { $0.removeFromSuperview() }
-        if let webView = tabs.active?.webView {
-            container.addSubview(webView)
-            NSLayoutConstraint.activate([
-                webView.topAnchor.constraint(equalTo: container.topAnchor),
-                webView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-                webView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                webView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            ])
-        }
+        let tab = tabs.active
+        container.show(tab?.layout.frames.compactMap { id, frame in
+            tab?.panes[id].map { (view: $0.view, frame: frame) }
+        } ?? [])
         refresh()
         if palette.isHidden { focusPage() }
     }
 
     private func refresh() {
         strip.update(titles: tabs.tabs.map(\.title), active: tabs.activeIndex)
-        tabs.active.map { $0.webView.isHidden = $0.isBlank }
-        let webView = tabs.active?.webView
+        if let tab = tabs.active {
+            for (id, pane) in tab.panes {
+                pane.webView.isHidden = pane.isBlank
+                pane.view.alphaValue = tab.panes.count == 1 || id == tab.layout.focused ? 1 : 0.6
+            }
+        }
+        let webView = tabs.active?.focused?.webView
         progressBar.isHidden = webView?.isLoading != true
         progressWidth.animator().constant = container.bounds.width * (webView?.estimatedProgress ?? 0)
     }
@@ -264,6 +247,6 @@ final class BrowserController: NSObject, WKUIDelegate {
     }
 
     private func focusPage() {
-        window.makeFirstResponder(tabs.active.flatMap { $0.isBlank ? nil : $0.webView })
+        window.makeFirstResponder(tabs.active?.focused.flatMap { $0.isBlank ? nil : $0.webView })
     }
 }

@@ -70,6 +70,12 @@ struct PaletteTests {
         #expect(found.map(\.action) == [.changeSetting("adblock.enabled")])
     }
 
+    @Test("dividir la pestaña también se puede lanzar desde la paleta")
+    func splitsAreReachableFromThePalette() {
+        #expect(Palette.items(query: "dividir a la derecha", tabTitles: []).first?.action == .split(.horizontal))
+        #expect(Palette.items(query: "dividir abajo", tabTitles: []).first?.action == .split(.vertical))
+    }
+
     @Test("solo las nueve primeras pestañas anuncian atajo porque no hay ⌘10")
     func onlyFirstNineTabsShowShortcut() {
         let items = Palette.items(query: "", tabTitles: Array(repeating: "t", count: 10))

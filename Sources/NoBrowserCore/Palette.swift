@@ -12,6 +12,11 @@ public enum PaletteAction: Equatable {
     case module(String)
     case openSettings
     case changeSetting(String)
+    case togglePalette
+    case openLocation
+    case split(SplitAxis)
+    case focusPane(Direction)
+    case resizePane(Direction)
 }
 
 public struct Setting: Equatable {
@@ -78,6 +83,8 @@ public enum Palette {
             PaletteItem(title: "Adelante", shortcut: "⌘]", action: .forward),
             PaletteItem(title: "Herramientas de desarrollador", shortcut: "⌥⌘I", action: .toggleDevTools),
             PaletteItem(title: "Ajustes", shortcut: "⌘,", action: .openSettings),
+            PaletteItem(title: "Dividir a la derecha", shortcut: "⌘D", action: .split(.horizontal)),
+            PaletteItem(title: "Dividir abajo", shortcut: "⇧⌘D", action: .split(.vertical)),
         ] + moduleCommands.map {
             PaletteItem(title: $0.title, shortcut: "", action: .module($0.id))
         } + tabTitles.enumerated().map { index, title in
