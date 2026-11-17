@@ -97,6 +97,17 @@ const en = {
         ],
       },
       {
+        title: "Without the mouse",
+        items: [
+          { keys: ["f"], text: "Label every link and button, then type a label to press it" },
+          { keys: ["F"], text: "The same, opening the link in a new tab" },
+          { keys: ["j", "k"], text: "Scroll down and up" },
+          { keys: ["h", "l"], text: "Scroll left and right" },
+          { keys: ["d", "u"], text: "Half a page down and up" },
+          { keys: ["gg", "G"], text: "Top and bottom of the page" },
+        ],
+      },
+      {
         title: "Window",
         items: [
           { keys: ["⌘↩"], text: "Full screen" },
@@ -228,6 +239,17 @@ const es: Content = {
           { keys: ["⌃⌘←", "⌃⌘→", "⌃⌘↑", "⌃⌘↓"], text: "Mover el divisor" },
           { keys: ["⌃⌘="], text: "Igualar los paneles" },
           { keys: ["⇧⌘↩"], text: "Ampliar el panel o restaurarlo" },
+        ],
+      },
+      {
+        title: "Sin ratón",
+        items: [
+          { keys: ["f"], text: "Etiquetar cada enlace y botón, y escribir una etiqueta para pulsarlo" },
+          { keys: ["F"], text: "Lo mismo, abriendo el enlace en una pestaña nueva" },
+          { keys: ["j", "k"], text: "Bajar y subir" },
+          { keys: ["h", "l"], text: "Mover a izquierda y derecha" },
+          { keys: ["d", "u"], text: "Media página abajo y arriba" },
+          { keys: ["gg", "G"], text: "Principio y final de la página" },
         ],
       },
       {

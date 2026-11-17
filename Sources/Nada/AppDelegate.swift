@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let bindings = KeyBindings(config: (try? String(contentsOf: Config.file, encoding: .utf8)) ?? "")
         bindings.errors.forEach { NSLog("%@ %@", Config.file.path, $0) }
-        let browser = BrowserController(modules: [AdBlockModule()], bindings: bindings)
+        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule()], bindings: bindings)
         self.browser = browser
         NSApp.mainMenu = mainMenu(bindings)
         browser.window.makeKeyAndOrderFront(nil)
