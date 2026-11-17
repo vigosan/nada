@@ -52,6 +52,9 @@ final class BrowserController: NSObject, WKUIDelegate {
         super.init()
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
+        window.toolbar = NSToolbar()
+        window.toolbarStyle = .unifiedCompact
+        window.titlebarSeparatorStyle = .none
         window.backgroundColor = Theme.window
         window.appearance = NSAppearance(named: .darkAqua)
         window.center()
@@ -86,12 +89,17 @@ final class BrowserController: NSObject, WKUIDelegate {
             view.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview(view)
         }
+        let titlebar = NSLayoutGuide()
+        root.addLayoutGuide(titlebar)
+        let content = window.contentLayoutGuide as! NSLayoutGuide
         NSLayoutConstraint.activate([
-            strip.topAnchor.constraint(equalTo: root.topAnchor, constant: 6),
+            titlebar.topAnchor.constraint(equalTo: root.topAnchor),
+            titlebar.bottomAnchor.constraint(equalTo: content.topAnchor),
+            strip.centerYAnchor.constraint(equalTo: titlebar.centerYAnchor),
             strip.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 78),
             strip.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -8),
             strip.heightAnchor.constraint(equalToConstant: 28),
-            container.topAnchor.constraint(equalTo: strip.bottomAnchor, constant: 6),
+            container.topAnchor.constraint(equalTo: content.topAnchor),
             container.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             container.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             container.bottomAnchor.constraint(equalTo: root.bottomAnchor),
