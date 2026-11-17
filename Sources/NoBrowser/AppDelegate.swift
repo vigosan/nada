@@ -4,7 +4,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var browser: BrowserController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let browser = BrowserController(modules: [])
+        let browser = BrowserController(modules: [AdBlockModule()])
         self.browser = browser
         NSApp.mainMenu = mainMenu(for: browser)
         browser.window.makeKeyAndOrderFront(nil)
