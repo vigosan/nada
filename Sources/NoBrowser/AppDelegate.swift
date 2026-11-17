@@ -38,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         edit.addItem(withTitle: "Seleccionar todo", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
 
         let navigation = NSMenu(title: "Navegación")
-        let arrows = ["left": "\u{F702}", "right": "\u{F703}", "up": "\u{F700}", "down": "\u{F701}"]
+        let arrows = ["left": "\u{F702}", "right": "\u{F703}", "up": "\u{F700}", "down": "\u{F701}", "return": "\r"]
         let masks: [(KeyCombo.Modifiers, NSEvent.ModifierFlags)] = [
             (.command, .command), (.shift, .shift), (.option, .option), (.control, .control),
         ]

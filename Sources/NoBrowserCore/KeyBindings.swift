@@ -16,7 +16,9 @@ public struct KeyCombo: Equatable {
 
     public init?(_ text: String) {
         let parts = text.lowercased().split(separator: "+", omittingEmptySubsequences: false).map(String.init)
-        guard let key = parts.last, key.count == 1 || Self.arrows[key] != nil else { return nil }
+        guard let typed = parts.last else { return nil }
+        let key = typed == "enter" ? "return" : typed
+        guard key.count == 1 || Self.namedKeys[key] != nil else { return nil }
         var modifiers: Modifiers = []
         for name in parts.dropLast() {
             guard let modifier = Self.modifierNames[name] else { return nil }
@@ -29,10 +31,10 @@ public struct KeyCombo: Equatable {
 
     public var label: String {
         let symbols: [(Modifiers, String)] = [(.control, "⌃"), (.option, "⌥"), (.shift, "⇧"), (.command, "⌘")]
-        return symbols.filter { modifiers.contains($0.0) }.map(\.1).joined() + (Self.arrows[key] ?? key.uppercased())
+        return symbols.filter { modifiers.contains($0.0) }.map(\.1).joined() + (Self.namedKeys[key] ?? key.uppercased())
     }
 
-    private static let arrows = ["left": "←", "right": "→", "up": "↑", "down": "↓"]
+    private static let namedKeys = ["left": "←", "right": "→", "up": "↑", "down": "↓", "return": "↩"]
     private static let modifierNames: [String: Modifiers] = [
         "cmd": .command, "command": .command, "super": .command,
         "ctrl": .control, "control": .control,
@@ -66,6 +68,8 @@ public struct Command: Sendable {
         Command(name: "resize_right", title: "Mover divisor a la derecha", action: .resizePane(.right)),
         Command(name: "resize_up", title: "Mover divisor arriba", action: .resizePane(.up)),
         Command(name: "resize_down", title: "Mover divisor abajo", action: .resizePane(.down)),
+        Command(name: "zoom_pane", title: "Ampliar o restaurar panel", action: .zoomPane),
+        Command(name: "fullscreen", title: "Pantalla completa", action: .toggleFullscreen),
     ] + (1...9).map { Command(name: "goto_tab:\($0)", title: "Pestaña \($0)", action: .selectTab($0 - 1)) }
 }
 
@@ -121,5 +125,6 @@ public struct KeyBindings {
         ("cmd+opt+up", "focus_up"), ("cmd+opt+down", "focus_down"),
         ("cmd+ctrl+left", "resize_left"), ("cmd+ctrl+right", "resize_right"),
         ("cmd+ctrl+up", "resize_up"), ("cmd+ctrl+down", "resize_down"),
+        ("cmd+shift+return", "zoom_pane"), ("cmd+return", "fullscreen"),
     ] + (1...9).map { ("cmd+\($0)", "goto_tab:\($0)") }
 }

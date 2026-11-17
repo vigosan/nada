@@ -100,6 +100,33 @@ struct PaneLayoutTests {
         #expect(layout.frames[0]!.width >= 0.1)
     }
 
+    @Test("ampliar deja solo el panel con foco a pantalla entera y volver a pulsar lo restaura")
+    func zoomShowsOnlyTheFocusedPane() {
+        var layout = PaneLayout()
+        let right = layout.split(.horizontal)
+        layout.toggleZoom()
+        #expect(layout.frames == [right: CGRect(x: 0, y: 0, width: 1, height: 1)])
+        layout.toggleZoom()
+        #expect(layout.frames.count == 2)
+        #expect(layout.frames[right] == CGRect(x: 0.5, y: 0, width: 0.5, height: 1))
+    }
+
+    @Test("ir a otro panel o dividir deshace la ampliación para no perder de vista dónde está el foco")
+    func changingPanesLeavesZoom() {
+        var layout = PaneLayout()
+        _ = layout.split(.horizontal)
+        layout.toggleZoom()
+        layout.moveFocus(.left)
+        #expect(layout.focused == 0)
+        #expect(layout.frames.count == 2)
+        layout.toggleZoom()
+        _ = layout.split(.vertical)
+        #expect(layout.frames.count == 3)
+        layout.toggleZoom()
+        #expect(layout.closeFocused() == true)
+        #expect(layout.frames.count == 2)
+    }
+
     @Test("un clic en otro panel le da el foco")
     func focusCanBeSetDirectly() {
         var layout = PaneLayout()

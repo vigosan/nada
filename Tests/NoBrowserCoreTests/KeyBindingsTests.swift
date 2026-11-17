@@ -14,6 +14,14 @@ struct KeyBindingsTests {
         #expect(bindings.errors.isEmpty)
     }
 
+    @Test("pantalla completa y ampliar panel usan intro como en Ghostty")
+    func returnKeyBindings() {
+        let bindings = KeyBindings(config: "")
+        #expect(bindings.label(for: .toggleFullscreen) == "⌘↩")
+        #expect(bindings.label(for: .zoomPane) == "⇧⌘↩")
+        #expect(KeyCombo("cmd+enter") == KeyCombo("cmd+return"))
+    }
+
     @Test("una línea keybind añade un atajo propio y la paleta lo anuncia")
     func configAddsABinding() {
         let bindings = KeyBindings(config: "keybind = ctrl+h=focus_left")

@@ -17,6 +17,8 @@ public enum PaletteAction: Equatable, Sendable {
     case split(SplitAxis)
     case focusPane(Direction)
     case resizePane(Direction)
+    case toggleFullscreen
+    case zoomPane
 }
 
 public struct Setting: Equatable {

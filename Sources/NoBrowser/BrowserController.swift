@@ -2,7 +2,7 @@ import AppKit
 import NoBrowserCore
 import WebKit
 
-final class BrowserController: NSObject, WKUIDelegate {
+final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     let window = NSWindow(
         contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
         styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -40,6 +40,7 @@ final class BrowserController: NSObject, WKUIDelegate {
         window.appearance = NSAppearance(named: .darkAqua)
         window.center()
         window.setFrameAutosaveName("NoBrowser")
+        window.delegate = self
 
         let root = NSView()
         root.wantsLayer = true
@@ -136,12 +137,24 @@ final class BrowserController: NSObject, WKUIDelegate {
             split(axis)
         case .focusPane(let direction):
             tabs.active?.layout.moveFocus(direction)
-            refresh()
-            focusPage()
+            showActiveTab()
         case .resizePane(let direction):
             tabs.active?.layout.resize(direction)
             showActiveTab()
+        case .zoomPane:
+            tabs.active?.layout.toggleZoom()
+            showActiveTab()
+        case .toggleFullscreen:
+            window.toggleFullScreen(nil)
         }
+    }
+
+    func windowWillEnterFullScreen(_ notification: Notification) {
+        strip.isHidden = true
+    }
+
+    func windowWillExitFullScreen(_ notification: Notification) {
+        strip.isHidden = false
     }
 
     private func changeSetting(_ id: String) {

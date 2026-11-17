@@ -25,10 +25,15 @@ public struct PaneLayout {
     public private(set) var focused = 0
     private var root = Node.leaf(0)
     private var nextID = 1
+    private var zoomed = false
 
     public init() {}
 
     public var frames: [Int: CGRect] {
+        zoomed ? [focused: CGRect(x: 0, y: 0, width: 1, height: 1)] : allFrames
+    }
+
+    private var allFrames: [Int: CGRect] {
         var frames: [Int: CGRect] = [:]
         Self.collect(root, in: CGRect(x: 0, y: 0, width: 1, height: 1), into: &frames)
         return frames
@@ -38,6 +43,7 @@ public struct PaneLayout {
         let id = nextID
         nextID += 1
         root = Self.splitting(root, leaf: focused, axis: axis, new: id)
+        zoomed = false
         focused = id
         return id
     }
@@ -45,17 +51,20 @@ public struct PaneLayout {
     public mutating func closeFocused() -> Bool {
         guard case .split = root, let kept = Self.removing(focused, from: root), let next = kept.next else { return false }
         root = kept.node
+        zoomed = false
         focused = next
         return true
     }
 
     public mutating func focus(_ id: Int) {
-        guard frames[id] != nil else { return }
+        guard allFrames[id] != nil, id != focused else { return }
         focused = id
+        zoomed = false
     }
 
     public mutating func moveFocus(_ direction: Direction) {
-        let frames = frames
+        zoomed = false
+        let frames = allFrames
         guard let from = frames[focused] else { return }
         let tolerance = 0.0001
         let neighbours = frames.filter { id, frame in
@@ -74,6 +83,10 @@ public struct PaneLayout {
         }
         let nearest = neighbours.min { (offset($0.value), $0.key) < (offset($1.value), $1.key) }
         focused = nearest?.key ?? focused
+    }
+
+    public mutating func toggleZoom() {
+        zoomed.toggle()
     }
 
     public mutating func resize(_ direction: Direction) {
