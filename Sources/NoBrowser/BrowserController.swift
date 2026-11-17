@@ -35,8 +35,10 @@ final class BrowserController: NSObject, WKUIDelegate {
     private let container = NSView()
     private let palette = PaletteView()
     private var tabs = TabList<Tab>()
+    private let modules: [BrowserModule]
 
-    override init() {
+    init(modules: [BrowserModule]) {
+        self.modules = modules
         super.init()
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
@@ -49,7 +51,13 @@ final class BrowserController: NSObject, WKUIDelegate {
         root.wantsLayer = true
         window.contentView = root
         palette.isHidden = true
-        palette.tabTitles = { [unowned self] in tabs.tabs.map(\.title) }
+        palette.itemsForQuery = { [unowned self] query in
+            Palette.items(
+                query: query,
+                tabTitles: tabs.tabs.map(\.title),
+                moduleCommands: self.modules.flatMap(\.commands)
+            )
+        }
         palette.onClose = { [unowned self] in closePalette() }
         palette.onRun = { [unowned self] action in
             closePalette()
@@ -95,6 +103,8 @@ final class BrowserController: NSObject, WKUIDelegate {
         case .selectTab(let index):
             tabs.select(index)
             showActiveTab()
+        case .module(let id):
+            modules.first { $0.commands.contains { $0.id == id } }?.run(id)
         }
     }
 
@@ -159,6 +169,7 @@ final class BrowserController: NSObject, WKUIDelegate {
 
     @discardableResult
     private func addTab(configuration: WKWebViewConfiguration) -> Tab {
+        modules.forEach { $0.configure(configuration) }
         let tab = Tab(configuration: configuration)
         tab.webView.uiDelegate = self
         tab.observations = [

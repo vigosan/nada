@@ -9,6 +9,17 @@ public enum PaletteAction: Equatable {
     case forward
     case toggleDevTools
     case selectTab(Int)
+    case module(String)
+}
+
+public struct ModuleCommand: Equatable {
+    public let id: String
+    public let title: String
+
+    public init(id: String, title: String) {
+        self.id = id
+        self.title = title
+    }
 }
 
 public struct PaletteItem: Equatable {
@@ -18,9 +29,9 @@ public struct PaletteItem: Equatable {
 }
 
 public enum Palette {
-    public static func items(query: String, tabTitles: [String]) -> [PaletteItem] {
+    public static func items(query: String, tabTitles: [String], moduleCommands: [ModuleCommand] = []) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let commands = commands(tabTitles: tabTitles)
+        let commands = commands(tabTitles: tabTitles, moduleCommands: moduleCommands)
         guard !text.isEmpty, let url = AddressResolver.url(for: text) else { return commands }
         let matches = commands.filter {
             $0.title.range(of: text, options: [.caseInsensitive, .diacriticInsensitive]) != nil
@@ -31,7 +42,7 @@ public enum Palette {
         return matches + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
     }
 
-    private static func commands(tabTitles: [String]) -> [PaletteItem] {
+    private static func commands(tabTitles: [String], moduleCommands: [ModuleCommand]) -> [PaletteItem] {
         [
             PaletteItem(title: "Pestaña nueva", shortcut: "⌘T", action: .newTab),
             PaletteItem(title: "Cerrar pestaña", shortcut: "⌘W", action: .closeTab),
@@ -39,7 +50,9 @@ public enum Palette {
             PaletteItem(title: "Atrás", shortcut: "⌘[", action: .back),
             PaletteItem(title: "Adelante", shortcut: "⌘]", action: .forward),
             PaletteItem(title: "Herramientas de desarrollador", shortcut: "⌥⌘I", action: .toggleDevTools),
-        ] + tabTitles.enumerated().map { index, title in
+        ] + moduleCommands.map {
+            PaletteItem(title: $0.title, shortcut: "", action: .module($0.id))
+        } + tabTitles.enumerated().map { index, title in
             PaletteItem(title: "Ir a pestaña: \(title)", shortcut: index < 9 ? "⌘\(index + 1)" : "", action: .selectTab(index))
         }
     }

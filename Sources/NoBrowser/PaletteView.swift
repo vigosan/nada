@@ -2,7 +2,7 @@ import AppKit
 import NoBrowserCore
 
 final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
-    var tabTitles: () -> [String] = { [] }
+    var itemsForQuery: (String) -> [PaletteItem] = { _ in [] }
     var onRun: (PaletteAction) -> Void = { _ in }
     var onClose: () -> Void = {}
 
@@ -89,7 +89,7 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
     }
 
     private func reload() {
-        items = Array(Palette.items(query: field.stringValue, tabTitles: tabTitles()).prefix(9))
+        items = Array(itemsForQuery(field.stringValue).prefix(9))
         render()
     }
 

@@ -37,6 +37,16 @@ struct PaletteTests {
         #expect(items.map(\.action) == [.open(AddressResolver.url(for: "receta paella")!)])
     }
 
+    @Test("un módulo añade sus órdenes a la paleta sin que la paleta lo conozca")
+    func moduleCommandsAreListedAndSearchable() {
+        let command = ModuleCommand(id: "adblock.toggle", title: "Desactivar bloqueo de anuncios")
+        let all = Palette.items(query: "", tabTitles: ["Docs"], moduleCommands: [command])
+        #expect(all.contains { $0.action == .module("adblock.toggle") })
+        #expect(all.last?.action == .selectTab(0))
+        let found = Palette.items(query: "bloqueo", tabTitles: [], moduleCommands: [command])
+        #expect(found.first?.action == .module("adblock.toggle"))
+    }
+
     @Test("solo las nueve primeras pestañas anuncian atajo porque no hay ⌘10")
     func onlyFirstNineTabsShowShortcut() {
         let items = Palette.items(query: "", tabTitles: Array(repeating: "t", count: 10))
