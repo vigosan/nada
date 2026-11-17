@@ -25,6 +25,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private enum Mode {
         case commands
         case settings
+        case shortcuts
         case find
     }
 
@@ -63,6 +64,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         palette.itemsForQuery = { [unowned self] query in
             switch mode {
             case .settings: return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings)
+            case .shortcuts: return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings, section: .shortcuts)
             case .find: return Palette.findItems(query: query)
             case .commands: break
             }
@@ -75,7 +77,13 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 history: history
             )
         }
-        palette.onClose = { [unowned self] in closePalette() }
+        palette.onClose = { [unowned self] in
+            if mode == .shortcuts {
+                openPalette(mode: .settings)
+            } else {
+                closePalette()
+            }
+        }
         palette.onRun = { [unowned self] action in
             if case .changeSetting(let id) = action {
                 changeSetting(id)
@@ -84,6 +92,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             }
             if case .find = action {
                 run(action)
+                return
+            }
+            if case .openSettingsSection = action {
+                openPalette(mode: .shortcuts)
                 return
             }
             closePalette()
@@ -199,6 +211,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 try? KeyBindings.template.write(to: Config.file, atomically: true, encoding: .utf8)
             }
             NSWorkspace.shared.open(Config.file)
+        case .openSettingsSection:
+            openPalette(mode: .shortcuts)
         case .clearHistory:
             history.clear()
             saveHistory()
@@ -230,6 +244,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         self.mode = mode
         let placeholders: [Mode: String] = [
             .commands: "URL, búsqueda, pestaña u orden…", .settings: "Ajustes", .find: "Buscar en la página",
+            .shortcuts: "Ajustes › Atajos de teclado",
         ]
         palette.open(prefill: prefill, placeholder: placeholders[mode] ?? "")
     }

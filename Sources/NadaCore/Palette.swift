@@ -32,6 +32,11 @@ public enum PaletteAction: Equatable, Sendable {
     case find(String, backwards: Bool)
     case clearHistory
     case editKeyBindings
+    case openSettingsSection(SettingsSection)
+}
+
+public enum SettingsSection: Equatable, Sendable {
+    case shortcuts
 }
 
 public struct Setting: Equatable {
@@ -92,13 +97,16 @@ public enum Palette {
     public static func settingsItems(
         query: String,
         settings: [Setting],
-        bindings: KeyBindings = KeyBindings(config: "")
+        bindings: KeyBindings = KeyBindings(config: ""),
+        section: SettingsSection? = nil
     ) -> [PaletteItem] {
-        let items = settings.map { PaletteItem(title: $0.title, shortcut: $0.value, action: .changeSetting($0.id)) }
-            + [PaletteItem(title: "Editar atajos de teclado", shortcut: "~/.config/nada/config", action: .editKeyBindings)]
-            + Command.all.map { PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: .editKeyBindings) }
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        return text.isEmpty ? items : matching(items, text)
+        let shortcuts = [PaletteItem(title: "Editar atajos de teclado", shortcut: "~/.config/nada/config", action: .editKeyBindings)]
+            + Command.all.map { PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: .editKeyBindings) }
+        if section == .shortcuts { return text.isEmpty ? shortcuts : matching(shortcuts, text) }
+        let root = settings.map { PaletteItem(title: $0.title, shortcut: $0.value, action: .changeSetting($0.id)) }
+            + [PaletteItem(title: "Atajos de teclado", shortcut: "›", action: .openSettingsSection(.shortcuts))]
+        return text.isEmpty ? root : matching(root + shortcuts, text)
     }
 
     public static func findItems(query: String) -> [PaletteItem] {

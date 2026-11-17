@@ -83,15 +83,27 @@ struct PaletteTests {
         #expect(items.map(\.action) == [.find("paella", backwards: false), .find("paella", backwards: true)])
     }
 
-    @Test("los ajustes enseñan cada atajo con su tecla actual, para no tener que abrir un archivo para recordarlo")
-    func settingsListEveryShortcut() {
+    @Test("la raíz de los ajustes solo tiene los ajustes generales y la entrada a cada sección, para no enterrarlos entre atajos")
+    func settingsRootStaysShort() {
+        let settings = [Setting(id: "search.engine", title: "Buscador", value: "DuckDuckGo")]
+        let root = Palette.settingsItems(query: "", settings: settings)
+        #expect(root.map(\.action) == [.changeSetting("search.engine"), .openSettingsSection(.shortcuts)])
+        #expect(root.last?.shortcut == "›")
+    }
+
+    @Test("la sección de atajos enseña cada orden con su tecla actual")
+    func shortcutsSectionListsEveryShortcut() {
         let bindings = KeyBindings(config: "keybind = ctrl+h=focus_left")
-        let items = Palette.settingsItems(query: "", settings: [], bindings: bindings)
+        let items = Palette.settingsItems(query: "", settings: [], bindings: bindings, section: .shortcuts)
         #expect(items.first?.action == .editKeyBindings)
         #expect(items.first { $0.title == "Ir al panel de la izquierda" }?.shortcut == "⌃H")
-        #expect(items.first { $0.title == "Dividir a la derecha" }?.shortcut == "⌘D")
         #expect(items.count == Command.all.count + 1)
-        #expect(items.allSatisfy { $0.action == .editKeyBindings })
+    }
+
+    @Test("buscar desde la raíz también encuentra atajos, sin tener que entrar antes en su sección")
+    func rootSearchReachesIntoSections() {
+        let found = Palette.settingsItems(query: "dividir abajo", settings: [])
+        #expect(found.map(\.title) == ["Dividir abajo"])
     }
 
     @Test("la lista se desplaza con la selección, así se llega a cualquier fila aunque no quepan todas")
