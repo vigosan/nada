@@ -4,12 +4,29 @@ import Testing
 
 @Suite("La paleta pone primero lo que la persona quiere hacer al pulsar intro")
 struct PaletteTests {
-    @Test("vacía muestra todas las órdenes y las pestañas abiertas para descubrirlas")
-    func emptyQueryListsEverything() {
-        let items = Palette.items(query: "", tabTitles: ["Docs"])
+    @Test("vacía enseña primero las pestañas abiertas, que es a lo que más se va, y después las órdenes")
+    func emptyQueryStartsWithOpenTabs() {
+        let items = Palette.items(query: "", tabTitles: ["Docs", "Correo"])
+        #expect(items.prefix(2).map(\.action) == [.selectTab(0), .selectTab(1)])
         #expect(items.map(\.action).contains(.newTab))
         #expect(items.map(\.action).contains(.toggleDevTools))
-        #expect(items.last?.action == .selectTab(0))
+    }
+
+    @Test("la pestaña en la que ya estás no se ofrece: ir a ella no hace nada")
+    func currentTabIsNotOffered() {
+        let items = Palette.items(query: "", tabTitles: ["Docs", "Correo"], activeTab: 0)
+        #expect(items.first?.action == .selectTab(1))
+        #expect(!items.map(\.action).contains(.selectTab(0)))
+    }
+
+    @Test("lo que solo tiene sentido como atajo no ocupa sitio en la paleta")
+    func shortcutOnlyCommandsStayOutOfThePalette() {
+        let actions = Palette.items(query: "", tabTitles: []).map(\.action)
+        for direction in [Direction.left, .right, .up, .down] {
+            #expect(!actions.contains(.focusPane(direction)))
+            #expect(!actions.contains(.resizePane(direction)))
+        }
+        #expect(!actions.contains(.togglePalette))
     }
 
     @Test("una dirección se abre con intro aunque también coincida con una orden")
@@ -42,7 +59,7 @@ struct PaletteTests {
         let command = ModuleCommand(id: "adblock.toggle", title: "Desactivar bloqueo de anuncios")
         let all = Palette.items(query: "", tabTitles: ["Docs"], moduleCommands: [command])
         #expect(all.contains { $0.action == .module("adblock.toggle") })
-        #expect(all.last?.action == .selectTab(0))
+        #expect(all.first?.action == .selectTab(0))
         let found = Palette.items(query: "bloqueo", tabTitles: [], moduleCommands: [command])
         #expect(found.first?.action == .module("adblock.toggle"))
     }

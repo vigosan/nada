@@ -88,6 +88,7 @@ public enum Palette {
     public static func items(
         query: String,
         tabTitles: [String],
+        activeTab: Int? = nil,
         moduleCommands: [ModuleCommand] = [],
         searchEngine: SearchEngine = .duckDuckGo,
         bindings: KeyBindings = KeyBindings(config: ""),
@@ -95,7 +96,7 @@ public enum Palette {
         bookmarks: Bookmarks = Bookmarks()
     ) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let commands = commands(tabTitles: tabTitles, moduleCommands: moduleCommands, bindings: bindings)
+        let commands = commands(tabTitles: tabTitles, activeTab: activeTab, moduleCommands: moduleCommands, bindings: bindings)
         guard !text.isEmpty, let url = AddressResolver.url(for: text, searchEngine: searchEngine) else { return commands }
         let matches = matching(commands, text)
         let marked = Array(bookmarks.matches(for: text).prefix(5))
@@ -199,17 +200,23 @@ public enum Palette {
         items.filter { $0.title.range(of: text, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
     }
 
-    private static func commands(tabTitles: [String], moduleCommands: [ModuleCommand], bindings: KeyBindings) -> [PaletteItem] {
-        let hidden: [PaletteAction] = [.togglePalette, .openLocation]
-        return Command.all.filter { command in
-            if case .selectTab = command.action { return false }
-            return !hidden.contains(command.action)
+    private static func commands(
+        tabTitles: [String],
+        activeTab: Int?,
+        moduleCommands: [ModuleCommand],
+        bindings: KeyBindings
+    ) -> [PaletteItem] {
+        tabTitles.enumerated().filter { $0.offset != activeTab }.map { index, title in
+            PaletteItem(title: "Ir a pestaña: \(title)", shortcut: bindings.label(for: .selectTab(index)), action: .selectTab(index))
+        } + Command.all.filter { command in
+            switch command.action {
+            case .selectTab, .focusPane, .resizePane, .togglePalette, .openLocation: false
+            default: true
+            }
         }.map {
             PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: $0.action)
         } + moduleCommands.map {
             PaletteItem(title: $0.title, shortcut: "", action: .module($0.id))
-        } + tabTitles.enumerated().map { index, title in
-            PaletteItem(title: "Ir a pestaña: \(title)", shortcut: bindings.label(for: .selectTab(index)), action: .selectTab(index))
         }
     }
 }

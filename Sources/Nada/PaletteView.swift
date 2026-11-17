@@ -5,6 +5,7 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
     var itemsForQuery: (String) -> [PaletteItem] = { _ in [] }
     var onRun: (PaletteAction) -> Void = { _ in }
     var onClose: () -> Void = {}
+    var onDismiss: () -> Void = {}
 
     private let field = NSTextField()
     private let rows = NSStackView()
@@ -59,6 +60,13 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
         reload()
         isHidden = false
         window?.makeFirstResponder(field)
+    }
+
+    func controlTextDidEndEditing(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !isHidden, window?.firstResponder !== field.currentEditor() else { return }
+            onDismiss()
+        }
     }
 
     func controlTextDidChange(_ notification: Notification) {

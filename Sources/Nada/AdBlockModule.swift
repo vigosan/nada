@@ -11,10 +11,7 @@ final class AdBlockModule: BrowserModule {
     }
 
     var commands: [ModuleCommand] {
-        [ModuleCommand(
-            id: "adblock.toggle",
-            title: enabled ? "Desactivar bloqueo de anuncios" : "Activar bloqueo de anuncios"
-        )]
+        []
     }
 
     func configure(_ configuration: WKWebViewConfiguration) {
@@ -25,9 +22,7 @@ final class AdBlockModule: BrowserModule {
         [Setting(id: "adblock.enabled", title: "Bloqueo de anuncios", value: enabled ? "Activado" : "Desactivado")]
     }
 
-    func run(_ commandID: String) {
-        toggle()
-    }
+    func run(_ commandID: String) {}
 
     func changeSetting(_ settingID: String) {
         toggle()

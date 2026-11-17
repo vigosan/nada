@@ -19,6 +19,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private let palette = PaletteView()
     private let progressBar = NSView()
     private lazy var progressWidth = progressBar.widthAnchor.constraint(equalToConstant: 0)
+    private var centeredPalette: [NSLayoutConstraint] = []
+    private var cornerPalette: [NSLayoutConstraint] = []
+    private var historySave: DispatchWorkItem?
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
     private let bindings: KeyBindings
@@ -80,6 +83,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             return Palette.items(
                 query: query,
                 tabTitles: tabs.tabs.map(\.title),
+                activeTab: tabs.activeIndex,
                 moduleCommands: self.modules.flatMap(\.commands),
                 searchEngine: searchEngine,
                 bindings: self.bindings,
@@ -96,6 +100,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 closePalette()
             }
         }
+        palette.onDismiss = { [unowned self] in palette.isHidden = true }
+        strip.onSelect = { [unowned self] index in run(.selectTab(index)) }
         palette.onRun = { [unowned self] action in
             if case .changeSetting(let id) = action {
                 changeSetting(id)
@@ -141,10 +147,17 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             progressBar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             progressBar.heightAnchor.constraint(equalToConstant: 2),
             progressWidth,
+        ])
+        centeredPalette = [
             palette.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             palette.topAnchor.constraint(equalTo: root.topAnchor, constant: 120),
             palette.widthAnchor.constraint(equalToConstant: 560),
-        ])
+        ]
+        cornerPalette = [
+            palette.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -16),
+            palette.topAnchor.constraint(equalTo: content.topAnchor, constant: 12),
+            palette.widthAnchor.constraint(equalToConstant: 340),
+        ]
         restoreSession()
         responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in self?.followClickedPane() }
     }
@@ -153,7 +166,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         tabs.tabs.flatMap(\.panes.values).first { $0.webView === webView }
     }
 
-    func saveSession() {
+    func saveState() {
+        historySave?.cancel()
+        save(history, to: historyFile)
         let pages = tabs.tabs.map { tab in
             tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title) } }
         }
@@ -169,6 +184,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         }
         guard let session, !session.tabs.isEmpty else {
             addTab(configuration: WKWebViewConfiguration())
+            openPalette()
             return
         }
         tabs.select(session.active)
@@ -304,6 +320,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     private func openPalette(prefill: String = "", mode: Mode = .commands) {
         self.mode = mode
+        NSLayoutConstraint.deactivate(mode == .find ? centeredPalette : cornerPalette)
+        NSLayoutConstraint.activate(mode == .find ? cornerPalette : centeredPalette)
         let placeholder = switch mode {
         case .commands: "URL, búsqueda, pestaña u orden…"
         case .find: "Buscar en la página"
@@ -394,7 +412,14 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
               let title = pane.webView.title, !title.isEmpty else { return }
         history.record(url: url, title: title, at: Date(), newVisit: pane.recordedURL != url)
         pane.recordedURL = url
-        save(history, to: historyFile)
+        historySave?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            let snapshot = history
+            DispatchQueue.global(qos: .utility).async { self.save(snapshot, to: self.historyFile) }
+        }
+        historySave = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: work)
     }
 
     private func save(_ value: some Encodable, to file: URL) {
@@ -425,12 +450,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         if let tab = tabs.active {
             for (id, pane) in tab.panes {
                 pane.webView.isHidden = pane.isBlank
-                pane.view.alphaValue = tab.panes.count == 1 || id == tab.layout.focused ? 1 : 0.6
+                let focused = id == tab.layout.focused
+                pane.view.alphaValue = tab.panes.count == 1 || focused ? 1 : 0.6
+                pane.view.layer?.borderColor = Theme.accent.withAlphaComponent(0.5).cgColor
+                pane.view.layer?.borderWidth = tab.panes.count > 1 && focused ? 1 : 0
             }
         }
         let webView = tabs.active?.focused?.webView
         progressBar.isHidden = webView?.isLoading != true
-        progressWidth.animator().constant = container.bounds.width * (webView?.estimatedProgress ?? 0)
+        progressWidth.constant = container.bounds.width * (webView?.estimatedProgress ?? 0)
     }
 
     private func closePalette() {
