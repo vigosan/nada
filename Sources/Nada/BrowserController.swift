@@ -27,6 +27,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var mode = Mode.commands
     private var lastFind = ""
     private var closedPages: [URL] = []
+    private let historyFile = URL.applicationSupportDirectory.appending(path: "Nada/history.json")
+    private lazy var history = (try? JSONDecoder().decode(History.self, from: Data(contentsOf: historyFile))) ?? History()
     private var searchEngine: SearchEngine {
         get { UserDefaults.standard.string(forKey: "search.engine").flatMap(SearchEngine.init) ?? .duckDuckGo }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: "search.engine") }
@@ -65,7 +67,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 tabTitles: tabs.tabs.map(\.title),
                 moduleCommands: self.modules.flatMap(\.commands),
                 searchEngine: searchEngine,
-                bindings: self.bindings
+                bindings: self.bindings,
+                history: history
             )
         }
         palette.onClose = { [unowned self] in closePalette() }
@@ -186,6 +189,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             run(lastFind.isEmpty ? .startFind : .find(lastFind, backwards: false))
         case .findPrevious:
             run(lastFind.isEmpty ? .startFind : .find(lastFind, backwards: true))
+        case .clearHistory:
+            history.clear()
+            saveHistory()
         case .find(let text, let backwards):
             lastFind = text
             let configuration = WKFindConfiguration()
@@ -281,12 +287,32 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         let pane = Pane(configuration: configuration)
         pane.webView.uiDelegate = self
         pane.observations = [
-            pane.webView.observe(\.title) { [weak self] _, _ in self?.refresh() },
+            pane.webView.observe(\.title) { [weak self, weak pane] _, _ in
+                pane.map { self?.record($0) }
+                self?.refresh()
+            },
             pane.webView.observe(\.url) { [weak self] _, _ in self?.refresh() },
             pane.webView.observe(\.estimatedProgress) { [weak self] _, _ in self?.refresh() },
             pane.webView.observe(\.isLoading) { [weak self] _, _ in self?.refresh() },
         ]
         return pane
+    }
+
+    private func record(_ pane: Pane) {
+        guard let url = pane.webView.url, ["http", "https"].contains(url.scheme),
+              let title = pane.webView.title, !title.isEmpty else { return }
+        history.record(url: url, title: title, at: Date(), newVisit: pane.recordedURL != url)
+        pane.recordedURL = url
+        saveHistory()
+    }
+
+    private func saveHistory() {
+        do {
+            try FileManager.default.createDirectory(at: historyFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try JSONEncoder().encode(history).write(to: historyFile, options: .atomic)
+        } catch {
+            NSLog("No se pudo guardar el historial: %@", "\(error)")
+        }
     }
 
     private func showActiveTab() {

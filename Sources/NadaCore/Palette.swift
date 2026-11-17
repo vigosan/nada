@@ -30,6 +30,7 @@ public enum PaletteAction: Equatable, Sendable {
     case findNext
     case findPrevious
     case find(String, backwards: Bool)
+    case clearHistory
 }
 
 public struct Setting: Equatable {
@@ -66,16 +67,20 @@ public enum Palette {
         tabTitles: [String],
         moduleCommands: [ModuleCommand] = [],
         searchEngine: SearchEngine = .duckDuckGo,
-        bindings: KeyBindings = KeyBindings(config: "")
+        bindings: KeyBindings = KeyBindings(config: ""),
+        history: History = History()
     ) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let commands = commands(tabTitles: tabTitles, moduleCommands: moduleCommands, bindings: bindings)
         guard !text.isEmpty, let url = AddressResolver.url(for: text, searchEngine: searchEngine) else { return commands }
         let matches = matching(commands, text)
+        let visited = history.matches(for: text)
+        let strong = visited.strong.map(item)
+        let weak = visited.weak.map(item)
         if AddressResolver.isAddress(text) {
-            return [PaletteItem(title: "Abrir \(text)", shortcut: "↵", action: .open(url))] + matches
+            return strong + [PaletteItem(title: "Abrir \(text)", shortcut: "↵", action: .open(url))] + matches + weak
         }
-        return matches + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
+        return strong + matches + weak + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
     }
 
     public static func settingsItems(query: String, settings: [Setting]) -> [PaletteItem] {
@@ -91,6 +96,14 @@ public enum Palette {
             PaletteItem(title: "Siguiente coincidencia", shortcut: "↵", action: .find(text, backwards: false)),
             PaletteItem(title: "Coincidencia anterior", shortcut: "", action: .find(text, backwards: true)),
         ]
+    }
+
+    private static func item(for entry: HistoryEntry) -> PaletteItem {
+        PaletteItem(
+            title: entry.title.isEmpty ? entry.url.absoluteString : entry.title,
+            shortcut: entry.url.host() ?? "",
+            action: .open(entry.url)
+        )
     }
 
     private static func matching(_ items: [PaletteItem], _ text: String) -> [PaletteItem] {

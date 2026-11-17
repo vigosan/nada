@@ -6,6 +6,7 @@ final class Pane {
     let view = NSView()
     let webView: WKWebView
     var observations: [NSKeyValueObservation] = []
+    var recordedURL: URL?
 
     init(configuration: WKWebViewConfiguration) {
         configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")

@@ -82,6 +82,7 @@ public struct Command: Sendable {
         Command(name: "find", title: "Buscar en la página", action: .startFind),
         Command(name: "find_next", title: "Siguiente coincidencia", action: .findNext),
         Command(name: "find_previous", title: "Coincidencia anterior", action: .findPrevious),
+        Command(name: "clear_history", title: "Borrar historial", action: .clearHistory),
     ] + (1...9).map { Command(name: "goto_tab:\($0)", title: "Pestaña \($0)", action: .selectTab($0 - 1)) }
 }
 
