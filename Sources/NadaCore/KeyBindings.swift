@@ -131,7 +131,7 @@ public struct KeyBindings {
 
     private static let defaults: [(String, String)] = [
         ("cmd+k", "palette"), ("cmd+l", "open_location"), ("cmd+t", "new_tab"), ("cmd+w", "close"),
-        ("cmd+r", "reload"), ("cmd+[", "back"), ("cmd+]", "forward"), ("cmd+opt+i", "dev_tools"),
+        ("cmd+r", "reload"), ("cmd+[", "back"), ("cmd+]", "forward"), ("cmd+left", "back"), ("cmd+right", "forward"), ("cmd+opt+i", "dev_tools"),
         ("cmd+,", "settings"), ("cmd+d", "split_right"), ("cmd+shift+d", "split_down"),
         ("cmd+opt+left", "focus_left"), ("cmd+opt+right", "focus_right"),
         ("cmd+opt+up", "focus_up"), ("cmd+opt+down", "focus_down"),

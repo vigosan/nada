@@ -6,7 +6,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuActions: [PaletteAction] = []
 
     @objc private func runMenuItem(_ sender: NSMenuItem) {
-        browser?.run(menuActions[sender.tag])
+        let action = menuActions[sender.tag]
+        if [.back, .forward].contains(action), let editor = browser?.window.firstResponder as? NSTextView, let event = NSApp.currentEvent {
+            editor.keyDown(with: event)
+            return
+        }
+        browser?.run(action)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

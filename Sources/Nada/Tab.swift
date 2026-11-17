@@ -12,6 +12,7 @@ final class Pane {
         configuration.applicationNameForUserAgent = "Version/26.0 Safari/605.1.15"
         webView = WKWebView(frame: view.bounds, configuration: configuration)
         webView.isInspectable = true
+        webView.allowsBackForwardNavigationGestures = true
         webView.autoresizingMask = [.width, .height]
         view.wantsLayer = true
         view.layer?.backgroundColor = Theme.window.cgColor

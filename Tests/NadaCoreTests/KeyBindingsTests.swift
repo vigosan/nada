@@ -35,6 +35,16 @@ struct KeyBindingsTests {
         #expect(bindings.errors.isEmpty)
     }
 
+    @Test("atrás y adelante responden a las flechas además de a los corchetes, como en Brave")
+    func historyFollowsBrave() {
+        let bindings = KeyBindings(config: "")
+        #expect(bindings.action(for: KeyCombo("cmd+left")!) == .back)
+        #expect(bindings.action(for: KeyCombo("cmd+right")!) == .forward)
+        #expect(bindings.action(for: KeyCombo("cmd+[")!) == .back)
+        #expect(bindings.action(for: KeyCombo("cmd+]")!) == .forward)
+        #expect(bindings.label(for: .back) == "⌘←")
+    }
+
     @Test("la tecla igual se puede reasignar aunque también separe la orden")
     func equalsKeyCanBeBound() {
         let bindings = KeyBindings(config: "keybind = cmd+opt+==zoom_in")
