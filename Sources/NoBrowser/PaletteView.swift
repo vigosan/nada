@@ -27,7 +27,6 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
         field.focusRingType = .none
         field.font = .monospacedSystemFont(ofSize: 15, weight: .regular)
         field.textColor = Theme.text
-        field.placeholderString = "URL, búsqueda, pestaña u orden…"
         field.delegate = self
         field.translatesAutoresizingMaskIntoConstraints = false
 
@@ -53,7 +52,8 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func open(prefill: String) {
+    func open(prefill: String, placeholder: String) {
+        field.placeholderString = placeholder
         field.stringValue = prefill
         selected = 0
         reload()
@@ -88,7 +88,7 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
         render()
     }
 
-    private func reload() {
+    func reload() {
         items = Array(itemsForQuery(field.stringValue).prefix(9))
         render()
     }

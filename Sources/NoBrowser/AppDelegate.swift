@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func mainMenu(for browser: BrowserController) -> NSMenu {
         let app = NSMenu()
+        app.addItem(withTitle: "Ajustes…", action: #selector(BrowserController.openSettings(_:)), keyEquivalent: ",").target = browser
         app.addItem(withTitle: "Ocultar No Browser", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         app.addItem(withTitle: "Salir de No Browser", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 

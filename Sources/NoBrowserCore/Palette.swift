@@ -10,6 +10,20 @@ public enum PaletteAction: Equatable {
     case toggleDevTools
     case selectTab(Int)
     case module(String)
+    case openSettings
+    case changeSetting(String)
+}
+
+public struct Setting: Equatable {
+    public let id: String
+    public let title: String
+    public let value: String
+
+    public init(id: String, title: String, value: String) {
+        self.id = id
+        self.title = title
+        self.value = value
+    }
 }
 
 public struct ModuleCommand: Equatable {
@@ -29,17 +43,30 @@ public struct PaletteItem: Equatable {
 }
 
 public enum Palette {
-    public static func items(query: String, tabTitles: [String], moduleCommands: [ModuleCommand] = []) -> [PaletteItem] {
+    public static func items(
+        query: String,
+        tabTitles: [String],
+        moduleCommands: [ModuleCommand] = [],
+        searchEngine: SearchEngine = .duckDuckGo
+    ) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let commands = commands(tabTitles: tabTitles, moduleCommands: moduleCommands)
-        guard !text.isEmpty, let url = AddressResolver.url(for: text) else { return commands }
-        let matches = commands.filter {
-            $0.title.range(of: text, options: [.caseInsensitive, .diacriticInsensitive]) != nil
-        }
+        guard !text.isEmpty, let url = AddressResolver.url(for: text, searchEngine: searchEngine) else { return commands }
+        let matches = matching(commands, text)
         if AddressResolver.isAddress(text) {
             return [PaletteItem(title: "Abrir \(text)", shortcut: "↵", action: .open(url))] + matches
         }
         return matches + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
+    }
+
+    public static func settingsItems(query: String, settings: [Setting]) -> [PaletteItem] {
+        let items = settings.map { PaletteItem(title: $0.title, shortcut: $0.value, action: .changeSetting($0.id)) }
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? items : matching(items, text)
+    }
+
+    private static func matching(_ items: [PaletteItem], _ text: String) -> [PaletteItem] {
+        items.filter { $0.title.range(of: text, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
     }
 
     private static func commands(tabTitles: [String], moduleCommands: [ModuleCommand]) -> [PaletteItem] {
@@ -50,6 +77,7 @@ public enum Palette {
             PaletteItem(title: "Atrás", shortcut: "⌘[", action: .back),
             PaletteItem(title: "Adelante", shortcut: "⌘]", action: .forward),
             PaletteItem(title: "Herramientas de desarrollador", shortcut: "⌥⌘I", action: .toggleDevTools),
+            PaletteItem(title: "Ajustes", shortcut: "⌘,", action: .openSettings),
         ] + moduleCommands.map {
             PaletteItem(title: $0.title, shortcut: "", action: .module($0.id))
         } + tabTitles.enumerated().map { index, title in

@@ -4,7 +4,7 @@ import WebKit
 final class AdBlockModule: BrowserModule {
     private let content = WKUserContentController()
     private var lists: [WKContentRuleList] = []
-    private var enabled = true
+    private var enabled = !UserDefaults.standard.bool(forKey: "adblock.disabled")
 
     init() {
         load()
@@ -21,8 +21,21 @@ final class AdBlockModule: BrowserModule {
         configuration.userContentController = content
     }
 
+    var settings: [Setting] {
+        [Setting(id: "adblock.enabled", title: "Bloqueo de anuncios", value: enabled ? "Activado" : "Desactivado")]
+    }
+
     func run(_ commandID: String) {
+        toggle()
+    }
+
+    func changeSetting(_ settingID: String) {
+        toggle()
+    }
+
+    private func toggle() {
         enabled.toggle()
+        UserDefaults.standard.set(!enabled, forKey: "adblock.disabled")
         if enabled {
             lists.forEach(content.add)
         } else {

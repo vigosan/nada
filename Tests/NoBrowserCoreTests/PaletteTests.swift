@@ -47,6 +47,29 @@ struct PaletteTests {
         #expect(found.first?.action == .module("adblock.toggle"))
     }
 
+    @Test("los ajustes se abren desde la paleta además de con su atajo")
+    func settingsAreReachableFromThePalette() {
+        #expect(Palette.items(query: "ajustes", tabTitles: []).first?.action == .openSettings)
+    }
+
+    @Test("buscar desde la paleta usa el buscador elegido")
+    func paletteSearchUsesTheChosenEngine() {
+        let items = Palette.items(query: "receta paella", tabTitles: [], searchEngine: .google)
+        #expect(items.last?.action == .open(URL(string: "https://www.google.com/search?q=receta%20paella")!))
+    }
+
+    @Test("cada ajuste muestra su valor actual para saber qué cambiará al pulsar intro")
+    func settingsShowTheirCurrentValue() {
+        let settings = [
+            Setting(id: "search.engine", title: "Buscador", value: "DuckDuckGo"),
+            Setting(id: "adblock.enabled", title: "Bloqueo de anuncios", value: "Activado"),
+        ]
+        let all = Palette.settingsItems(query: "", settings: settings)
+        #expect(all.map(\.shortcut) == ["DuckDuckGo", "Activado"])
+        let found = Palette.settingsItems(query: "bloq", settings: settings)
+        #expect(found.map(\.action) == [.changeSetting("adblock.enabled")])
+    }
+
     @Test("solo las nueve primeras pestañas anuncian atajo porque no hay ⌘10")
     func onlyFirstNineTabsShowShortcut() {
         let items = Palette.items(query: "", tabTitles: Array(repeating: "t", count: 10))

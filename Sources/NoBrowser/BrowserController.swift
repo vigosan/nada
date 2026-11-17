@@ -38,6 +38,14 @@ final class BrowserController: NSObject, WKUIDelegate {
     private lazy var progressWidth = progressBar.widthAnchor.constraint(equalToConstant: 0)
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
+    private var showingSettings = false
+    private var searchEngine: SearchEngine {
+        get { UserDefaults.standard.string(forKey: "search.engine").flatMap(SearchEngine.init) ?? .duckDuckGo }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: "search.engine") }
+    }
+    private var settings: [Setting] {
+        [Setting(id: "search.engine", title: "Buscador", value: searchEngine.title)] + modules.flatMap(\.settings)
+    }
 
     init(modules: [BrowserModule]) {
         self.modules = modules
@@ -54,14 +62,21 @@ final class BrowserController: NSObject, WKUIDelegate {
         window.contentView = root
         palette.isHidden = true
         palette.itemsForQuery = { [unowned self] query in
-            Palette.items(
+            if showingSettings { return Palette.settingsItems(query: query, settings: settings) }
+            return Palette.items(
                 query: query,
                 tabTitles: tabs.tabs.map(\.title),
-                moduleCommands: self.modules.flatMap(\.commands)
+                moduleCommands: self.modules.flatMap(\.commands),
+                searchEngine: searchEngine
             )
         }
         palette.onClose = { [unowned self] in closePalette() }
         palette.onRun = { [unowned self] action in
+            if case .changeSetting(let id) = action {
+                changeSetting(id)
+                palette.reload()
+                return
+            }
             closePalette()
             run(action)
         }
@@ -113,12 +128,33 @@ final class BrowserController: NSObject, WKUIDelegate {
             showActiveTab()
         case .module(let id):
             modules.first { $0.commands.contains { $0.id == id } }?.run(id)
+        case .openSettings:
+            openSettings(nil)
+        case .changeSetting(let id):
+            changeSetting(id)
         }
+    }
+
+    @objc func openSettings(_ sender: Any?) {
+        openPalette(settings: true)
+    }
+
+    private func changeSetting(_ id: String) {
+        if id == "search.engine" {
+            searchEngine = searchEngine.next
+        } else {
+            modules.first { $0.settings.contains { $0.id == id } }?.changeSetting(id)
+        }
+    }
+
+    private func openPalette(prefill: String = "", settings: Bool = false) {
+        showingSettings = settings
+        palette.open(prefill: prefill, placeholder: settings ? "Ajustes" : "URL, búsqueda, pestaña u orden…")
     }
 
     @objc func newTab(_ sender: Any?) {
         addTab(configuration: WKWebViewConfiguration())
-        palette.open(prefill: "")
+        openPalette()
     }
 
     @objc func closeTab(_ sender: Any?) {
@@ -132,14 +168,14 @@ final class BrowserController: NSObject, WKUIDelegate {
 
     @objc func togglePalette(_ sender: Any?) {
         if palette.isHidden {
-            palette.open(prefill: "")
+            openPalette()
         } else {
             closePalette()
         }
     }
 
     @objc func openLocation(_ sender: Any?) {
-        palette.open(prefill: tabs.active?.webView.url?.absoluteString ?? "")
+        openPalette(prefill: tabs.active?.webView.url?.absoluteString ?? "")
     }
 
     @objc func reload(_ sender: Any?) {

@@ -38,6 +38,18 @@ struct AddressResolverTests {
         #expect(AddressResolver.url(for: "a&b = c+d")?.query() == "q=a%26b%20%3D%20c%2Bd")
     }
 
+    @Test("la búsqueda va al buscador elegido en ajustes, no a uno impuesto")
+    func searchUsesTheChosenEngine() {
+        #expect(AddressResolver.url(for: "paella", searchEngine: .google)?.absoluteString == "https://www.google.com/search?q=paella")
+        #expect(AddressResolver.url(for: "paella", searchEngine: .brave)?.absoluteString == "https://search.brave.com/search?q=paella")
+    }
+
+    @Test("cambiar de buscador recorre todos y vuelve al primero para no quedarse atascado")
+    func enginesCycle() {
+        #expect(SearchEngine.duckDuckGo.next == .google)
+        #expect(SearchEngine.brave.next == .duckDuckGo)
+    }
+
     @Test("sin texto no hay a dónde ir")
     func emptyInputGoesNowhere() {
         #expect(AddressResolver.url(for: "   ") == nil)
