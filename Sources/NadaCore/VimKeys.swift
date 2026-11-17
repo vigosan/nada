@@ -69,21 +69,35 @@ public enum VimKeys {
         const root = host.attachShadow({ mode: "open" });
         const style = document.createElement("style");
         style.textContent =
-          "span{position:fixed;font:700 11px/1.2 ui-monospace,Menlo,monospace;text-transform:uppercase;" +
-          "color:#13141c;background:#6cc4f2;border-radius:3px;padding:1px 4px;box-shadow:0 1px 3px rgba(0,0,0,.45)}" +
+          "span{position:fixed;font:700 10px/1.3 ui-monospace,Menlo,monospace;text-transform:uppercase;" +
+          "color:#13141c;background:#6cc4f2;border-radius:2px;padding:0 3px;box-shadow:0 0 0 1px rgba(19,20,28,.4)}" +
           "span[hidden]{display:none}";
         root.append(style);
         const names = labels(targets.length);
+        document.documentElement.append(host);
+        const placed = [];
         const items = targets.map((el, index) => {
-          const rect = el.getBoundingClientRect();
+          const rect = el.getClientRects()[0] || el.getBoundingClientRect();
           const tag = document.createElement("span");
           tag.textContent = names[index];
-          tag.style.left = Math.max(0, rect.left) + "px";
-          tag.style.top = Math.max(0, rect.top) + "px";
           root.append(tag);
+          const top = Math.max(0, rect.top - 1);
+          const bottom = top + tag.offsetHeight;
+          let left = Math.max(0, rect.left);
+          for (let moved = true; moved; ) {
+            moved = false;
+            for (const other of placed) {
+              if (left < other.right && other.left < left + tag.offsetWidth && top < other.bottom && other.top < bottom) {
+                left = other.right + 1;
+                moved = true;
+              }
+            }
+          }
+          tag.style.left = left + "px";
+          tag.style.top = top + "px";
+          placed.push({ left, top, right: left + tag.offsetWidth, bottom });
           return { el, tag, label: names[index] };
         });
-        document.documentElement.append(host);
         hints = { host, items, typed: "", newTab };
       };
 

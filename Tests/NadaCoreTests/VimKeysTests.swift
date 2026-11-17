@@ -75,6 +75,27 @@ struct VimKeysTests {
         #expect(Set(labels.map(\.count)) == [2])
     }
 
+    @Test("las etiquetas de enlaces pegados no se pisan, porque una etiqueta tapada no se puede leer")
+    func hintsDoNotOverlap() async throws {
+        let crowded = (0..<12).map { "<a href='#c\($0)' style='display:inline-block;width:8px;height:8px'></a>" }.joined()
+        let webView = try await page("<div style='white-space:nowrap'>\(crowded)</div>")
+        try await press("f", in: webView)
+        let overlaps: Double = try #require(await evaluate(
+            """
+            (() => {
+              const rects = [...document.getElementById('nada-hints').shadowRoot.querySelectorAll('span')].map((tag) => tag.getBoundingClientRect());
+              let count = 0;
+              rects.forEach((a, i) => rects.slice(i + 1).forEach((b) => {
+                if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) count++;
+              }));
+              return count;
+            })()
+            """,
+            in: webView
+        ))
+        #expect(overlaps == 0)
+    }
+
     @Test("escribir una etiqueta pulsa ese enlace y quita las etiquetas")
     func typingALabelClicksItsLink() async throws {
         let webView = try await page(links)
