@@ -33,6 +33,11 @@ public enum PaletteAction: Equatable, Sendable {
     case clearHistory
     case editKeyBindings
     case openSettingsSection(SettingsSection)
+    case bookmarkPage
+    case openBookmarks
+    case saveBookmark(category: String)
+    case removeBookmark
+    case openBookmarkCategory(String)
 }
 
 public enum SettingsSection: Equatable, Sendable {
@@ -86,19 +91,23 @@ public enum Palette {
         moduleCommands: [ModuleCommand] = [],
         searchEngine: SearchEngine = .duckDuckGo,
         bindings: KeyBindings = KeyBindings(config: ""),
-        history: History = History()
+        history: History = History(),
+        bookmarks: Bookmarks = Bookmarks()
     ) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let commands = commands(tabTitles: tabTitles, moduleCommands: moduleCommands, bindings: bindings)
         guard !text.isEmpty, let url = AddressResolver.url(for: text, searchEngine: searchEngine) else { return commands }
         let matches = matching(commands, text)
+        let marked = Array(bookmarks.matches(for: text).prefix(5))
         let visited = history.matches(for: text)
-        let strong = visited.strong.map(item)
-        let weak = visited.weak.map(item)
+        let unmarked: (HistoryEntry) -> Bool = { entry in !marked.contains { $0.url == entry.url } }
+        let strong = visited.strong.filter(unmarked).map(item)
+        let weak = visited.weak.filter(unmarked).map(item)
+        let starred = marked.map(starredItem)
         if AddressResolver.isAddress(text) {
-            return strong + [PaletteItem(title: "Abrir \(text)", shortcut: "↵", action: .open(url))] + matches + weak
+            return strong + [PaletteItem(title: "Abrir \(text)", shortcut: "↵", action: .open(url))] + starred + matches + weak
         }
-        return strong + matches + weak + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
+        return strong + starred + matches + weak + [PaletteItem(title: "Buscar «\(text)»", shortcut: "↵", action: .open(url))]
     }
 
     public static func window(selected: Int, count: Int, size: Int) -> Range<Int> {
@@ -141,6 +150,41 @@ public enum Palette {
             PaletteItem(title: "Siguiente coincidencia", shortcut: "↵", action: .find(text, backwards: false)),
             PaletteItem(title: "Coincidencia anterior", shortcut: "", action: .find(text, backwards: true)),
         ]
+    }
+
+    public static func bookmarkSaveItems(query: String, bookmarks: Bookmarks, page: URL) -> [PaletteItem] {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let removal = bookmarks.bookmark(for: page).map {
+            [PaletteItem(title: "Quitar de marcadores", shortcut: $0.category, action: .removeBookmark)]
+        } ?? []
+        let categories = [Bookmarks.uncategorized] + bookmarks.categories.filter { $0 != Bookmarks.uncategorized }
+        let choices = categories.map { PaletteItem(title: $0, shortcut: "", action: .saveBookmark(category: $0)) }
+        guard !text.isEmpty else { return removal + choices }
+        let exists = categories.contains {
+            $0.compare(text, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }
+        let creation = exists ? [] : [
+            PaletteItem(title: "Crear categoría «\(text)»", shortcut: "↵", action: .saveBookmark(category: text)),
+        ]
+        return matching(removal + choices, text) + creation
+    }
+
+    public static func bookmarkItems(query: String, bookmarks: Bookmarks, category: String?) -> [PaletteItem] {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let category {
+            let items = bookmarks.items(in: category).map {
+                PaletteItem(title: $0.title, shortcut: $0.url.host() ?? "", action: .open($0.url))
+            }
+            return text.isEmpty ? items : matching(items, text)
+        }
+        guard text.isEmpty else { return bookmarks.matches(for: text).map(starredItem) }
+        return bookmarks.categories.map {
+            PaletteItem(title: $0, shortcut: "\(bookmarks.items(in: $0).count) ›", action: .openBookmarkCategory($0))
+        }
+    }
+
+    private static func starredItem(for bookmark: Bookmark) -> PaletteItem {
+        PaletteItem(title: bookmark.title, shortcut: "★ \(bookmark.category)", action: .open(bookmark.url))
     }
 
     private static func item(for entry: HistoryEntry) -> PaletteItem {

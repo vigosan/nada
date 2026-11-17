@@ -25,6 +25,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private enum Mode: Equatable {
         case commands
         case settings(SettingsSection?)
+        case saveBookmark
+        case bookmarks(String?)
         case find
     }
 
@@ -33,6 +35,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var closedPages: [URL] = []
     private let historyFile = URL.applicationSupportDirectory.appending(path: "Nada/history.json")
     private lazy var history = (try? JSONDecoder().decode(History.self, from: Data(contentsOf: historyFile))) ?? History()
+    private let bookmarksFile = URL.applicationSupportDirectory.appending(path: "Nada/bookmarks.json")
+    private lazy var bookmarks = (try? JSONDecoder().decode(Bookmarks.self, from: Data(contentsOf: bookmarksFile))) ?? Bookmarks()
     private var searchEngine: SearchEngine {
         get { UserDefaults.standard.string(forKey: "search.engine").flatMap(SearchEngine.init) ?? .duckDuckGo }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: "search.engine") }
@@ -65,6 +69,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             case .settings(let section):
                 return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings, section: section)
             case .find: return Palette.findItems(query: query)
+            case .bookmarks(let category): return Palette.bookmarkItems(query: query, bookmarks: bookmarks, category: category)
+            case .saveBookmark:
+                guard let page = tabs.active?.focused?.webView.url else { return [] }
+                return Palette.bookmarkSaveItems(query: query, bookmarks: bookmarks, page: page)
             case .commands: break
             }
             return Palette.items(
@@ -73,12 +81,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 moduleCommands: self.modules.flatMap(\.commands),
                 searchEngine: searchEngine,
                 bindings: self.bindings,
-                history: history
+                history: history,
+                bookmarks: bookmarks
             )
         }
         palette.onClose = { [unowned self] in
             if case .settings(let section?) = mode {
                 openPalette(mode: .settings(section.parent))
+            } else if case .bookmarks(.some) = mode {
+                openPalette(mode: .bookmarks(nil))
             } else {
                 closePalette()
             }
@@ -95,6 +106,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             }
             if case .openSettingsSection(let section) = action {
                 openPalette(mode: .settings(section))
+                return
+            }
+            if case .openBookmarkCategory(let category) = action {
+                openPalette(mode: .bookmarks(category))
                 return
             }
             closePalette()
@@ -212,9 +227,24 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             NSWorkspace.shared.open(Config.file)
         case .openSettingsSection(let section):
             openPalette(mode: .settings(section))
+        case .bookmarkPage:
+            guard tabs.active?.focused?.isBlank == false else { return }
+            openPalette(mode: .saveBookmark)
+        case .openBookmarks:
+            openPalette(mode: .bookmarks(nil))
+        case .openBookmarkCategory(let category):
+            openPalette(mode: .bookmarks(category))
+        case .saveBookmark(let category):
+            guard let pane = tabs.active?.focused, let url = pane.webView.url else { return }
+            bookmarks.save(url: url, title: pane.title, category: category)
+            save(bookmarks, to: bookmarksFile)
+        case .removeBookmark:
+            guard let url = tabs.active?.focused?.webView.url else { return }
+            bookmarks.remove(url: url)
+            save(bookmarks, to: bookmarksFile)
         case .clearHistory:
             history.clear()
-            saveHistory()
+            save(history, to: historyFile)
         case .find(let text, let backwards):
             lastFind = text
             let configuration = WKFindConfiguration()
@@ -245,6 +275,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .commands: "URL, búsqueda, pestaña u orden…"
         case .find: "Buscar en la página"
         case .settings(let section): section?.path ?? "Ajustes"
+        case .saveBookmark: "Guardar en marcadores: elige o escribe una categoría"
+        case .bookmarks(let category): category.map { "Marcadores › \($0)" } ?? "Marcadores"
         }
         palette.open(prefill: prefill, placeholder: placeholder)
     }
@@ -328,15 +360,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
               let title = pane.webView.title, !title.isEmpty else { return }
         history.record(url: url, title: title, at: Date(), newVisit: pane.recordedURL != url)
         pane.recordedURL = url
-        saveHistory()
+        save(history, to: historyFile)
     }
 
-    private func saveHistory() {
+    private func save(_ value: some Encodable, to file: URL) {
         do {
-            try FileManager.default.createDirectory(at: historyFile.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try JSONEncoder().encode(history).write(to: historyFile, options: .atomic)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try JSONEncoder().encode(value).write(to: file, options: .atomic)
         } catch {
-            NSLog("No se pudo guardar el historial: %@", "\(error)")
+            NSLog("No se pudo guardar %@: %@", file.lastPathComponent, "\(error)")
         }
     }
 
