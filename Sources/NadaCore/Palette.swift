@@ -44,6 +44,7 @@ public enum PaletteAction: Equatable, Sendable {
     case download(Int)
     case openDownloadedFile(Int)
     case revealDownload(Int)
+    case cancelDownload(Int)
 }
 
 public enum SettingsSection: Equatable, Sendable {
@@ -193,15 +194,21 @@ public enum Palette {
     public static func downloadItems(query: String, downloads: DownloadList, selected: Int?) -> [PaletteItem] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if let selected {
-            guard downloads.items.first(where: { $0.id == selected })?.state == .finished else { return [] }
-            return [
-                PaletteItem(title: "Abrir", shortcut: "↵", action: .openDownloadedFile(selected)),
-                PaletteItem(title: "Mostrar en Finder", shortcut: "", action: .revealDownload(selected)),
-            ]
+            switch downloads.items.first(where: { $0.id == selected })?.state {
+            case .running:
+                return [PaletteItem(title: "Cancelar descarga", shortcut: "↵", action: .cancelDownload(selected))]
+            case .finished:
+                return [
+                    PaletteItem(title: "Abrir", shortcut: "↵", action: .openDownloadedFile(selected)),
+                    PaletteItem(title: "Mostrar en Finder", shortcut: "", action: .revealDownload(selected)),
+                ]
+            default:
+                return []
+            }
         }
         let items = downloads.items.map { download in
             let state = switch download.state {
-            case .running(let fraction): "\(Int(fraction * 100)) %"
+            case .running(let fraction): "\(Int(fraction * 100)) % ›"
             case .finished: "Hecha ›"
             case .failed: "Falló"
             case .cancelled: "Cancelada"

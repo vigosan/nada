@@ -30,8 +30,15 @@ extension BrowserController: WKDownloadDelegate {
     }
 
     func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
-        let file = settle(download, as: .failed).flatMap { downloadFiles[$0] }
-        ask("No se pudo descargar \(file?.lastPathComponent ?? "el archivo")", detail: error.localizedDescription, buttons: ["Aceptar"]) { _ in }
+        guard let id = settle(download, as: .failed) else { return }
+        ask("No se pudo descargar \(downloadFiles[id]?.lastPathComponent ?? "el archivo")", detail: error.localizedDescription, buttons: ["Aceptar"]) { _ in }
+    }
+
+    func cancelDownload(_ id: Int) {
+        guard let download = activeDownloads.values.first(where: { $0.id == id })?.download else { return }
+        _ = settle(download, as: .cancelled)
+        let file = downloadFiles[id]
+        download.cancel { _ in file.map { try? FileManager.default.removeItem(at: $0) } }
     }
 
     private func downloadProgressed(_ id: Int, to fraction: Double) {

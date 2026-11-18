@@ -45,7 +45,7 @@ struct DownloadsTests {
         list.update(half, to: .running(0.437))
         let items = Palette.downloadItems(query: "", downloads: list, selected: nil)
         #expect(items.map(\.title) == ["video.mp4", "informe.pdf"])
-        #expect(items.map(\.shortcut) == ["43 %", "Hecha ›"])
+        #expect(items.map(\.shortcut) == ["43 % ›", "Hecha ›"])
         #expect(items.map(\.action) == [.download(half), .download(done)])
         #expect(Palette.downloadItems(query: "INFOR", downloads: list, selected: nil).map(\.title) == ["informe.pdf"])
     }
@@ -54,9 +54,15 @@ struct DownloadsTests {
     func finishedDownloadsCanBeOpenedOrRevealed() {
         var list = DownloadList()
         let id = list.start(name: "informe.pdf")
-        #expect(Palette.downloadItems(query: "", downloads: list, selected: id).isEmpty)
         list.update(id, to: .finished)
         let actions = Palette.downloadItems(query: "", downloads: list, selected: id).map(\.action)
         #expect(actions == [.openDownloadedFile(id), .revealDownload(id)])
+    }
+
+    @Test("una descarga en marcha se puede cancelar desde la lista")
+    func runningDownloadsCanBeCancelled() {
+        var list = DownloadList()
+        let id = list.start(name: "video.mp4")
+        #expect(Palette.downloadItems(query: "", downloads: list, selected: id).map(\.action) == [.cancelDownload(id)])
     }
 }

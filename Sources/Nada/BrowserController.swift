@@ -360,6 +360,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             downloadFiles[id].map { _ = NSWorkspace.shared.open($0) }
         case .revealDownload(let id):
             downloadFiles[id].map { NSWorkspace.shared.activateFileViewerSelecting([$0]) }
+        case .cancelDownload(let id):
+            cancelDownload(id)
         case .reloadConfig:
             onReloadConfig()
         case .clearHistory:
