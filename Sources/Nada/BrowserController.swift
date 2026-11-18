@@ -67,6 +67,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         self.modules = modules
         self.config = config
         super.init()
+        modules.compactMap { $0 as? ExtensionsModule }.forEach { $0.browser = self }
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.toolbar = NSToolbar()
