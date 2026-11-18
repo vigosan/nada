@@ -19,4 +19,12 @@ describe("privacy", () => {
       for (const section of content[lang].privacy.sections) expect(html).toContain(section.heading);
     }
   });
+
+  it("says where the app looks for updates, since that is the one connection nobody asked it to make", () => {
+    for (const lang of LANGS) {
+      const html = renderToStaticMarkup(<Privacy c={content[lang]} />);
+      expect(html).toContain("nada.vicent.io/appcast.xml");
+      expect(html).toContain("GitHub");
+    }
+  });
 });

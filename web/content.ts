@@ -151,6 +151,7 @@ const en = {
           "Like any browser, Nada connects to the sites you open and to the search engine you choose in the settings. Those sites receive what any browser sends them, such as your IP address.",
           "Your history, bookmarks, cookies and site data stay on your Mac, in the app's own storage. Nada never sends them anywhere.",
           "The ad and tracker filters are lists stored on your Mac. Nada does not report what it blocks or which pages you visit.",
+          "To keep itself up to date, Nada checks nada.vicent.io/appcast.xml for a new version from time to time and, when there is one, downloads it from GitHub. Those requests carry the version of Nada you have and, like any request, your IP address, and nothing about what you browse. You can also check by hand from the Nada menu.",
         ],
       },
       {
@@ -313,6 +314,7 @@ const es: Content = {
           "Como cualquier navegador, Nada se conecta a las webs que abres y al buscador que eliges en los ajustes. Esas webs reciben lo que les envía cualquier navegador, como tu dirección IP.",
           "Tu historial, tus marcadores, tus cookies y los datos de las webs se quedan en tu Mac, en el almacenamiento propio de la app. Nada nunca los envía a ningún sitio.",
           "Los filtros de anuncios y rastreadores son listas guardadas en tu Mac. Nada no informa de lo que bloquea ni de las páginas que visitas.",
+          "Para mantenerse al día, Nada consulta de vez en cuando nada.vicent.io/appcast.xml por si hay una versión nueva y, cuando la hay, la descarga de GitHub. Esas peticiones llevan la versión de Nada que tienes y, como cualquier petición, tu dirección IP, y nada sobre lo que navegas. También puedes buscar actualizaciones a mano desde el menú Nada.",
         ],
       },
       {
