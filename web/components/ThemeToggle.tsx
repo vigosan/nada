@@ -40,7 +40,19 @@ export function ThemeToggle({ labels }: { labels: Record<ThemeChoice, string> })
       title={labels[choice]}
       className="grid size-8 cursor-pointer place-items-center rounded-md text-dim transition-[background-color,color,scale] duration-150 ease-out hover:bg-bar hover:text-ink active:scale-[0.97] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
-      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg
+        key={choice}
+        viewBox="0 0 24 24"
+        width={18}
+        height={18}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+        className="transition-[opacity,scale,filter] duration-200 ease-out starting:scale-25 starting:opacity-0 starting:blur-xs motion-reduce:starting:scale-100 motion-reduce:starting:blur-none"
+      >
         {icons[choice]}
       </svg>
     </button>
