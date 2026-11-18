@@ -35,6 +35,19 @@ export function Home({ c }: { c: Content }) {
           <p className="max-w-2xl text-pretty leading-relaxed">
             <Keys text={section.text} />
           </p>
+          {"shot" in section && (
+            <div className={wide}>
+              <img
+                data-testid="panes-shot"
+                src="/panes.webp"
+                alt={section.shot}
+                width={2400}
+                height={1500}
+                loading="lazy"
+                className="h-auto w-full rounded-xl border border-line shadow-2xl shadow-black/30"
+              />
+            </div>
+          )}
         </article>
       ))}
       <article className="flex flex-col gap-6">

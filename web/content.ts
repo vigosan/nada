@@ -55,6 +55,7 @@ const en = {
       {
         title: "Split it like your terminal",
         text: "[⌘D] splits the tab to the right and [⇧⌘D] splits it down. Move between panes with [⌥⌘] and the arrow keys, resize them with [⌃⌘] and the arrows, and zoom one with [⇧⌘↩]. The panes without focus dim, so you always know where you are typing.",
+        shot: "Nada with Hacker News and Lobsters open side by side in two panes",
       },
       {
         title: "Leave the mouse alone",
@@ -218,6 +219,7 @@ const es: Content = {
       {
         title: "Divídelo como tu terminal",
         text: "[⌘D] divide la pestaña a la derecha y [⇧⌘D] la divide hacia abajo. Muévete entre paneles con [⌥⌘] y las flechas, cambia su tamaño con [⌃⌘] y las flechas, y amplía uno con [⇧⌘↩]. Los paneles sin foco se oscurecen, para que siempre sepas dónde escribes.",
+        shot: "Nada con Hacker News y Lobsters abiertos uno al lado del otro en dos paneles",
       },
       {
         title: "Deja el ratón quieto",

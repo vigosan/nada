@@ -24,6 +24,20 @@ describe("demo", () => {
   });
 });
 
+describe("screenshot", () => {
+  it("shows the real app with two pages side by side next to the panes explanation, so splitting is seen and not only described", () => {
+    for (const c of [content.en, content.es]) {
+      const html = renderToStaticMarkup(<Home c={c} />);
+      const panes = c.home.sections.find((section) => "shot" in section)!;
+      const next = c.home.sections[c.home.sections.indexOf(panes) + 1];
+      const shot = html.indexOf('data-testid="panes-shot"');
+      expect(shot).toBeGreaterThan(html.indexOf(panes.title));
+      expect(shot).toBeLessThan(html.indexOf(next.title));
+      expect(html).toContain(`alt="${"shot" in panes && panes.shot}"`);
+    }
+  });
+});
+
 describe("page frame", () => {
   it("links privacy and support from every page footer, in the page's own language", () => {
     const html = renderToStaticMarkup(<Home c={content.es} />);
