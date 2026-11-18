@@ -238,9 +238,18 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
         }
     }
 
+    private func supplyMissingAPIs(in folder: URL) throws {
+        try ExtensionShim.script.write(to: folder.appending(path: ExtensionShim.shimFile), atomically: true, encoding: .utf8)
+        let manifest = folder.appending(path: "manifest.json")
+        guard let wrapped = try ExtensionShim.wrapping(Data(contentsOf: manifest)) else { return }
+        try wrapped.worker.write(to: folder.appending(path: ExtensionShim.workerFile), atomically: true, encoding: .utf8)
+        try wrapped.manifest.write(to: manifest)
+    }
+
     @MainActor
     private func load(_ folder: URL) async {
         do {
+            try supplyMissingAPIs(in: folder)
             let webExtension = try await WKWebExtension(resourceBaseURL: folder)
             let context = WKWebExtensionContext(for: webExtension)
             context.uniqueIdentifier = folder.lastPathComponent

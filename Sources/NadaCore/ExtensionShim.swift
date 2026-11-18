@@ -1,6 +1,30 @@
+import Foundation
+
 public enum ExtensionShim {
     public static let chromeVersion = 150
     public static let userAgentSuffix = "Chrome/\(chromeVersion).0.0.0 Safari/537.36"
+
+    public static let shimFile = "nada-shim.js"
+    public static let workerFile = "nada-background.js"
+
+    public struct Wrapped: Equatable {
+        public let manifest: Data
+        public let worker: String
+    }
+
+    public static func wrapping(_ manifest: Data) -> Wrapped? {
+        guard var json = (try? JSONSerialization.jsonObject(with: manifest)) as? [String: Any],
+              var background = json["background"] as? [String: Any],
+              let original = background["service_worker"] as? String,
+              original != workerFile else { return nil }
+        background["service_worker"] = workerFile
+        json["background"] = background
+        guard let wrapped = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]) else { return nil }
+        let worker = background["type"] as? String == "module"
+            ? "import \"./\(shimFile)\";\nimport \"./\(original)\";\n"
+            : "importScripts(\"\(shimFile)\", \"\(original)\");\n"
+        return Wrapped(manifest: wrapped, worker: worker)
+    }
 
     public static let script = """
     (() => {
