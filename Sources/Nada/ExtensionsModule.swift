@@ -32,7 +32,10 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
         contexts.map {
             let name = $0.webExtension.displayShortName ?? $0.webExtension.displayName ?? $0.uniqueIdentifier
             return ModuleCommand(id: "extension:\($0.uniqueIdentifier)", title: "Extensión: \(name)")
-        } + [ModuleCommand(id: "extensions.folder", title: "Abrir carpeta de extensiones")]
+        } + [
+            ModuleCommand(id: "extensions.install", title: "Instalar la extensión de esta página"),
+            ModuleCommand(id: "extensions.folder", title: "Abrir carpeta de extensiones"),
+        ]
     }
 
     var settings: [Setting] {
@@ -44,6 +47,10 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
     }
 
     func run(_ commandID: String) {
+        if commandID == "extensions.install" {
+            install()
+            return
+        }
         if commandID == "extensions.folder" {
             try? FileManager.default.createDirectory(at: Self.folder, withIntermediateDirectories: true)
             NSWorkspace.shared.open(Self.folder)
@@ -144,6 +151,69 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
         let name = context.webExtension.displayShortName ?? context.webExtension.displayName ?? context.uniqueIdentifier
         browser.ask("«\(name)» pide permiso", detail: wanted.joined(separator: "\n"), buttons: ["Permitir", "No permitir"]) {
             completion($0 == .alertFirstButtonReturn)
+        }
+    }
+
+    private func install() {
+        guard let browser else { return }
+        guard let identifier = browser.focusedPane?.webView.url.flatMap({ ChromeStore.identifier(in: $0.absoluteString) }) else {
+            browser.ask(
+                "Esta página no es de una extensión",
+                detail: "Abre la página de la extensión en chromewebstore.google.com y repite la orden.",
+                buttons: ["Aceptar"]
+            ) { _ in }
+            return
+        }
+        Task { @MainActor in
+            do {
+                let (package, _) = try await URLSession.shared.data(from: ChromeStore.download(identifier))
+                guard let archive = ChromeStore.archive(in: package) else { throw CocoaError(.fileReadCorruptFile) }
+                let unpacked = FileManager.default.temporaryDirectory.appending(path: "nada-\(identifier)")
+                try? FileManager.default.removeItem(at: unpacked)
+                try unpack(archive, into: unpacked)
+                let webExtension = try await WKWebExtension(resourceBaseURL: unpacked)
+                let name = webExtension.displayName ?? identifier
+                let wanted = webExtension.requestedPermissions.map(\.rawValue).sorted().joined(separator: ", ")
+                browser.ask(
+                    "¿Instalar «\(name)»?",
+                    detail: "Podrá leer y cambiar las páginas que visites.\n\nPermisos: \(wanted)",
+                    buttons: ["Instalar", "Cancelar"]
+                ) { response in
+                    guard response == .alertFirstButtonReturn else { return }
+                    Task { @MainActor in await self.replace(identifier, with: unpacked) }
+                }
+            } catch {
+                browser.ask("No se pudo instalar la extensión", detail: error.localizedDescription, buttons: ["Aceptar"]) { _ in }
+            }
+        }
+    }
+
+    private func unpack(_ archive: Data, into folder: URL) throws {
+        let file = folder.appendingPathExtension("zip")
+        try archive.write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let ditto = Process()
+        ditto.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        ditto.arguments = ["-x", "-k", file.path, folder.path]
+        try ditto.run()
+        ditto.waitUntilExit()
+        guard ditto.terminationStatus == 0 else { throw CocoaError(.fileReadCorruptFile) }
+    }
+
+    @MainActor
+    private func replace(_ identifier: String, with unpacked: URL) async {
+        let folder = Self.folder.appending(path: identifier)
+        do {
+            if let loaded = contexts.first(where: { $0.uniqueIdentifier == identifier }) {
+                try controller.unload(loaded)
+                contexts.removeAll { $0 === loaded }
+            }
+            try FileManager.default.createDirectory(at: Self.folder, withIntermediateDirectories: true)
+            try? FileManager.default.removeItem(at: folder)
+            try FileManager.default.moveItem(at: unpacked, to: folder)
+            await load(folder)
+        } catch {
+            browser?.ask("No se pudo instalar la extensión", detail: error.localizedDescription, buttons: ["Aceptar"]) { _ in }
         }
     }
 
