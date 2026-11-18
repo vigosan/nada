@@ -39,6 +39,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var lastFind = ""
     private var closedPages: [URL] = []
     var downloads: [ObjectIdentifier: URL] = [:]
+    var trustedHosts: Set<String> = []
     private let sessionFile = URL.applicationSupportDirectory.appending(path: "Nada/session.json")
     private let historyFile = URL.applicationSupportDirectory.appending(path: "Nada/history.json")
     private lazy var history = (try? JSONDecoder().decode(History.self, from: Data(contentsOf: historyFile))) ?? History()

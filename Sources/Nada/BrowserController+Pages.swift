@@ -147,10 +147,55 @@ extension BrowserController: WKNavigationDelegate, WKDownloadDelegate {
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
         let space = challenge.protectionSpace
-        guard Challenge(method: space.authenticationMethod) == .credentials else {
+        switch Challenge(method: space.authenticationMethod) {
+        case .credentials: askCredentials(for: space, completionHandler)
+        case .trust: checkTrust(of: space, in: webView, completionHandler)
+        case .system: completionHandler(.performDefaultHandling, nil)
+        }
+    }
+
+    private func checkTrust(
+        of space: URLProtectionSpace,
+        in webView: WKWebView,
+        _ completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        guard let trust = space.serverTrust, space.host == webView.url?.host() else {
             completionHandler(.performDefaultHandling, nil)
             return
         }
+        if trustedHosts.contains(space.host) {
+            completionHandler(.useCredential, URLCredential(trust: trust))
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async {
+            var failure: CFError?
+            let valid = SecTrustEvaluateWithError(trust, &failure)
+            let reason = failure.map { ($0 as Error).localizedDescription } ?? ""
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !valid else {
+                    completionHandler(.performDefaultHandling, nil)
+                    return
+                }
+                ask(
+                    "El certificado de \(space.host) no es válido",
+                    detail: "\(reason)\n\nAlguien podría estar suplantando el sitio o leyendo lo que envías.",
+                    buttons: ["Cancelar", "Continuar de todos modos"]
+                ) {
+                    guard $0 == .alertSecondButtonReturn else {
+                        completionHandler(.performDefaultHandling, nil)
+                        return
+                    }
+                    self.trustedHosts.insert(space.host)
+                    completionHandler(.useCredential, URLCredential(trust: trust))
+                }
+            }
+        }
+    }
+
+    private func askCredentials(
+        for space: URLProtectionSpace,
+        _ completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
         let user = NSTextField(frame: NSRect(x: 0, y: 30, width: 260, height: 24))
         user.placeholderString = "Usuario"
         let password = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
