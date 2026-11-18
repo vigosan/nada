@@ -115,7 +115,11 @@ public struct Session: Codable {
 }
 
 public enum TabLabel {
-    public static func text(title: String, address: URL?, active: Bool) -> String {
+    public static func text(title: String, address: URL?, active: Bool, playing: Bool = false) -> String {
+        (playing ? "♪ " : "") + text(title: title, address: address, active: active)
+    }
+
+    private static func text(title: String, address: URL?, active: Bool) -> String {
         guard active, let address, let scheme = address.scheme, ["http", "https"].contains(scheme),
               let host = address.host(percentEncoded: false) else { return title }
         let bare = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host

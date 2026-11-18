@@ -36,6 +36,7 @@ public enum PaletteAction: Equatable, Sendable {
     case find(String, backwards: Bool)
     case clearHistory
     case clearSiteData
+    case pauseMedia
     case reloadConfig
     case editKeyBindings
     case openSettingsSection(SettingsSection)

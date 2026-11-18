@@ -34,6 +34,19 @@ struct TabLabelTests {
         #expect(shown == "xn--pple-43d.com — Apple")
     }
 
+    @Test("la pestaña que suena lleva una nota, esté activa o no, para encontrar de dónde sale el ruido")
+    func playingTabsAreMarked() {
+        let site = URL(string: "https://musica.example/")
+        #expect(TabLabel.text(title: "Lista", address: site, active: false, playing: true) == "♪ Lista")
+        #expect(TabLabel.text(title: "Lista", address: site, active: true, playing: true) == "♪ musica.example — Lista")
+        #expect(TabLabel.text(title: "Lista", address: site, active: false, playing: false) == "Lista")
+    }
+
+    @Test("callar todo lo que suena se hace con una orden, porque no hay un altavoz en cada pestaña donde pulsar")
+    func mediaIsPausedFromThePalette() {
+        #expect(Palette.items(query: "pausar", tabTitles: []).first?.action == .pauseMedia)
+    }
+
     @Test("las páginas que no vienen de un sitio web, como las de una extensión o la pestaña vacía, solo llevan título")
     func pagesWithoutASiteKeepTheirTitle() {
         #expect(label("Pestaña nueva", nil) == "Pestaña nueva")

@@ -17,6 +17,7 @@ final class Pane: NSObject {
     var recordedURL: URL?
     var failedURL: URL?
     var pending: SessionPage?
+    var isPlaying = false
 
     init(configuration: WKWebViewConfiguration, extensionPage: Bool = false) {
         configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
@@ -86,5 +87,9 @@ final class Tab {
 
     var title: String {
         focused?.title ?? ""
+    }
+
+    var isPlaying: Bool {
+        panes.values.contains(where: \.isPlaying)
     }
 }

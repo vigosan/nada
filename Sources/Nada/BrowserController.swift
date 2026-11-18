@@ -31,6 +31,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private let restores: Bool
     private lazy var privateStore = WKWebsiteDataStore.nonPersistent()
     private var appearanceObservation: NSKeyValueObservation?
+    private var mediaTimer: Timer?
     private enum Mode: Equatable {
         case commands
         case settings(SettingsSection?)
@@ -190,6 +191,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         extensions?.didFocusWindow(self)
         responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in self?.followClickedPane() }
         appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in self?.applyTheme() }
+        mediaTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in self?.checkMedia() }
     }
 
     func apply(_ config: Config) {
@@ -276,7 +278,18 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         extensions?.didFocusWindow(self)
     }
 
+    private func checkMedia() {
+        for pane in panesInOrder where pane.pending == nil {
+            pane.webView.requestMediaPlaybackState { [weak self, weak pane] state in
+                guard let pane, pane.isPlaying != (state == .playing) else { return }
+                pane.isPlaying = state == .playing
+                self?.refresh()
+            }
+        }
+    }
+
     func windowWillClose(_ notification: Notification) {
+        mediaTimer?.invalidate()
         modules.compactMap { $0 as? ExtensionsModule }.forEach { $0.closed(self) }
         extensions?.didCloseWindow(self)
         onClose()
@@ -457,6 +470,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .clearHistory:
             library.history.clear()
             library.saveHistory()
+        case .pauseMedia:
+            panesInOrder.forEach { $0.webView.pauseAllMediaPlayback() }
         case .clearSiteData:
             ask(
                 "¿Borrar cookies y datos de sitios?",
@@ -645,7 +660,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     private func refresh() {
         let labels = tabs.tabs.enumerated().map { index, tab in
-            TabLabel.text(title: tab.title, address: tab.focused?.address, active: index == tabs.activeIndex)
+            TabLabel.text(title: tab.title, address: tab.focused?.address, active: index == tabs.activeIndex, playing: tab.isPlaying)
         }
         strip.update(titles: labels, active: tabs.activeIndex)
         if let tab = tabs.active {
