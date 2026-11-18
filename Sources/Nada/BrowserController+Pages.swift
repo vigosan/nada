@@ -143,16 +143,16 @@ extension BrowserController: WKNavigationDelegate {
             completionHandler(.useCredential, URLCredential(trust: trust))
             return
         }
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             var failure: CFError?
             let valid = SecTrustEvaluateWithError(trust, &failure)
             let reason = failure.map { ($0 as Error).localizedDescription } ?? ""
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                 guard let self, !valid else {
                     completionHandler(.performDefaultHandling, nil)
                     return
                 }
-                ask(
+                self.ask(
                     "El certificado de \(space.host) no es válido",
                     detail: "\(reason)\n\nAlguien podría estar suplantando el sitio o leyendo lo que envías.",
                     buttons: ["Cancelar", "Continuar de todos modos"]
