@@ -18,7 +18,7 @@ public enum ChromeStore {
     public static func download(_ identifier: String) -> URL {
         var components = URLComponents(string: "https://clients2.google.com/service/update2/crx")!
         components.percentEncodedQuery =
-            "response=redirect&prodversion=134.0&acceptformat=crx3&x=id%3D\(identifier)%26uc"
+            "response=redirect&prodversion=\(ExtensionShim.chromeVersion).0&acceptformat=crx3&x=id%3D\(identifier)%26uc"
         return components.url!
     }
 

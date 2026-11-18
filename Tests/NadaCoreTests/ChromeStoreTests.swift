@@ -49,4 +49,12 @@ struct ChromeStoreTests {
         #expect(ChromeStore.archive(in: Data("Cr24".utf8) + Data([3, 0, 0, 0]) + Data([200, 0, 0, 0]) + Data([1])) == nil)
         #expect(ChromeStore.archive(in: Data("Cr24".utf8) + Data([3, 0, 0, 0]) + Data([1, 0, 0, 0]) + Data([9]) + Data("no es zip".utf8)) == nil)
     }
+
+    @Test("la tienda niega las extensiones que piden un Chrome más nuevo que el que se le dice, y 1Password pide el 140")
+    func asksAsARecentChrome() throws {
+        let query = try #require(ChromeStore.download(id).query(percentEncoded: false))
+        let version = try #require(query.firstMatch(of: /prodversion=(\d+)/).flatMap { Int($0.1) })
+        #expect(version >= 140)
+        #expect(ExtensionShim.userAgentSuffix.contains("Chrome/\(version)."))
+    }
 }

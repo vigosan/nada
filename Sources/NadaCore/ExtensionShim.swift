@@ -1,5 +1,6 @@
 public enum ExtensionShim {
-    public static let userAgentSuffix = "Chrome/134.0.0.0 Safari/537.36"
+    public static let chromeVersion = 150
+    public static let userAgentSuffix = "Chrome/\(chromeVersion).0.0.0 Safari/537.36"
 
     public static let script = """
     (() => {
