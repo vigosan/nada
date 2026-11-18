@@ -465,7 +465,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             for (id, pane) in tab.panes {
                 pane.webView.isHidden = pane.isBlank
                 let focused = id == tab.layout.focused
-                pane.view.alphaValue = tab.panes.count == 1 || focused ? 1 : 0.6
+                pane.dim.isHidden = tab.panes.count == 1 || focused
                 pane.view.layer?.borderColor = Theme.accent.withAlphaComponent(0.5).cgColor
                 pane.view.layer?.borderWidth = tab.panes.count > 1 && focused ? 1 : 0
             }

@@ -2,8 +2,15 @@ import AppKit
 import NadaCore
 import WebKit
 
+final class DimView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+}
+
 final class Pane {
     let view = NSView()
+    let dim = DimView()
     let webView: WKWebView
     var observations: [NSKeyValueObservation] = []
     var recordedURL: URL?
@@ -20,6 +27,11 @@ final class Pane {
         view.wantsLayer = true
         view.layer?.backgroundColor = Theme.window.cgColor
         view.addSubview(webView)
+        dim.frame = view.bounds
+        dim.autoresizingMask = [.width, .height]
+        dim.wantsLayer = true
+        dim.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.4).cgColor
+        view.addSubview(dim)
     }
 
     var isBlank: Bool {
