@@ -23,9 +23,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     ]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let bindings = KeyBindings(config: (try? String(contentsOf: Config.file, encoding: .utf8)) ?? "")
+        let config = (try? String(contentsOf: Config.file, encoding: .utf8)) ?? ""
+        let bindings = KeyBindings(config: config)
         bindings.errors.forEach { NSLog("%@ %@", Config.file.path, $0) }
-        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule()], bindings: bindings)
+        let theme = ThemeChoice(config: config)
+        Theme.load(theme)
+        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule()], bindings: bindings, theme: theme)
         self.browser = browser
         NSApp.mainMenu = mainMenu(bindings)
         browser.window.makeKeyAndOrderFront(nil)

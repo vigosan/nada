@@ -127,7 +127,12 @@ public struct KeyBindings {
     }
 
     public static let template = ([
-        "# Atajos de Nada. Quita el # de una línea keybind para activarla y reinicia Nada.",
+        "# Configuración de Nada. Quita el # de una línea para activarla y reinicia Nada.",
+        "#",
+        "# Tema: el nombre de un tema de Ghostty, o uno para claro y otro para oscuro.",
+        "# theme = TokyoNight",
+        "# theme = light:TokyoNight Day,dark:TokyoNight",
+        "#",
         "# keybind = ctrl+h=focus_left",
         "# keybind = ctrl+shift+v=split_right",
         "# keybind = cmd+w=unbind",

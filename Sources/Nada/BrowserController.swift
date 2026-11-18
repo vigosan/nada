@@ -25,6 +25,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
     private let bindings: KeyBindings
+    private let themeChoice: ThemeChoice
+    private var appearanceObservation: NSKeyValueObservation?
     private enum Mode: Equatable {
         case commands
         case settings(SettingsSection?)
@@ -47,12 +49,16 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         set { UserDefaults.standard.set(newValue.rawValue, forKey: "search.engine") }
     }
     private var settings: [Setting] {
-        [Setting(id: "search.engine", title: "Buscador", value: searchEngine.title)] + modules.flatMap(\.settings)
+        [
+            Setting(id: "search.engine", title: "Buscador", value: searchEngine.title),
+            Setting(id: "theme", title: "Tema", value: Theme.name),
+        ] + modules.flatMap(\.settings)
     }
 
-    init(modules: [BrowserModule], bindings: KeyBindings) {
+    init(modules: [BrowserModule], bindings: KeyBindings, theme: ThemeChoice) {
         self.modules = modules
         self.bindings = bindings
+        themeChoice = theme
         super.init()
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
@@ -60,7 +66,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         window.toolbarStyle = .unifiedCompact
         window.titlebarSeparatorStyle = .none
         window.backgroundColor = Theme.window
-        window.appearance = NSAppearance(named: .darkAqua)
+        window.appearance = NSAppearance(named: Theme.colors.isDark ? .darkAqua : .aqua)
         window.center()
         window.setFrameAutosaveName("Nada")
         window.delegate = self
@@ -160,6 +166,21 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         ]
         restoreSession()
         responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in self?.followClickedPane() }
+        appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in self?.applyTheme() }
+    }
+
+    private func applyTheme() {
+        Theme.load(themeChoice)
+        window.appearance = NSAppearance(named: Theme.colors.isDark ? .darkAqua : .aqua)
+        window.backgroundColor = Theme.window
+        progressBar.layer?.backgroundColor = Theme.accent.cgColor
+        strip.restyle()
+        container.restyle()
+        palette.restyle()
+        for pane in tabs.tabs.flatMap(\.panes.values) {
+            pane.view.layer?.backgroundColor = Theme.window.cgColor
+        }
+        refresh()
     }
 
     func open(_ url: URL) {
@@ -327,6 +348,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private func changeSetting(_ id: String) {
         if id == "search.engine" {
             searchEngine = searchEngine.next
+        } else if id == "theme" {
+            run(.editKeyBindings)
         } else {
             modules.first { $0.settings.contains { $0.id == id } }?.changeSetting(id)
         }

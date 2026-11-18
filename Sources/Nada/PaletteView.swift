@@ -14,7 +14,7 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        material = .hudWindow
+        material = .menu
         blendingMode = .withinWindow
         state = .active
         wantsLayer = true
@@ -51,6 +51,12 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    func restyle() {
+        layer?.borderColor = Theme.raised.cgColor
+        field.textColor = Theme.text
+        render()
     }
 
     func open(prefill: String, placeholder: String) {

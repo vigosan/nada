@@ -17,6 +17,10 @@ final class PanesView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    func restyle() {
+        layer?.backgroundColor = Theme.raised.cgColor
+    }
+
     func show(_ panes: [(view: NSView, frame: CGRect)]) {
         for view in subviews where !panes.contains(where: { $0.view === view }) {
             view.removeFromSuperview()

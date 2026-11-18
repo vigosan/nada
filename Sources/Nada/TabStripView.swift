@@ -31,6 +31,13 @@ final class TabStripView: NSView {
         recognizer.view.flatMap(stack.arrangedSubviews.firstIndex).map(onSelect)
     }
 
+    func restyle() {
+        layer?.backgroundColor = Theme.bar.cgColor
+        let current = shown
+        shown = ([], nil)
+        update(titles: current.titles, active: current.active)
+    }
+
     func update(titles: [String], active: Int?) {
         guard shown.titles != titles || shown.active != active else { return }
         shown = (titles, active)
