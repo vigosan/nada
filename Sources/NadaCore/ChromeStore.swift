@@ -5,8 +5,12 @@ public enum ChromeStore {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let isIdentifier: (String) -> Bool = { $0.count == 32 && $0.allSatisfy { ("a"..."p").contains($0) } }
         if isIdentifier(trimmed) { return trimmed }
-        guard let url = URL(string: trimmed), let host = url.host(),
-              ["chromewebstore.google.com", "chrome.google.com"].contains(host),
+        guard let url = URL(string: trimmed), let host = url.host() else { return nil }
+        if host == "consent.google.com" {
+            let target = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "continue" }?.value
+            return target.flatMap { $0.contains("consent.google.com") ? nil : identifier(in: $0) }
+        }
+        guard ["chromewebstore.google.com", "chrome.google.com"].contains(host),
               url.pathComponents.contains("detail") else { return nil }
         return url.pathComponents.last.flatMap { isIdentifier($0) ? $0 : nil }
     }

@@ -13,6 +13,13 @@ struct ChromeStoreTests {
         #expect(ChromeStore.identifier(in: "  \(id) ") == id)
     }
 
+    @Test("también vale la página de consentimiento que Google pone delante la primera vez")
+    func findsTheIdentifierBehindTheConsentPage() {
+        let consent = "https://consent.google.com/m?continue=https://chromewebstore.google.com/detail/bitwarden/\(id)&gl=ES&hl=en-US"
+        #expect(ChromeStore.identifier(in: consent) == id)
+        #expect(ChromeStore.identifier(in: "https://consent.google.com/m?continue=https://example.com/detail/x/\(id)") == nil)
+    }
+
     @Test("un texto cualquiera no se toma por una extensión")
     func rejectsOtherText() {
         #expect(ChromeStore.identifier(in: "bitwarden") == nil)
