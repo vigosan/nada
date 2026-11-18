@@ -68,4 +68,27 @@ struct TabListTests {
         list.select(7)
         #expect(list.activeIndex == 0)
     }
+
+    @Test("mover la pestaña activa la lleva al sitio de su vecina y sigue siendo la activa, para ordenar sin soltar el teclado")
+    func movingKeepsTheTabActive() {
+        var list = TabList<String>()
+        ["a", "b", "c"].forEach { list.append($0) }
+        list.select(0)
+        #expect(list.moveActive(by: 1) == 0)
+        #expect(list.tabs == ["b", "a", "c"])
+        #expect(list.active == "a")
+        #expect(list.moveActive(by: -1) == 1)
+        #expect(list.tabs == ["a", "b", "c"])
+    }
+
+    @Test("en un extremo no hay a dónde mover y la pestaña no da la vuelta, que desordenaría todas las demás")
+    func movingStopsAtTheEnds() {
+        var list = TabList<String>()
+        ["a", "b"].forEach { list.append($0) }
+        #expect(list.moveActive(by: 1) == nil)
+        #expect(list.tabs == ["a", "b"])
+        list.select(0)
+        #expect(list.moveActive(by: -1) == nil)
+        #expect(TabList<String>().tabs.isEmpty)
+    }
 }

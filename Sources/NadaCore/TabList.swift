@@ -32,6 +32,13 @@ public struct TabList<Tab> {
         activeIndex = (index - 1 + tabs.count) % tabs.count
     }
 
+    public mutating func moveActive(by offset: Int) -> Int? {
+        guard let index = activeIndex, tabs.indices.contains(index + offset) else { return nil }
+        tabs.swapAt(index, index + offset)
+        activeIndex = index + offset
+        return index
+    }
+
     public mutating func closeActive() -> Tab? {
         guard let index = activeIndex else { return nil }
         let closed = tabs.remove(at: index)

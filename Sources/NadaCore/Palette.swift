@@ -23,6 +23,8 @@ public enum PaletteAction: Equatable, Sendable {
     case zoomPane
     case nextTab
     case previousTab
+    case moveTab(forward: Bool)
+    case duplicateTab
     case equalizePanes
     case reopenTab
     case zoomIn

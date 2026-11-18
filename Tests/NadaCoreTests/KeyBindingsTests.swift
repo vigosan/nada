@@ -43,6 +43,14 @@ struct KeyBindingsTests {
         #expect(Palette.items(query: "ventana privada", tabTitles: []).first?.action == .newWindow(private: true))
     }
 
+    @Test("las pestañas se reordenan y se duplican desde el teclado, porque no hay nada que arrastrar")
+    func tabsAreArrangedFromTheKeyboard() throws {
+        let bindings = KeyBindings(config: "")
+        #expect(bindings.action(for: try #require(KeyCombo("cmd+opt+shift+left"))) == .moveTab(forward: false))
+        #expect(bindings.action(for: try #require(KeyCombo("cmd+opt+shift+right"))) == .moveTab(forward: true))
+        #expect(Palette.items(query: "duplicar", tabTitles: []).first?.action == .duplicateTab)
+    }
+
     @Test("los corchetes cambian de panel como en Ghostty, y atrás y adelante van con las flechas como en Brave")
     func bracketsCyclePanesAndArrowsGoThroughHistory() {
         let bindings = KeyBindings(config: "")

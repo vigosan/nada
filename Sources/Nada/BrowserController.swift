@@ -377,6 +377,18 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .previousTab:
             tabs.selectPrevious()
             showActiveTab()
+        case .moveTab(let forward):
+            guard let previous = tabs.moveActive(by: forward ? 1 : -1) else { return }
+            tabs.active?.focused.map { extensions?.didMoveTab($0, from: previous, in: self) }
+            showActiveTab()
+        case .duplicateTab:
+            guard let address = tabs.active?.focused?.address else { return }
+            let pane = makePane(configuration: WKWebViewConfiguration())
+            tabs.insertAfterActive(makeTab(pane))
+            tabs.selectNext()
+            extensions?.didOpenTab(pane)
+            pane.webView.load(URLRequest(url: address))
+            showActiveTab()
         case .equalizePanes:
             tabs.active?.layout.equalize()
             showActiveTab()
