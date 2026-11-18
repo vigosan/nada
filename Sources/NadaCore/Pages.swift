@@ -66,15 +66,32 @@ public enum Downloads {
     }
 }
 
+public struct SessionSplit: Codable {
+    public let layout: PaneLayout
+    public let others: [Int: SessionPage]
+
+    public init(layout: PaneLayout, others: [Int: SessionPage]) {
+        self.layout = layout
+        self.others = others
+    }
+}
+
 public struct SessionPage: Codable, Equatable {
     public let url: URL
     public let title: String
     public let state: Data?
+    public let split: SessionSplit?
 
-    public init(url: URL, title: String, state: Data? = nil) {
+    public init(url: URL, title: String, state: Data? = nil, split: SessionSplit? = nil) {
         self.url = url
         self.title = title
         self.state = state
+        self.split = split
+    }
+
+    public static func == (left: SessionPage, right: SessionPage) -> Bool {
+        left.url == right.url && left.title == right.title && left.state == right.state
+            && left.split?.others == right.split?.others && left.split?.layout.frames == right.split?.layout.frames
     }
 }
 

@@ -1,6 +1,6 @@
 import CoreGraphics
 
-public enum SplitAxis: Equatable, Sendable {
+public enum SplitAxis: Equatable, Sendable, Codable {
     case horizontal
     case vertical
 }
@@ -16,8 +16,14 @@ public enum Direction: Equatable, Sendable {
     }
 }
 
-public struct PaneLayout {
-    private indirect enum Node {
+public struct PaneLayout: Codable {
+    private enum CodingKeys: CodingKey {
+        case focused
+        case root
+        case nextID
+    }
+
+    private indirect enum Node: Codable {
         case leaf(Int)
         case split(SplitAxis, Double, Node, Node)
     }

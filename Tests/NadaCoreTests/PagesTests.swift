@@ -82,4 +82,19 @@ struct PagesTests {
         #expect(session.tabs == [SessionPage(url: URL(string: "https://a.example/")!, title: "A")])
         #expect(session.closed.isEmpty)
     }
+
+    @Test("una pestaña dividida vuelve con todos sus paneles y no solo con el que tenía el foco")
+    func sessionKeepsSplitPanes() throws {
+        var layout = PaneLayout()
+        let second = layout.split(.horizontal)
+        let other = SessionPage(url: URL(string: "https://otro.example/")!, title: "Otro")
+        let page = SessionPage(
+            url: URL(string: "https://a.example/")!,
+            title: "A",
+            split: SessionSplit(layout: layout, others: [0: other])
+        )
+        let restored = try JSONDecoder().decode(Session.self, from: JSONEncoder().encode(Session(pages: [page], active: 0)))
+        #expect(restored.tabs.first?.split?.others == [0: other])
+        #expect(restored.tabs.first?.split?.layout.focused == second)
+    }
 }

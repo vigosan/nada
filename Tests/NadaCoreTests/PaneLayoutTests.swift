@@ -1,3 +1,4 @@
+import Foundation
 import CoreGraphics
 import Testing
 @testable import NadaCore
@@ -195,5 +196,26 @@ struct PaneLayoutTests {
         #expect(layout.focused == 0)
         layout.focus(99)
         #expect(layout.focused == 0)
+    }
+
+    @Test("un reparto de paneles guardado vuelve con los mismos huecos, el mismo foco y sin repetir identificadores al seguir dividiendo")
+    func layoutSurvivesARoundTrip() throws {
+        var layout = PaneLayout()
+        _ = layout.split(.horizontal)
+        let third = layout.split(.vertical)
+        layout.resize(.left)
+        var restored = try JSONDecoder().decode(PaneLayout.self, from: JSONEncoder().encode(layout))
+        #expect(restored.frames == layout.frames)
+        #expect(restored.focused == third)
+        #expect(restored.split(.horizontal) == layout.split(.horizontal))
+    }
+
+    @Test("un panel ampliado se guarda sin ampliar, para no esconder los demás al volver")
+    func zoomIsNotRestored() throws {
+        var layout = PaneLayout()
+        _ = layout.split(.horizontal)
+        layout.toggleZoom()
+        let restored = try JSONDecoder().decode(PaneLayout.self, from: JSONEncoder().encode(layout))
+        #expect(restored.frames.count == 2)
     }
 }

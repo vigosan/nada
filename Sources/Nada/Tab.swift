@@ -50,6 +50,10 @@ final class Pane: NSObject {
         return failedURL == nil ? webView.interactionState as? Data : nil
     }
 
+    var sessionPage: SessionPage? {
+        address.map { SessionPage(url: $0, title: title, state: navigationState) }
+    }
+
     var title: String {
         if let title = webView.title, !title.isEmpty { return title }
         return pending?.title ?? webView.url?.host() ?? "Pestaña nueva"
@@ -62,6 +66,18 @@ final class Tab {
 
     init(pane: Pane) {
         panes = [layout.focused: pane]
+    }
+
+    init(layout: PaneLayout, panes: [Int: Pane]) {
+        self.layout = layout
+        self.panes = panes
+    }
+
+    var sessionPage: SessionPage? {
+        guard let focused, let page = focused.sessionPage else { return nil }
+        let others = panes.filter { $0.key != layout.focused }.compactMapValues(\.sessionPage)
+        guard others.count == panes.count - 1, !others.isEmpty else { return page }
+        return SessionPage(url: page.url, title: page.title, state: page.state, split: SessionSplit(layout: layout, others: others))
     }
 
     var focused: Pane? {

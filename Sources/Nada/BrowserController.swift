@@ -285,10 +285,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     func saveState() {
         library.saveHistory()
         guard config.restoresWindows, !isPrivate else { return }
-        let pages = tabs.tabs.map { tab in
-            tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title, state: pane.navigationState) } }
-        }
-        Library.save(Session(pages: pages, active: tabs.activeIndex ?? 0, closed: closedPages), to: sessionFile)
+        Library.save(Session(pages: tabs.tabs.map(\.sessionPage), active: tabs.activeIndex ?? 0, closed: closedPages), to: sessionFile)
     }
 
     private func restoreSession() {
@@ -296,10 +293,14 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         let session = config.restoresWindows && restores ? saved : nil
         closedPages = session?.closed ?? []
         for page in session?.tabs ?? [] {
-            let pane = makePane(configuration: WKWebViewConfiguration())
-            pane.pending = page
-            tabs.append(makeTab(pane))
-            extensions?.didOpenTab(pane)
+            let pane = pendingPane(page)
+            guard let split = page.split else {
+                tabs.append(makeTab(pane))
+                continue
+            }
+            let tab = Tab(layout: split.layout, panes: split.others.mapValues(pendingPane).merging([split.layout.focused: pane]) { $1 })
+            tab.layout.preservesZoom = config.preservesZoomOnNavigation
+            tabs.append(tab)
         }
         guard let session, !session.tabs.isEmpty else {
             addTab(configuration: WKWebViewConfiguration())
@@ -308,6 +309,13 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         }
         tabs.select(session.active)
         showActiveTab()
+    }
+
+    private func pendingPane(_ page: SessionPage) -> Pane {
+        let pane = makePane(configuration: WKWebViewConfiguration())
+        pane.pending = page
+        extensions?.didOpenTab(pane)
+        return pane
     }
 
     func run(_ action: PaletteAction) {
