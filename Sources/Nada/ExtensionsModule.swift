@@ -83,6 +83,70 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
 
     func changeSetting(_ settingID: String) {}
 
+    func webExtensionController(
+        _ controller: WKWebExtensionController,
+        openNewTabUsing configuration: WKWebExtension.TabConfiguration,
+        for context: WKWebExtensionContext,
+        completionHandler: @escaping ((any WKWebExtensionTab)?, (any Error)?) -> Void
+    ) {
+        completionHandler(open(configuration.url, for: context), nil)
+    }
+
+    func webExtensionController(
+        _ controller: WKWebExtensionController,
+        openOptionsPageFor context: WKWebExtensionContext,
+        completionHandler: @escaping ((any Error)?) -> Void
+    ) {
+        _ = open(context.optionsPageURL, for: context)
+        completionHandler(nil)
+    }
+
+    func webExtensionController(
+        _ controller: WKWebExtensionController,
+        promptForPermissions permissions: Set<WKWebExtension.Permission>,
+        in tab: (any WKWebExtensionTab)?,
+        for context: WKWebExtensionContext,
+        completionHandler: @escaping (Set<WKWebExtension.Permission>, Date?) -> Void
+    ) {
+        confirm(permissions.map(\.rawValue).sorted(), for: context) { completionHandler($0 ? permissions : [], nil) }
+    }
+
+    func webExtensionController(
+        _ controller: WKWebExtensionController,
+        promptForPermissionToAccess urls: Set<URL>,
+        in tab: (any WKWebExtensionTab)?,
+        for context: WKWebExtensionContext,
+        completionHandler: @escaping (Set<URL>, Date?) -> Void
+    ) {
+        confirm(urls.compactMap { $0.host() }.sorted(), for: context) { completionHandler($0 ? urls : [], nil) }
+    }
+
+    func webExtensionController(
+        _ controller: WKWebExtensionController,
+        promptForPermissionMatchPatterns matchPatterns: Set<WKWebExtension.MatchPattern>,
+        in tab: (any WKWebExtensionTab)?,
+        for context: WKWebExtensionContext,
+        completionHandler: @escaping (Set<WKWebExtension.MatchPattern>, Date?) -> Void
+    ) {
+        confirm(matchPatterns.map(\.string).sorted(), for: context) { completionHandler($0 ? matchPatterns : [], nil) }
+    }
+
+    private func open(_ url: URL?, for context: WKWebExtensionContext) -> Pane? {
+        let own = url?.scheme == context.baseURL.scheme && url?.host() == context.baseURL.host()
+        return browser?.openExtensionPage(url, configuration: own ? context.webViewConfiguration : nil)
+    }
+
+    private func confirm(_ wanted: [String], for context: WKWebExtensionContext, completion: @escaping (Bool) -> Void) {
+        guard let browser else {
+            completion(false)
+            return
+        }
+        let name = context.webExtension.displayShortName ?? context.webExtension.displayName ?? context.uniqueIdentifier
+        browser.ask("«\(name)» pide permiso", detail: wanted.joined(separator: "\n"), buttons: ["Permitir", "No permitir"]) {
+            completion($0 == .alertFirstButtonReturn)
+        }
+    }
+
     @MainActor
     private func load(_ folder: URL) async {
         do {

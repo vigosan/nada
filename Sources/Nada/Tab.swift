@@ -18,10 +18,10 @@ final class Pane: NSObject {
     var failedURL: URL?
     var pending: SessionPage?
 
-    init(configuration: WKWebViewConfiguration) {
+    init(configuration: WKWebViewConfiguration, extensionPage: Bool = false) {
         configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
         configuration.preferences.isElementFullscreenEnabled = true
-        configuration.applicationNameForUserAgent = "Version/26.0 Safari/605.1.15"
+        if !extensionPage { configuration.applicationNameForUserAgent = "Version/26.0 Safari/605.1.15" }
         webView = WKWebView(frame: view.bounds, configuration: configuration)
         super.init()
         webView.isInspectable = true

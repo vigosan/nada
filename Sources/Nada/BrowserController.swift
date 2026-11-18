@@ -214,6 +214,18 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         focusPage()
     }
 
+    @discardableResult
+    func openExtensionPage(_ url: URL?, configuration: WKWebViewConfiguration?) -> Pane {
+        let pane = makePane(configuration: configuration ?? WKWebViewConfiguration(), extensionPage: configuration != nil)
+        tabs.append(makeTab(pane))
+        extensions?.didOpenTab(pane)
+        showActiveTab()
+        url.map { _ = pane.webView.load(URLRequest(url: $0)) }
+        palette.isHidden = true
+        focusPage()
+        return pane
+    }
+
     func openInBackground(_ request: URLRequest) {
         let pane = makePane(configuration: WKWebViewConfiguration())
         tabs.insertAfterActive(makeTab(pane))
@@ -525,9 +537,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         return tab
     }
 
-    private func makePane(configuration: WKWebViewConfiguration) -> Pane {
-        modules.forEach { $0.configure(configuration) }
-        let pane = Pane(configuration: configuration)
+    private func makePane(configuration: WKWebViewConfiguration, extensionPage: Bool = false) -> Pane {
+        if !extensionPage { modules.forEach { $0.configure(configuration) } }
+        let pane = Pane(configuration: configuration, extensionPage: extensionPage)
         pane.browser = self
         pane.webView.uiDelegate = self
         pane.webView.navigationDelegate = self
