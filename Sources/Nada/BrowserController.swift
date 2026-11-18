@@ -429,6 +429,19 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         addTab(configuration: configuration).webView
     }
 
+    func webViewDidClose(_ webView: WKWebView) {
+        guard let index = tabs.tabs.firstIndex(where: { $0.panes.values.contains { $0.webView === webView } }),
+              let id = tabs.tabs[index].panes.first(where: { $0.value.webView === webView })?.key else { return }
+        let previous = tabs.activeIndex ?? index
+        let count = tabs.tabs.count
+        tabs.select(index)
+        tabs.tabs[index].layout.focus(id)
+        close()
+        guard previous != index else { return }
+        tabs.select(tabs.tabs.count < count && previous > index ? previous - 1 : previous)
+        showActiveTab()
+    }
+
     @discardableResult
     private func addTab(configuration: WKWebViewConfiguration) -> Pane {
         let pane = makePane(configuration: configuration)
