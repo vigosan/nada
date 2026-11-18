@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 import Testing
 import WebKit
 @testable import NadaCore
@@ -59,5 +60,33 @@ struct ExtensionShimTests {
         let webView = try await page(existing: "undefined")
         let chrome: String = try #require(await evaluate("typeof window.chrome", in: webView))
         #expect(chrome == "undefined")
+    }
+
+    @Test("la configuración de empresa se responde vacía, que es lo que 1Password espera cuando nadie lo administra")
+    func managedStorageAnswersEmpty() async throws {
+        let webView = try await page(existing: "{ storage: { local: 'real' } }")
+        let managed: String = try #require(await evaluate("JSON.stringify(await browser.storage.managed.get())", in: webView))
+        #expect(managed == "{}")
+        let kept: String = try #require(await evaluate("chrome.storage.local", in: webView))
+        #expect(kept == "real")
+    }
+
+    @Test("también vale en el proceso de fondo de la extensión, donde no existe window")
+    func worksWithoutAWindow() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript("globalThis.chrome = { webNavigation: {} }; globalThis.browser = globalThis.chrome;")
+        context.evaluateScript(ExtensionShim.script)
+        #expect(context.exception == nil)
+        #expect(context.evaluateScript("typeof chrome.webNavigation.onCreatedNavigationTarget.addListener").toString() == "function")
+        #expect(context.evaluateScript("typeof browser.notifications.create").toString() == "function")
+    }
+
+    @Test("WebKit suelta los espacios de API que nadie sujeta, y con ellos lo añadido: por eso se quedan sujetos")
+    func extendedNamespacesAreHeld() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript("globalThis.chrome = { storage: {}, tabs: {} };")
+        context.evaluateScript(ExtensionShim.script)
+        #expect(context.evaluateScript("nadaKept.includes(chrome.storage)").toBool())
+        #expect(!context.evaluateScript("nadaKept.includes(chrome.tabs)").toBool())
     }
 }

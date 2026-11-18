@@ -5,23 +5,36 @@ public enum ExtensionShim {
     public static let script = """
     (() => {
       const event = () => ({ addListener() {}, removeListener() {}, hasListener() { return false; } });
-      const answer = (value, callback) => {
+      const answer = (value) => (...given) => {
+        const callback = given[given.length - 1];
         if (typeof callback === "function") callback(value);
         return Promise.resolve(value);
       };
-      const notifications = {
-        onClicked: event(), onClosed: event(), onButtonClicked: event(), onShown: event(),
-        create: (id, options, callback) => answer(typeof id === "string" ? id : "nada", typeof options === "function" ? options : callback),
-        clear: (id, callback) => answer(true, callback),
-        update: (id, options, callback) => answer(false, callback),
-        getAll: (callback) => answer({}, callback),
+      const namespaces = {
+        notifications: {
+          onClicked: event(), onClosed: event(), onButtonClicked: event(), onShown: event(),
+          create: (id, ...rest) => answer(typeof id === "string" ? id : "nada")(id, ...rest),
+          clear: answer(true), update: answer(false), getAll: answer({}),
+        },
       };
-      for (const root of [window.chrome, window.browser]) {
+      const members = {
+        storage: { managed: { get: answer({}), getBytesInUse: answer(0), onChanged: event() } },
+        webNavigation: { onCreatedNavigationTarget: event() },
+      };
+      const kept = globalThis.nadaKept = globalThis.nadaKept || [];
+      for (const root of [globalThis.chrome, globalThis.browser]) {
         if (!root) continue;
-        try {
-          if (!root.notifications) root.notifications = notifications;
-          if (root.webNavigation && !root.webNavigation.onCreatedNavigationTarget) root.webNavigation.onCreatedNavigationTarget = event();
-        } catch (error) {}
+        for (const [name, value] of Object.entries(namespaces)) {
+          try { if (!root[name]) root[name] = value; } catch (error) {}
+        }
+        for (const [name, extra] of Object.entries(members)) {
+          const namespace = root[name];
+          if (!namespace) continue;
+          kept.push(namespace);
+          for (const [key, value] of Object.entries(extra)) {
+            try { if (!(key in namespace)) namespace[key] = value; } catch (error) {}
+          }
+        }
       }
     })();
     """
