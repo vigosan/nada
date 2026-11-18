@@ -3,6 +3,7 @@ import Foundation
 public enum PaletteAction: Equatable, Sendable {
     case open(URL)
     case newTab
+    case newWindow(private: Bool)
     case closeTab
     case reload
     case back

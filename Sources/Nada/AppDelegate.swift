@@ -3,7 +3,12 @@ import NadaCore
 import Sparkle
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var browser: BrowserController?
+    private var browsers: [BrowserController] = []
+    private let library = Library()
+    private lazy var modules: [BrowserModule] = [AdBlockModule(), VimKeysModule(), ExtensionsModule()]
+    private var browser: BrowserController? {
+        browsers.first { $0.window.isKeyWindow } ?? browsers.first { $0.window.isMainWindow } ?? browsers.last
+    }
     private var menuActions: [PaletteAction] = []
     private let updater = Bundle.main.bundleIdentifier.map { _ in
         SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
@@ -30,14 +35,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let config = loadConfig()
         Theme.load(config)
-        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule(), ExtensionsModule()], config: config)
-        browser.onReloadConfig = { [weak self] in self?.reloadConfig() }
-        self.browser = browser
+        let browser = openWindow(config, isPrivate: false, restores: true)
         NSApp.mainMenu = mainMenu(config.keyBindings)
-        browser.window.makeKeyAndOrderFront(nil)
         if config.startsMaximized { browser.window.zoom(nil) }
         if config.startsFullscreen { browser.window.toggleFullScreen(nil) }
         NSApp.activate()
+    }
+
+    @discardableResult
+    private func openWindow(_ config: Config, isPrivate: Bool, restores: Bool) -> BrowserController {
+        let browser = BrowserController(
+            modules: isPrivate ? modules.filter { !($0 is ExtensionsModule) } : modules,
+            config: config,
+            library: library,
+            isPrivate: isPrivate,
+            restores: restores
+        )
+        browser.onReloadConfig = { [weak self] in self?.reloadConfig() }
+        browser.onNewWindow = { [weak self] isPrivate in
+            guard let self else { return }
+            openWindow(loadConfig(), isPrivate: isPrivate, restores: false)
+        }
+        browser.onClose = { [weak self, unowned browser] in
+            guard let self, browsers.count > 1 else { return }
+            browser.saveState()
+            browsers.removeAll { $0 === browser }
+        }
+        if let front = self.browser {
+            browser.window.setFrameTopLeftPoint(front.window.cascadeTopLeft(from: NSPoint(x: front.window.frame.minX, y: front.window.frame.maxY)))
+        }
+        browsers.append(browser)
+        browser.window.makeKeyAndOrderFront(nil)
+        return browser
     }
 
     private func loadConfig() -> Config {
@@ -54,21 +83,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let config = loadConfig()
         menuActions = []
         NSApp.mainMenu = mainMenu(config.keyBindings)
-        browser?.apply(config)
+        browsers.forEach { $0.apply(config) }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        urls.forEach { browser?.open($0) }
+        let target = browser.flatMap { $0.isPrivate ? nil : $0 } ?? browsers.last { !$0.isPrivate } ?? browser
+        urls.forEach { target?.open($0) }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let browser, browser.downloads.running > 0 else { return .terminateNow }
-        browser.confirmLeavingDownloads { sender.reply(toApplicationShouldTerminate: $0) }
+        let busy = browsers.filter { $0.downloads.running > 0 }
+        guard let first = busy.first else { return .terminateNow }
+        first.confirmLeavingDownloads(count: busy.map(\.downloads.running).reduce(0, +)) { leaving in
+            if leaving { busy.forEach { $0.cancelDownloads() } }
+            sender.reply(toApplicationShouldTerminate: leaving)
+        }
         return .terminateLater
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        browser?.saveState()
+        (browsers.last { !$0.isPrivate } ?? browser)?.saveState()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

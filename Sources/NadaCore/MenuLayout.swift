@@ -27,6 +27,8 @@ public enum MenuLayout {
         ]),
         MenuSection(title: "Archivo", entries: [
             .command("new_tab", symbol: "plus.rectangle"),
+            .command("new_window", symbol: "macwindow.badge.plus"),
+            .command("new_private_window", symbol: "eye.slash"),
             .command("open_location", symbol: "link"),
             .command("reopen_tab", symbol: "arrow.uturn.backward"),
             .separator,

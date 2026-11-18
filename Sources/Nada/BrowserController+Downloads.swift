@@ -36,24 +36,24 @@ extension BrowserController: WKDownloadDelegate {
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard downloads.running > 0 else { return true }
-        NSApp.terminate(nil)
+        confirmLeavingDownloads(count: downloads.running) { [weak self] leaving in
+            guard leaving else { return }
+            self?.cancelDownloads()
+            self?.window.close()
+        }
         return false
     }
 
-    func confirmLeavingDownloads(_ completion: @escaping (Bool) -> Void) {
-        let count = downloads.running
+    func cancelDownloads() {
+        activeDownloads.values.map(\.id).forEach(cancelDownload)
+    }
+
+    func confirmLeavingDownloads(count: Int, _ completion: @escaping (Bool) -> Void) {
         ask(
             count == 1 ? "Hay una descarga en curso" : "Hay \(count) descargas en curso",
             detail: "Si sales ahora se cancelarán.",
             buttons: ["Seguir descargando", "Salir"]
-        ) { [weak self] response in
-            guard response == .alertSecondButtonReturn else {
-                completion(false)
-                return
-            }
-            self?.activeDownloads.values.map(\.id).forEach { self?.cancelDownload($0) }
-            completion(true)
-        }
+        ) { completion($0 == .alertSecondButtonReturn) }
     }
 
     func cancelDownload(_ id: Int) {

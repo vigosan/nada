@@ -3,6 +3,15 @@ import AppKit
 final class TabStripView: NSView {
     var onSelect: (Int) -> Void = { _ in }
     private let stack = NSStackView()
+    private let captionLabel = Theme.label("", color: Theme.accent, font: .systemFont(ofSize: 12, weight: .medium))
+    var caption = "" {
+        didSet {
+            captionLabel.stringValue = caption
+            captionInset.constant = caption.isEmpty ? 0 : 12
+        }
+    }
+
+    private lazy var captionInset = captionLabel.leadingAnchor.constraint(equalTo: leadingAnchor)
     private var shown: (titles: [String], active: Int?) = ([], nil)
 
     override init(frame: NSRect) {
@@ -15,8 +24,13 @@ final class TabStripView: NSView {
         stack.edgeInsets = NSEdgeInsets(top: 2, left: 2, bottom: 2, right: 2)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
+        addSubview(captionLabel)
+        captionLabel.setContentHuggingPriority(.required, for: .horizontal)
+        captionLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            captionInset,
+            captionLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            stack.leadingAnchor.constraint(equalTo: captionLabel.trailingAnchor),
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
             stack.topAnchor.constraint(equalTo: topAnchor),
             stack.bottomAnchor.constraint(equalTo: bottomAnchor),
@@ -33,6 +47,7 @@ final class TabStripView: NSView {
 
     func restyle() {
         layer?.backgroundColor = Theme.bar.cgColor
+        captionLabel.textColor = Theme.accent
         let current = shown
         shown = ([], nil)
         update(titles: current.titles, active: current.active)

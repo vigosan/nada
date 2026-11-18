@@ -35,6 +35,14 @@ struct KeyBindingsTests {
         #expect(bindings.errors.isEmpty)
     }
 
+    @Test("ventana nueva y ventana privada van donde en cualquier navegador de Mac")
+    func windowsOpenWithTheUsualShortcuts() throws {
+        let bindings = KeyBindings(config: "")
+        #expect(bindings.action(for: try #require(KeyCombo("cmd+n"))) == .newWindow(private: false))
+        #expect(bindings.action(for: try #require(KeyCombo("cmd+shift+n"))) == .newWindow(private: true))
+        #expect(Palette.items(query: "ventana privada", tabTitles: []).first?.action == .newWindow(private: true))
+    }
+
     @Test("los corchetes cambian de panel como en Ghostty, y atrás y adelante van con las flechas como en Brave")
     func bracketsCyclePanesAndArrowsGoThroughHistory() {
         let bindings = KeyBindings(config: "")

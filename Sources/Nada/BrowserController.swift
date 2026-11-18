@@ -25,6 +25,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private let modules: [BrowserModule]
     private var config: Config
     var onReloadConfig: () -> Void = {}
+    var onNewWindow: (Bool) -> Void = { _ in }
+    var onClose: () -> Void = {}
+    let isPrivate: Bool
+    private let restores: Bool
+    private lazy var privateStore = WKWebsiteDataStore.nonPersistent()
     private var appearanceObservation: NSKeyValueObservation?
     private enum Mode: Equatable {
         case commands
@@ -59,10 +64,12 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         ] + modules.flatMap(\.settings)
     }
 
-    init(modules: [BrowserModule], config: Config, library: Library = Library()) {
+    init(modules: [BrowserModule], config: Config, library: Library = Library(), isPrivate: Bool = false, restores: Bool = true) {
         self.modules = modules
         self.config = config
         self.library = library
+        self.isPrivate = isPrivate
+        self.restores = restores
         super.init()
         modules.compactMap { $0 as? ExtensionsModule }.forEach { $0.browser = self }
         window.titlebarAppearsTransparent = true
@@ -73,7 +80,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         window.backgroundColor = Theme.window
         window.appearance = NSAppearance(named: Theme.colors.isDark ? .darkAqua : .aqua)
         window.center()
+        window.isReleasedWhenClosed = false
         window.setFrameAutosaveName("Nada")
+        strip.caption = isPrivate ? "Privada" : ""
         window.delegate = self
 
         let root = NSView()
@@ -263,12 +272,19 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     }
 
     func windowDidBecomeKey(_ notification: Notification) {
+        modules.compactMap { $0 as? ExtensionsModule }.forEach { $0.browser = self }
         extensions?.didFocusWindow(self)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        modules.compactMap { $0 as? ExtensionsModule }.forEach { $0.closed(self) }
+        extensions?.didCloseWindow(self)
+        onClose()
     }
 
     func saveState() {
         library.saveHistory()
-        guard config.restoresWindows else { return }
+        guard config.restoresWindows, !isPrivate else { return }
         let pages = tabs.tabs.map { tab in
             tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title) } }
         }
@@ -277,7 +293,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     private func restoreSession() {
         let saved = try? JSONDecoder().decode(Session.self, from: Data(contentsOf: sessionFile))
-        let session = config.restoresWindows ? saved : nil
+        let session = config.restoresWindows && restores ? saved : nil
         for page in session?.tabs ?? [] {
             let pane = makePane(configuration: WKWebViewConfiguration())
             pane.pending = page
@@ -295,6 +311,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     func run(_ action: PaletteAction) {
         switch action {
+        case .newWindow(let isPrivate):
+            onNewWindow(isPrivate)
         case .open(let url):
             tabs.active?.focused?.webView.load(URLRequest(url: url))
             focusPage()
@@ -547,6 +565,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     private func makePane(configuration: WKWebViewConfiguration, extensionPage: Bool = false) -> Pane {
         if !extensionPage { modules.forEach { $0.configure(configuration) } }
+        if isPrivate { configuration.websiteDataStore = privateStore }
         let pane = Pane(configuration: configuration, extensionPage: extensionPage)
         pane.browser = self
         pane.webView.uiDelegate = self
@@ -571,7 +590,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     }
 
     private func record(_ pane: Pane) {
-        guard let url = pane.webView.url, ["http", "https"].contains(url.scheme),
+        guard !isPrivate, let url = pane.webView.url, ["http", "https"].contains(url.scheme),
               let title = pane.webView.title, !title.isEmpty else { return }
         library.history.record(url: url, title: title, at: Date(), newVisit: pane.recordedURL != url)
         pane.recordedURL = url

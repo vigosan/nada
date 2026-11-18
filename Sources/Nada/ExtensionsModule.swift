@@ -8,7 +8,11 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
 
     let controller: WKWebExtensionController
     private(set) var contexts: [WKWebExtensionContext] = []
-    weak var browser: BrowserController?
+    weak var browser: BrowserController? {
+        didSet { browser.map(windows.add) }
+    }
+
+    private let windows = NSHashTable<BrowserController>.weakObjects()
     private var connections: [ObjectIdentifier: NativeConnection] = [:]
 
     override init() {
@@ -111,6 +115,11 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
         } ?? false
     }
 
+    func closed(_ closing: BrowserController) {
+        windows.remove(closing)
+        if browser === closing { browser = windows.allObjects.first }
+    }
+
     private func name(of context: WKWebExtensionContext) -> String {
         context.webExtension.displayShortName ?? context.webExtension.displayName ?? context.uniqueIdentifier
     }
@@ -132,7 +141,7 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
         _ controller: WKWebExtensionController,
         openWindowsFor extensionContext: WKWebExtensionContext
     ) -> [any WKWebExtensionWindow] {
-        browser.map { [$0] } ?? []
+        windows.allObjects
     }
 
     func webExtensionController(
