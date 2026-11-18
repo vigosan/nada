@@ -396,11 +396,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             guard let url = closedPages.popLast() else { return }
             addTab(configuration: WKWebViewConfiguration()).webView.load(URLRequest(url: url))
         case .zoomIn:
-            zoomPage(by: 1.1)
+            zoomPage { $0 * 1.1 }
         case .zoomOut:
-            zoomPage(by: 1 / 1.1)
+            zoomPage { $0 / 1.1 }
         case .resetZoom:
-            tabs.active?.focused?.webView.pageZoom = 1
+            zoomPage { _ in 1 }
         case .startFind:
             openPalette(prefill: lastFind, mode: .find)
         case .findNext:
@@ -503,9 +503,16 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         palette.open(prefill: prefill, placeholder: placeholder)
     }
 
-    private func zoomPage(by factor: Double) {
+    private func zoomPage(_ change: (Double) -> Double) {
         guard let webView = tabs.active?.focused?.webView else { return }
-        webView.pageZoom = min(3, max(0.5, webView.pageZoom * factor))
+        webView.pageZoom = min(3, max(0.5, change(webView.pageZoom)))
+        guard !isPrivate else { return }
+        library.zoom.set(webView.pageZoom, for: webView.url)
+        library.saveZoom()
+    }
+
+    func restoreZoom(of webView: WKWebView) {
+        webView.pageZoom = library.zoom.factor(for: webView.url)
     }
 
     private func split(_ axis: SplitAxis) {

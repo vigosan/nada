@@ -6,6 +6,8 @@ final class Library {
     private static let bookmarksFile = URL.applicationSupportDirectory.appending(path: "Nada/bookmarks.json")
     var history = (try? JSONDecoder().decode(History.self, from: Data(contentsOf: historyFile))) ?? History()
     var bookmarks = (try? JSONDecoder().decode(Bookmarks.self, from: Data(contentsOf: bookmarksFile))) ?? Bookmarks()
+    private static let zoomFile = URL.applicationSupportDirectory.appending(path: "Nada/zoom.json")
+    var zoom = (try? JSONDecoder().decode(SiteZoom.self, from: Data(contentsOf: zoomFile))) ?? SiteZoom()
     private var historySave: DispatchWorkItem?
 
     static func save(_ value: some Encodable, to file: URL) {
@@ -30,6 +32,10 @@ final class Library {
         }
         historySave = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: work)
+    }
+
+    func saveZoom() {
+        Self.save(zoom, to: Self.zoomFile)
     }
 
     func saveBookmarks() {

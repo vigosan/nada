@@ -5,6 +5,7 @@ import WebKit
 extension BrowserController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         if webView.url?.scheme != "about" { pane(for: webView)?.failedURL = nil }
+        restoreZoom(of: webView)
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
