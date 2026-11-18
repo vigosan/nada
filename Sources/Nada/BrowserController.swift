@@ -21,7 +21,6 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private lazy var progressWidth = progressBar.widthAnchor.constraint(equalToConstant: 0)
     private var centeredPalette: [NSLayoutConstraint] = []
     private var cornerPalette: [NSLayoutConstraint] = []
-    private var historySave: DispatchWorkItem?
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
     private var config: Config
@@ -48,10 +47,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     var activeDownloads: [ObjectIdentifier: (id: Int, download: WKDownload, observation: NSKeyValueObservation)] = [:]
     var trustedHosts: Set<String> = []
     private let sessionFile = URL.applicationSupportDirectory.appending(path: "Nada/session.json")
-    private let historyFile = URL.applicationSupportDirectory.appending(path: "Nada/history.json")
-    private lazy var history = (try? JSONDecoder().decode(History.self, from: Data(contentsOf: historyFile))) ?? History()
-    private let bookmarksFile = URL.applicationSupportDirectory.appending(path: "Nada/bookmarks.json")
-    private lazy var bookmarks = (try? JSONDecoder().decode(Bookmarks.self, from: Data(contentsOf: bookmarksFile))) ?? Bookmarks()
+    private let library: Library
     private var searchEngine: SearchEngine {
         get { UserDefaults.standard.string(forKey: "search.engine").flatMap(SearchEngine.init) ?? .duckDuckGo }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: "search.engine") }
@@ -63,9 +59,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         ] + modules.flatMap(\.settings)
     }
 
-    init(modules: [BrowserModule], config: Config) {
+    init(modules: [BrowserModule], config: Config, library: Library = Library()) {
         self.modules = modules
         self.config = config
+        self.library = library
         super.init()
         modules.compactMap { $0 as? ExtensionsModule }.forEach { $0.browser = self }
         window.titlebarAppearsTransparent = true
@@ -88,11 +85,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             case .settings(let section):
                 return Palette.settingsItems(query: query, settings: settings, bindings: config.keyBindings, section: section)
             case .find: return Palette.findItems(query: query)
-            case .bookmarks(let category): return Palette.bookmarkItems(query: query, bookmarks: bookmarks, category: category)
+            case .bookmarks(let category): return Palette.bookmarkItems(query: query, bookmarks: library.bookmarks, category: category)
             case .downloads(let selected): return Palette.downloadItems(query: query, downloads: downloads, selected: selected)
             case .saveBookmark:
                 guard let page = tabs.active?.focused?.webView.url else { return [] }
-                return Palette.bookmarkSaveItems(query: query, bookmarks: bookmarks, page: page)
+                return Palette.bookmarkSaveItems(query: query, bookmarks: library.bookmarks, page: page)
             case .commands: break
             }
             return Palette.items(
@@ -102,8 +99,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 moduleCommands: self.modules.flatMap(\.commands),
                 searchEngine: searchEngine,
                 bindings: config.keyBindings,
-                history: history,
-                bookmarks: bookmarks
+                history: library.history,
+                bookmarks: library.bookmarks
             )
         }
         palette.onClose = { [unowned self] in
@@ -270,13 +267,12 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     }
 
     func saveState() {
-        historySave?.cancel()
-        save(history, to: historyFile)
+        library.saveHistory()
         guard config.restoresWindows else { return }
         let pages = tabs.tabs.map { tab in
             tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title) } }
         }
-        save(Session(pages: pages, active: tabs.activeIndex ?? 0), to: sessionFile)
+        Library.save(Session(pages: pages, active: tabs.activeIndex ?? 0), to: sessionFile)
     }
 
     private func restoreSession() {
@@ -398,12 +394,12 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             openPalette(mode: .bookmarks(category))
         case .saveBookmark(let category):
             guard let pane = tabs.active?.focused, let url = pane.webView.url else { return }
-            bookmarks.save(url: url, title: pane.title, category: category)
-            save(bookmarks, to: bookmarksFile)
+            library.bookmarks.save(url: url, title: pane.title, category: category)
+            library.saveBookmarks()
         case .removeBookmark:
             guard let url = tabs.active?.focused?.webView.url else { return }
-            bookmarks.remove(url: url)
-            save(bookmarks, to: bookmarksFile)
+            library.bookmarks.remove(url: url)
+            library.saveBookmarks()
         case .openDownloads:
             openPalette(mode: .downloads(nil))
         case .download(let id):
@@ -420,8 +416,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .reloadConfig:
             onReloadConfig()
         case .clearHistory:
-            history.clear()
-            save(history, to: historyFile)
+            library.history.clear()
+            library.saveHistory()
         case .clearSiteData:
             ask(
                 "¿Borrar cookies y datos de sitios?",
@@ -577,25 +573,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private func record(_ pane: Pane) {
         guard let url = pane.webView.url, ["http", "https"].contains(url.scheme),
               let title = pane.webView.title, !title.isEmpty else { return }
-        history.record(url: url, title: title, at: Date(), newVisit: pane.recordedURL != url)
+        library.history.record(url: url, title: title, at: Date(), newVisit: pane.recordedURL != url)
         pane.recordedURL = url
-        historySave?.cancel()
-        let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            let snapshot = history
-            DispatchQueue.global(qos: .utility).async { self.save(snapshot, to: self.historyFile) }
-        }
-        historySave = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: work)
-    }
-
-    private func save(_ value: some Encodable, to file: URL) {
-        do {
-            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try JSONEncoder().encode(value).write(to: file, options: .atomic)
-        } catch {
-            NSLog("No se pudo guardar %@: %@", file.lastPathComponent, "\(error)")
-        }
+        library.saveHistorySoon()
     }
 
     private func showActiveTab() {
