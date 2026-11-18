@@ -116,7 +116,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
               aria-label={labels.placeholder}
               autoComplete="off"
               spellCheck={false}
-              className="w-full border-b border-line bg-transparent px-4 py-3 text-ink caret-accent outline-none placeholder:text-dim"
+              className="w-full border-b border-line bg-transparent px-4 py-3 text-base text-ink sm:text-sm caret-accent outline-none placeholder:text-dim"
             />
             <ul className="p-1.5 text-left" onMouseDown={(event) => event.preventDefault()}>
               {items.map((item, index) => (
