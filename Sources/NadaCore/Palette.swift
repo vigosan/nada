@@ -38,6 +38,7 @@ public enum PaletteAction: Equatable, Sendable {
     case clearSiteData
     case pauseMedia
     case printPage
+    case makeDefaultBrowser
     case reloadConfig
     case editKeyBindings
     case openSettingsSection(SettingsSection)

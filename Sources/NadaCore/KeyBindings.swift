@@ -79,6 +79,7 @@ public struct Command: Sendable {
         Command(name: "forward", group: .page, title: "Adelante", action: .forward),
         Command(name: "dev_tools", group: .window, title: "Herramientas de desarrollador", action: .toggleDevTools),
         Command(name: "settings", group: .window, title: "Ajustes", action: .openSettings),
+        Command(name: "default_browser", group: .window, title: "Usar Nada como navegador por defecto", action: .makeDefaultBrowser),
         Command(name: "split_right", group: .panes, title: "Dividir a la derecha", action: .split(.horizontal)),
         Command(name: "split_down", group: .panes, title: "Dividir abajo", action: .split(.vertical)),
         Command(name: "focus_left", group: .panes, title: "Ir al panel de la izquierda", action: .focusPane(.left)),

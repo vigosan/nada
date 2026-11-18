@@ -77,6 +77,11 @@ struct PaletteTests {
         #expect(Palette.items(query: "borrar cookies", tabTitles: []).first?.action == .clearSiteData)
     }
 
+    @Test("hacer de Nada el navegador por defecto se pide desde la paleta, sin ir a Ajustes del Sistema")
+    func defaultBrowserIsSetFromThePalette() {
+        #expect(Palette.items(query: "navegador por defecto", tabTitles: []).first?.action == .makeDefaultBrowser)
+    }
+
     @Test("los ajustes se abren desde la paleta además de con su atajo")
     func settingsAreReachableFromThePalette() {
         #expect(Palette.items(query: "ajustes", tabTitles: []).first?.action == .openSettings)

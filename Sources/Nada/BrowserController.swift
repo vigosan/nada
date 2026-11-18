@@ -470,6 +470,13 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .clearHistory:
             library.history.clear()
             library.saveHistory()
+        case .makeDefaultBrowser:
+            NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpenURLsWithScheme: "http") { [weak self] error in
+                guard let error else { return }
+                DispatchQueue.main.async {
+                    self?.ask("No se pudo cambiar el navegador por defecto", detail: error.localizedDescription, buttons: ["Aceptar"]) { _ in }
+                }
+            }
         case .printPage:
             guard let webView = tabs.active?.focused?.webView else { return }
             let operation = webView.printOperation(with: NSPrintInfo.shared)

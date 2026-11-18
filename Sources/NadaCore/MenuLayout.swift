@@ -18,6 +18,7 @@ public enum MenuLayout {
             .separator,
             .command("settings", symbol: "gearshape"),
             .command("reload_config", symbol: "arrow.triangle.2.circlepath"),
+            .command("default_browser", symbol: "checkmark.seal"),
             .separator,
             .system("hide"),
             .system("hideOthers"),
