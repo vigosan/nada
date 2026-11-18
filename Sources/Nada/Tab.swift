@@ -8,7 +8,8 @@ final class DimView: NSView {
     }
 }
 
-final class Pane {
+final class Pane: NSObject {
+    weak var browser: BrowserController?
     let view = NSView()
     let dim = DimView()
     let webView: WKWebView
@@ -22,6 +23,7 @@ final class Pane {
         configuration.preferences.isElementFullscreenEnabled = true
         configuration.applicationNameForUserAgent = "Version/26.0 Safari/605.1.15"
         webView = WKWebView(frame: view.bounds, configuration: configuration)
+        super.init()
         webView.isInspectable = true
         webView.allowsBackForwardNavigationGestures = true
         webView.autoresizingMask = [.width, .height]

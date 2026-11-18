@@ -39,6 +39,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var mode = Mode.commands
     private var lastFind = ""
     private var closedPages: [URL] = []
+    private weak var announcedPane: Pane?
+    private var extensions: WKWebExtensionController? {
+        modules.lazy.compactMap { ($0 as? ExtensionsModule)?.controller }.first
+    }
     var downloads = DownloadList()
     var downloadFiles: [Int: URL] = [:]
     var activeDownloads: [ObjectIdentifier: (id: Int, download: WKDownload, observation: NSKeyValueObservation)] = [:]
@@ -175,6 +179,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             palette.widthAnchor.constraint(equalToConstant: 340),
         ]
         restoreSession()
+        extensions?.didOpenWindow(self)
+        extensions?.didFocusWindow(self)
         responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in self?.followClickedPane() }
         appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in self?.applyTheme() }
     }
@@ -210,12 +216,44 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     func openInBackground(_ request: URLRequest) {
         let pane = makePane(configuration: WKWebViewConfiguration())
         tabs.insertAfterActive(makeTab(pane))
+        extensions?.didOpenTab(pane)
         pane.webView.load(request)
         refresh()
     }
 
     func pane(for webView: WKWebView) -> Pane? {
         tabs.tabs.flatMap(\.panes.values).first { $0.webView === webView }
+    }
+
+    var panesInOrder: [Pane] {
+        tabs.tabs.flatMap { tab in tab.panes.sorted { $0.key < $1.key }.map(\.value) }
+    }
+
+    var focusedPane: Pane? {
+        tabs.active?.focused
+    }
+
+    func activate(_ pane: Pane) {
+        guard let index = tabs.tabs.firstIndex(where: { $0.panes.values.contains { $0 === pane } }),
+              let id = tabs.tabs[index].panes.first(where: { $0.value === pane })?.key else { return }
+        tabs.select(index)
+        tabs.tabs[index].layout.focus(id)
+        showActiveTab()
+    }
+
+    func close(_ pane: Pane) {
+        guard let index = tabs.tabs.firstIndex(where: { $0.panes.values.contains { $0 === pane } }) else { return }
+        let previous = tabs.activeIndex ?? index
+        let count = tabs.tabs.count
+        activate(pane)
+        close()
+        guard previous != index else { return }
+        tabs.select(tabs.tabs.count < count && previous > index ? previous - 1 : previous)
+        showActiveTab()
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        extensions?.didFocusWindow(self)
     }
 
     func saveState() {
@@ -235,6 +273,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             let pane = makePane(configuration: WKWebViewConfiguration())
             pane.pending = page
             tabs.append(makeTab(pane))
+            extensions?.didOpenTab(pane)
         }
         guard let session, !session.tabs.isEmpty else {
             addTab(configuration: WKWebViewConfiguration())
@@ -420,7 +459,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
 
     private func split(_ axis: SplitAxis) {
         guard let tab = tabs.active else { return }
-        tab.panes[tab.layout.split(axis)] = makePane(configuration: WKWebViewConfiguration())
+        let pane = makePane(configuration: WKWebViewConfiguration())
+        tab.panes[tab.layout.split(axis)] = pane
+        extensions?.didOpenTab(pane)
         showActiveTab()
         openPalette()
     }
@@ -429,6 +470,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         guard let tab = tabs.active else { return }
         let closing = tab.layout.focused
         tab.focused?.address.map { closedPages.append($0) }
+        tab.focused.map { extensions?.didCloseTab($0, windowIsClosing: false) }
         if tab.layout.closeFocused() {
             tab.panes.removeValue(forKey: closing)
         } else {
@@ -464,22 +506,14 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     }
 
     func webViewDidClose(_ webView: WKWebView) {
-        guard let index = tabs.tabs.firstIndex(where: { $0.panes.values.contains { $0.webView === webView } }),
-              let id = tabs.tabs[index].panes.first(where: { $0.value.webView === webView })?.key else { return }
-        let previous = tabs.activeIndex ?? index
-        let count = tabs.tabs.count
-        tabs.select(index)
-        tabs.tabs[index].layout.focus(id)
-        close()
-        guard previous != index else { return }
-        tabs.select(tabs.tabs.count < count && previous > index ? previous - 1 : previous)
-        showActiveTab()
+        pane(for: webView).map(close)
     }
 
     @discardableResult
     private func addTab(configuration: WKWebViewConfiguration) -> Pane {
         let pane = makePane(configuration: configuration)
         tabs.append(makeTab(pane))
+        extensions?.didOpenTab(pane)
         showActiveTab()
         return pane
     }
@@ -493,16 +527,24 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private func makePane(configuration: WKWebViewConfiguration) -> Pane {
         modules.forEach { $0.configure(configuration) }
         let pane = Pane(configuration: configuration)
+        pane.browser = self
         pane.webView.uiDelegate = self
         pane.webView.navigationDelegate = self
         pane.observations = [
             pane.webView.observe(\.title) { [weak self, weak pane] _, _ in
                 pane.map { self?.record($0) }
+                pane.map { self?.extensions?.didChangeTabProperties(.title, for: $0) }
                 self?.refresh()
             },
-            pane.webView.observe(\.url) { [weak self] _, _ in self?.refresh() },
+            pane.webView.observe(\.url) { [weak self, weak pane] _, _ in
+                pane.map { self?.extensions?.didChangeTabProperties(.URL, for: $0) }
+                self?.refresh()
+            },
             pane.webView.observe(\.estimatedProgress) { [weak self] _, _ in self?.refresh() },
-            pane.webView.observe(\.isLoading) { [weak self] _, _ in self?.refresh() },
+            pane.webView.observe(\.isLoading) { [weak self, weak pane] _, _ in
+                pane.map { self?.extensions?.didChangeTabProperties(.loading, for: $0) }
+                self?.refresh()
+            },
         ]
         return pane
     }
@@ -557,6 +599,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             }
         }
         refreshProgress()
+        if let pane = focusedPane, pane !== announcedPane {
+            extensions?.didActivateTab(pane, previousActiveTab: announcedPane)
+            announcedPane = pane
+        }
     }
 
     func downloadsChanged() {
