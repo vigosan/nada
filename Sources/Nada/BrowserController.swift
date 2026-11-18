@@ -362,6 +362,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             downloadFiles[id].map { NSWorkspace.shared.activateFileViewerSelecting([$0]) }
         case .cancelDownload(let id):
             cancelDownload(id)
+        case .clearDownloads:
+            downloads.clear()
+            downloadFiles = downloadFiles.filter { id, _ in downloads.items.contains { $0.id == id } }
         case .reloadConfig:
             onReloadConfig()
         case .clearHistory:

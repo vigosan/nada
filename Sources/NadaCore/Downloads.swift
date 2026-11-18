@@ -37,6 +37,10 @@ public struct DownloadList {
         return nextID
     }
 
+    public mutating func clear() {
+        items.removeAll { $0.fraction == nil }
+    }
+
     public mutating func update(_ id: Int, to state: DownloadState) {
         guard let index = items.firstIndex(where: { $0.id == id }), items[index].fraction != nil else { return }
         items[index].state = state

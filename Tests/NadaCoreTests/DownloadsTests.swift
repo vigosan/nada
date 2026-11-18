@@ -43,7 +43,7 @@ struct DownloadsTests {
         let half = list.start(name: "video.mp4")
         list.update(done, to: .finished)
         list.update(half, to: .running(0.437))
-        let items = Palette.downloadItems(query: "", downloads: list, selected: nil)
+        let items = Palette.downloadItems(query: "", downloads: list, selected: nil).prefix(2)
         #expect(items.map(\.title) == ["video.mp4", "informe.pdf"])
         #expect(items.map(\.shortcut) == ["43 % ›", "Hecha ›"])
         #expect(items.map(\.action) == [.download(half), .download(done)])
@@ -64,5 +64,17 @@ struct DownloadsTests {
         var list = DownloadList()
         let id = list.start(name: "video.mp4")
         #expect(Palette.downloadItems(query: "", downloads: list, selected: id).map(\.action) == [.cancelDownload(id)])
+    }
+
+    @Test("vaciar la lista quita lo que ya acabó y deja lo que sigue bajando")
+    func clearingKeepsWhatIsStillRunning() {
+        var list = DownloadList()
+        let done = list.start(name: "informe.pdf")
+        _ = list.start(name: "video.mp4")
+        #expect(!Palette.downloadItems(query: "", downloads: list, selected: nil).map(\.action).contains(.clearDownloads))
+        list.update(done, to: .finished)
+        #expect(Palette.downloadItems(query: "", downloads: list, selected: nil).last?.action == .clearDownloads)
+        list.clear()
+        #expect(list.items.map(\.name) == ["video.mp4"])
     }
 }

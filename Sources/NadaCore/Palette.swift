@@ -45,6 +45,7 @@ public enum PaletteAction: Equatable, Sendable {
     case openDownloadedFile(Int)
     case revealDownload(Int)
     case cancelDownload(Int)
+    case clearDownloads
 }
 
 public enum SettingsSection: Equatable, Sendable {
@@ -215,7 +216,9 @@ public enum Palette {
             }
             return PaletteItem(title: download.name, shortcut: state, action: .download(download.id))
         }
-        return text.isEmpty ? items : matching(items, text)
+        let settled = downloads.items.count - downloads.running
+        let clearing = settled == 0 ? [] : [PaletteItem(title: "Vaciar lista", shortcut: "\(settled)", action: .clearDownloads)]
+        return text.isEmpty ? items + clearing : matching(items + clearing, text)
     }
 
     private static func starredItem(for bookmark: Bookmark) -> PaletteItem {
