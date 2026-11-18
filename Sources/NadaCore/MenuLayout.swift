@@ -61,6 +61,7 @@ public enum MenuLayout {
             .separator,
             .command("palette", symbol: "filemenu.and.selection"),
             .command("bookmarks", symbol: "book"),
+            .command("downloads", symbol: "arrow.down.circle"),
             .separator,
             .command("dev_tools", symbol: "scope"),
         ]),

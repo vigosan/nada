@@ -40,6 +40,10 @@ public enum PaletteAction: Equatable, Sendable {
     case saveBookmark(category: String)
     case removeBookmark
     case openBookmarkCategory(String)
+    case openDownloads
+    case download(Int)
+    case openDownloadedFile(Int)
+    case revealDownload(Int)
 }
 
 public enum SettingsSection: Equatable, Sendable {
@@ -184,6 +188,27 @@ public enum Palette {
         return bookmarks.categories.map {
             PaletteItem(title: $0, shortcut: "\(bookmarks.items(in: $0).count) ›", action: .openBookmarkCategory($0))
         }
+    }
+
+    public static func downloadItems(query: String, downloads: DownloadList, selected: Int?) -> [PaletteItem] {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let selected {
+            guard downloads.items.first(where: { $0.id == selected })?.state == .finished else { return [] }
+            return [
+                PaletteItem(title: "Abrir", shortcut: "↵", action: .openDownloadedFile(selected)),
+                PaletteItem(title: "Mostrar en Finder", shortcut: "", action: .revealDownload(selected)),
+            ]
+        }
+        let items = downloads.items.map { download in
+            let state = switch download.state {
+            case .running(let fraction): "\(Int(fraction * 100)) %"
+            case .finished: "Hecha ›"
+            case .failed: "Falló"
+            case .cancelled: "Cancelada"
+            }
+            return PaletteItem(title: download.name, shortcut: state, action: .download(download.id))
+        }
+        return text.isEmpty ? items : matching(items, text)
     }
 
     private static func starredItem(for bookmark: Bookmark) -> PaletteItem {

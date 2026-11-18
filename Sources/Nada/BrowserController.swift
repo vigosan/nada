@@ -32,6 +32,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case settings(SettingsSection?)
         case saveBookmark
         case bookmarks(String?)
+        case downloads(Int?)
         case find
     }
 
@@ -83,6 +84,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 return Palette.settingsItems(query: query, settings: settings, bindings: config.keyBindings, section: section)
             case .find: return Palette.findItems(query: query)
             case .bookmarks(let category): return Palette.bookmarkItems(query: query, bookmarks: bookmarks, category: category)
+            case .downloads(let selected): return Palette.downloadItems(query: query, downloads: downloads, selected: selected)
             case .saveBookmark:
                 guard let page = tabs.active?.focused?.webView.url else { return [] }
                 return Palette.bookmarkSaveItems(query: query, bookmarks: bookmarks, page: page)
@@ -104,6 +106,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 openPalette(mode: .settings(section.parent))
             } else if case .bookmarks(.some) = mode {
                 openPalette(mode: .bookmarks(nil))
+            } else if case .downloads(.some) = mode {
+                openPalette(mode: .downloads(nil))
             } else {
                 closePalette()
             }
@@ -126,6 +130,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             }
             if case .openBookmarkCategory(let category) = action {
                 openPalette(mode: .bookmarks(category))
+                return
+            }
+            if case .download(let id) = action {
+                openPalette(mode: .downloads(id))
                 return
             }
             closePalette()
@@ -344,6 +352,14 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             guard let url = tabs.active?.focused?.webView.url else { return }
             bookmarks.remove(url: url)
             save(bookmarks, to: bookmarksFile)
+        case .openDownloads:
+            openPalette(mode: .downloads(nil))
+        case .download(let id):
+            openPalette(mode: .downloads(id))
+        case .openDownloadedFile(let id):
+            downloadFiles[id].map { _ = NSWorkspace.shared.open($0) }
+        case .revealDownload(let id):
+            downloadFiles[id].map { NSWorkspace.shared.activateFileViewerSelecting([$0]) }
         case .reloadConfig:
             onReloadConfig()
         case .clearHistory:
@@ -385,6 +401,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .settings(let section): section?.path ?? "Ajustes"
         case .saveBookmark: "Guardar en marcadores: elige o escribe una categoría"
         case .bookmarks(let category): category.map { "Marcadores › \($0)" } ?? "Marcadores"
+        case .downloads(let selected):
+            downloads.items.first { $0.id == selected }.map { "Descargas › \($0.name)" }
+                ?? (downloads.items.isEmpty ? "No hay descargas" : "Descargas")
         }
         palette.open(prefill: prefill, placeholder: placeholder)
     }
@@ -533,6 +552,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             }
         }
         refreshProgress()
+    }
+
+    func downloadsChanged() {
+        refreshProgress()
+        if !palette.isHidden, case .downloads = mode { palette.reload() }
     }
 
     func refreshProgress() {

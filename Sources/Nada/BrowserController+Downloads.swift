@@ -20,7 +20,7 @@ extension BrowserController: WKDownloadDelegate {
             DispatchQueue.main.async { self?.downloadProgressed(id, to: fraction) }
         }
         activeDownloads[ObjectIdentifier(download)] = (id, download, observation)
-        refreshProgress()
+        downloadsChanged()
         completionHandler(folder.appending(path: name))
     }
 
@@ -38,13 +38,13 @@ extension BrowserController: WKDownloadDelegate {
         guard case .running(let shown)? = downloads.items.first(where: { $0.id == id })?.state,
               Int(shown * 100) != Int(fraction * 100) else { return }
         downloads.update(id, to: .running(fraction))
-        refreshProgress()
+        downloadsChanged()
     }
 
     private func settle(_ download: WKDownload, as state: DownloadState) -> Int? {
         guard let active = activeDownloads.removeValue(forKey: ObjectIdentifier(download)) else { return nil }
         downloads.update(active.id, to: state)
-        refreshProgress()
+        downloadsChanged()
         return active.id
     }
 }

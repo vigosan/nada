@@ -105,6 +105,7 @@ public struct Command: Sendable {
         Command(name: "clear_history", group: .page, title: "Borrar historial", action: .clearHistory),
         Command(name: "bookmarks", group: .page, title: "Marcadores", action: .openBookmarks),
         Command(name: "bookmark_page", group: .page, title: "Guardar en marcadores", action: .bookmarkPage),
+        Command(name: "downloads", group: .page, title: "Descargas", action: .openDownloads),
     ] + (1...9).map { Command(name: "goto_tab:\($0)", group: .tabs, title: "Pestaña \($0)", action: .selectTab($0 - 1)) }
 }
 
@@ -174,7 +175,7 @@ public struct KeyBindings: Sendable {
         ("ctrl+tab", "next_tab"), ("ctrl+shift+tab", "previous_tab"),
         ("cmd+shift+t", "reopen_tab"), ("cmd+ctrl+=", "equalize_panes"),
         ("cmd+=", "zoom_in"), ("cmd+plus", "zoom_in"), ("cmd+-", "zoom_out"), ("cmd+0", "reset_zoom"),
-        ("cmd+b", "bookmark_page"), ("cmd+opt+b", "bookmarks"),
+        ("cmd+b", "bookmark_page"), ("cmd+opt+b", "bookmarks"), ("cmd+opt+l", "downloads"),
         ("cmd+f", "find"), ("cmd+g", "find_next"), ("cmd+shift+g", "find_previous"),
     ] + (1...9).map { ("cmd+\($0)", "goto_tab:\($0)") }
 }

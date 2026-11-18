@@ -35,4 +35,28 @@ struct DownloadsTests {
         list.update(id, to: .failed)
         #expect(list.items.first?.state == .cancelled)
     }
+
+    @Test("la lista dice de un vistazo cómo va cada descarga y deja buscar por nombre")
+    func listShowsTheStateOfEachDownload() {
+        var list = DownloadList()
+        let done = list.start(name: "informe.pdf")
+        let half = list.start(name: "video.mp4")
+        list.update(done, to: .finished)
+        list.update(half, to: .running(0.437))
+        let items = Palette.downloadItems(query: "", downloads: list, selected: nil)
+        #expect(items.map(\.title) == ["video.mp4", "informe.pdf"])
+        #expect(items.map(\.shortcut) == ["43 %", "Hecha ›"])
+        #expect(items.map(\.action) == [.download(half), .download(done)])
+        #expect(Palette.downloadItems(query: "INFOR", downloads: list, selected: nil).map(\.title) == ["informe.pdf"])
+    }
+
+    @Test("una descarga terminada se puede abrir o enseñar en Finder sin salir del teclado")
+    func finishedDownloadsCanBeOpenedOrRevealed() {
+        var list = DownloadList()
+        let id = list.start(name: "informe.pdf")
+        #expect(Palette.downloadItems(query: "", downloads: list, selected: id).isEmpty)
+        list.update(id, to: .finished)
+        let actions = Palette.downloadItems(query: "", downloads: list, selected: id).map(\.action)
+        #expect(actions == [.openDownloadedFile(id), .revealDownload(id)])
+    }
 }
