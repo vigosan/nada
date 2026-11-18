@@ -470,6 +470,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .clearHistory:
             library.history.clear()
             library.saveHistory()
+        case .printPage:
+            guard let webView = tabs.active?.focused?.webView else { return }
+            let operation = webView.printOperation(with: NSPrintInfo.shared)
+            operation.view?.frame = webView.bounds
+            operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
         case .pauseMedia:
             panesInOrder.forEach { $0.webView.pauseAllMediaPlayback() }
         case .clearSiteData:

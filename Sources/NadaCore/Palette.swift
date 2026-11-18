@@ -37,6 +37,7 @@ public enum PaletteAction: Equatable, Sendable {
     case clearHistory
     case clearSiteData
     case pauseMedia
+    case printPage
     case reloadConfig
     case editKeyBindings
     case openSettingsSection(SettingsSection)

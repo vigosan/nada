@@ -36,6 +36,7 @@ public enum MenuLayout {
             .command("split_down", symbol: "rectangle.bottomhalf.inset.filled"),
             .separator,
             .command("bookmark_page", symbol: "star"),
+            .command("print", symbol: "printer"),
             .separator,
             .command("close", symbol: "xmark"),
         ]),

@@ -51,6 +51,11 @@ struct KeyBindingsTests {
         #expect(Palette.items(query: "duplicar", tabTitles: []).first?.action == .duplicateTab)
     }
 
+    @Test("imprimir, que también es como se guarda una página en PDF, va con el atajo de siempre")
+    func printingUsesTheUsualShortcut() throws {
+        #expect(KeyBindings(config: "").action(for: try #require(KeyCombo("cmd+p"))) == .printPage)
+    }
+
     @Test("los corchetes cambian de panel como en Ghostty, y atrás y adelante van con las flechas como en Brave")
     func bracketsCyclePanesAndArrowsGoThroughHistory() {
         let bindings = KeyBindings(config: "")

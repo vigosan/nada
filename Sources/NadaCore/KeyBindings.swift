@@ -109,6 +109,7 @@ public struct Command: Sendable {
         Command(name: "find_previous", group: .page, title: "Coincidencia anterior", action: .findPrevious),
         Command(name: "clear_history", group: .page, title: "Borrar historial", action: .clearHistory),
         Command(name: "clear_site_data", group: .page, title: "Borrar cookies y datos de sitios", action: .clearSiteData),
+        Command(name: "print", group: .page, title: "Imprimir o guardar como PDF", action: .printPage),
         Command(name: "pause_media", group: .page, title: "Pausar todo lo que suena", action: .pauseMedia),
         Command(name: "bookmarks", group: .page, title: "Marcadores", action: .openBookmarks),
         Command(name: "bookmark_page", group: .page, title: "Guardar en marcadores", action: .bookmarkPage),
@@ -184,7 +185,7 @@ public struct KeyBindings: Sendable {
         ("cmd+opt+shift+left", "move_tab_left"), ("cmd+opt+shift+right", "move_tab_right"),
         ("cmd+shift+t", "reopen_tab"), ("cmd+ctrl+=", "equalize_panes"),
         ("cmd+=", "zoom_in"), ("cmd+plus", "zoom_in"), ("cmd+-", "zoom_out"), ("cmd+0", "reset_zoom"),
-        ("cmd+b", "bookmark_page"), ("cmd+opt+b", "bookmarks"), ("cmd+opt+l", "downloads"),
+        ("cmd+p", "print"), ("cmd+b", "bookmark_page"), ("cmd+opt+b", "bookmarks"), ("cmd+opt+l", "downloads"),
         ("cmd+f", "find"), ("cmd+g", "find_next"), ("cmd+shift+g", "find_previous"),
     ] + (1...9).map { ("cmd+\($0)", "goto_tab:\($0)") }
 }
