@@ -63,7 +63,6 @@ public struct PaneLayout {
     }
 
     public mutating func moveFocus(_ direction: Direction) {
-        zoomed = false
         let frames = allFrames
         guard let from = frames[focused] else { return }
         let tolerance = 0.0001
@@ -97,7 +96,6 @@ public struct PaneLayout {
         let order = Self.leaves(of: root)
         guard let index = order.firstIndex(of: focused) else { return }
         focused = order[(index + step + order.count) % order.count]
-        zoomed = false
     }
 
     public mutating func equalize() {

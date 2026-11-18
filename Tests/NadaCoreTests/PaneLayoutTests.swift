@@ -111,14 +111,21 @@ struct PaneLayoutTests {
         #expect(layout.frames[right] == CGRect(x: 0.5, y: 0, width: 0.5, height: 1))
     }
 
-    @Test("ir a otro panel o dividir deshace la ampliación para no perder de vista dónde está el foco")
-    func changingPanesLeavesZoom() {
+    @Test("al cambiar de panel la ampliación se mantiene: pasas al siguiente a pantalla entera, como en Ghostty")
+    func navigatingKeepsZoom() {
         var layout = PaneLayout()
-        _ = layout.split(.horizontal)
+        let right = layout.split(.horizontal)
         layout.toggleZoom()
         layout.moveFocus(.left)
-        #expect(layout.focused == 0)
-        #expect(layout.frames.count == 2)
+        #expect(layout.frames == [0: CGRect(x: 0, y: 0, width: 1, height: 1)])
+        layout.focusNext()
+        #expect(layout.frames == [right: CGRect(x: 0, y: 0, width: 1, height: 1)])
+    }
+
+    @Test("dividir o cerrar un panel sí deshace la ampliación, porque cambia lo que hay que ver")
+    func changingTheLayoutLeavesZoom() {
+        var layout = PaneLayout()
+        _ = layout.split(.horizontal)
         layout.toggleZoom()
         _ = layout.split(.vertical)
         #expect(layout.frames.count == 3)
