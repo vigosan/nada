@@ -4,6 +4,7 @@ import WebKit
 
 final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerDelegate {
     static let folder = URL.applicationSupportDirectory.appending(path: "Nada/extensions")
+    private static let popupCommand = "_execute_action"
 
     let controller: WKWebExtensionController
     private(set) var contexts: [WKWebExtensionContext] = []
@@ -21,6 +22,9 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
         controller = WKWebExtensionController(configuration: configuration)
         super.init()
         controller.delegate = self
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleShortcut(event) == true ? nil : event
+        }
         let folders = ((try? FileManager.default.contentsOfDirectory(at: Self.folder, includingPropertiesForKeys: nil)) ?? [])
             .filter { FileManager.default.fileExists(atPath: $0.appending(path: "manifest.json").path) }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
@@ -30,8 +34,20 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
     }
 
     var commands: [ModuleCommand] {
-        contexts.map {
-            ModuleCommand(id: "extension:\($0.uniqueIdentifier)", title: "Extensión: \(name(of: $0))")
+        contexts.flatMap { context in
+            [
+                ModuleCommand(
+                    id: "extension:\(context.uniqueIdentifier)",
+                    title: "Extensión: \(name(of: context))",
+                    shortcut: shortcut(of: context.commands.first { $0.id == Self.popupCommand })
+                ),
+            ] + context.commands.filter { $0.id != Self.popupCommand }.map {
+                ModuleCommand(
+                    id: "extension.command:\(context.uniqueIdentifier):\($0.id)",
+                    title: "\(name(of: context)): \($0.title)",
+                    shortcut: shortcut(of: $0)
+                )
+            }
         } + contexts.map {
             ModuleCommand(id: "extensions.remove:\($0.uniqueIdentifier)", title: "Quitar extensión: \(name(of: $0))")
         } + [
@@ -62,7 +78,37 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
             remove(removed)
             return
         }
+        for context in contexts {
+            if let command = context.commands.first(where: { "extension.command:\(context.uniqueIdentifier):\($0.id)" == commandID }) {
+                context.performCommand(command)
+                return
+            }
+        }
         contexts.first { "extension:\($0.uniqueIdentifier)" == commandID }?.performAction(for: browser?.focusedPane)
+    }
+
+    private func shortcut(of command: WKWebExtension.Command?) -> String {
+        guard let command, let key = command.activationKey else { return "" }
+        let names: [(NSEvent.ModifierFlags, String)] = [(.control, "ctrl"), (.option, "opt"), (.shift, "shift"), (.command, "cmd")]
+        let combo = names.filter { command.modifierFlags.contains($0.0) }.map(\.1) + [key]
+        return KeyCombo(combo.joined(separator: "+"))?.label ?? ""
+    }
+
+    func handleShortcut(_ event: NSEvent) -> Bool {
+        guard event.window === browser?.window, !claimed(event, by: NSApp.mainMenu) else { return false }
+        return contexts.contains { $0.performCommand(for: event) }
+    }
+
+    private func claimed(_ event: NSEvent, by menu: NSMenu?) -> Bool {
+        let modifiers: NSEvent.ModifierFlags = [.command, .shift, .option, .control]
+        let key = event.charactersIgnoringModifiers?.lowercased()
+        return menu?.items.contains { item in
+            if claimed(event, by: item.submenu) { return true }
+            guard !item.keyEquivalent.isEmpty, item.keyEquivalent.lowercased() == key else { return false }
+            var wanted = item.keyEquivalentModifierMask.intersection(modifiers)
+            if item.keyEquivalent != item.keyEquivalent.lowercased() { wanted.insert(.shift) }
+            return wanted == event.modifierFlags.intersection(modifiers)
+        } ?? false
     }
 
     private func name(of context: WKWebExtensionContext) -> String {

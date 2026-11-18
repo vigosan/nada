@@ -64,6 +64,14 @@ struct PaletteTests {
         #expect(found.first?.action == .module("adblock.toggle"))
     }
 
+    @Test("la orden de un módulo enseña su atajo, que es como se aprende el de una extensión sin abrir sus ajustes")
+    func moduleCommandsShowTheirShortcut() {
+        let command = ModuleCommand(id: "extension.command:bitwarden:autofill_login", title: "Bitwarden: Autofill", shortcut: "⇧⌘L")
+        let found = Palette.items(query: "autofill", tabTitles: [], moduleCommands: [command])
+        #expect(found.first?.shortcut == "⇧⌘L")
+        #expect(Palette.items(query: "x", tabTitles: [], moduleCommands: [ModuleCommand(id: "x", title: "x")]).first?.shortcut == "")
+    }
+
     @Test("los ajustes se abren desde la paleta además de con su atajo")
     func settingsAreReachableFromThePalette() {
         #expect(Palette.items(query: "ajustes", tabTitles: []).first?.action == .openSettings)

@@ -79,10 +79,12 @@ public struct Setting: Equatable {
 public struct ModuleCommand: Equatable {
     public let id: String
     public let title: String
+    public let shortcut: String
 
-    public init(id: String, title: String) {
+    public init(id: String, title: String, shortcut: String = "") {
         self.id = id
         self.title = title
+        self.shortcut = shortcut
     }
 }
 
@@ -253,7 +255,7 @@ public enum Palette {
         }.map {
             PaletteItem(title: $0.title, shortcut: bindings.label(for: $0.action), action: $0.action)
         } + moduleCommands.map {
-            PaletteItem(title: $0.title, shortcut: "", action: .module($0.id))
+            PaletteItem(title: $0.title, shortcut: $0.shortcut, action: .module($0.id))
         }
     }
 }
