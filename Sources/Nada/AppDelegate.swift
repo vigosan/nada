@@ -61,6 +61,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         urls.forEach { browser?.open($0) }
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let browser, browser.downloads.running > 0 else { return .terminateNow }
+        browser.confirmLeavingDownloads { sender.reply(toApplicationShouldTerminate: $0) }
+        return .terminateLater
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         browser?.saveState()
     }

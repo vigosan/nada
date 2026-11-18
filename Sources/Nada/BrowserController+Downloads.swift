@@ -34,6 +34,28 @@ extension BrowserController: WKDownloadDelegate {
         ask("No se pudo descargar \(downloadFiles[id]?.lastPathComponent ?? "el archivo")", detail: error.localizedDescription, buttons: ["Aceptar"]) { _ in }
     }
 
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard downloads.running > 0 else { return true }
+        NSApp.terminate(nil)
+        return false
+    }
+
+    func confirmLeavingDownloads(_ completion: @escaping (Bool) -> Void) {
+        let count = downloads.running
+        ask(
+            count == 1 ? "Hay una descarga en curso" : "Hay \(count) descargas en curso",
+            detail: "Si sales ahora se cancelarán.",
+            buttons: ["Seguir descargando", "Salir"]
+        ) { [weak self] response in
+            guard response == .alertSecondButtonReturn else {
+                completion(false)
+                return
+            }
+            self?.activeDownloads.values.map(\.id).forEach { self?.cancelDownload($0) }
+            completion(true)
+        }
+    }
+
     func cancelDownload(_ id: Int) {
         guard let download = activeDownloads.values.first(where: { $0.id == id })?.download else { return }
         _ = settle(download, as: .cancelled)
