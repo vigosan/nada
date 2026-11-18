@@ -8,6 +8,7 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
     let controller: WKWebExtensionController
     private(set) var contexts: [WKWebExtensionContext] = []
     weak var browser: BrowserController?
+    private var connections: [ObjectIdentifier: NativeConnection] = [:]
 
     override init() {
         let pages = WKWebViewConfiguration()
@@ -158,6 +159,59 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
         completionHandler: @escaping (Set<WKWebExtension.MatchPattern>, Date?) -> Void
     ) {
         confirm(matchPatterns.map(\.string).sorted(), for: context) { completionHandler($0 ? matchPatterns : [], nil) }
+    }
+
+    func webExtensionController(
+        _ controller: WKWebExtensionController,
+        connectUsing port: WKWebExtension.MessagePort,
+        for context: WKWebExtensionContext,
+        completionHandler: @escaping ((any Error)?) -> Void
+    ) {
+        guard let connection = connect(to: port.applicationIdentifier, for: context) else {
+            completionHandler(CocoaError(.fileNoSuchFile))
+            return
+        }
+        let key = ObjectIdentifier(connection)
+        connection.onMessage = { port.sendMessage($0) { _ in } }
+        connection.onClose = { [weak self] in
+            self?.connections[key] = nil
+            if !port.isDisconnected { port.disconnect() }
+        }
+        port.messageHandler = { message, _ in message.map(connection.send) }
+        port.disconnectHandler = { _ in connection.close() }
+        completionHandler(nil)
+    }
+
+    func webExtensionController(
+        _ controller: WKWebExtensionController,
+        sendMessage message: Any,
+        toApplicationWithIdentifier applicationIdentifier: String?,
+        for context: WKWebExtensionContext,
+        replyHandler: @escaping (Any?, (any Error)?) -> Void
+    ) {
+        guard let connection = connect(to: applicationIdentifier, for: context) else {
+            replyHandler(nil, CocoaError(.fileNoSuchFile))
+            return
+        }
+        let key = ObjectIdentifier(connection)
+        var answered = false
+        connection.onMessage = { reply in
+            answered = true
+            replyHandler(reply, nil)
+            connection.close()
+        }
+        connection.onClose = { [weak self] in
+            self?.connections[key] = nil
+            if !answered { replyHandler(nil, CocoaError(.fileReadUnknown)) }
+        }
+        connection.send(message)
+    }
+
+    private func connect(to application: String?, for context: WKWebExtensionContext) -> NativeConnection? {
+        guard let host = NativeConnection.host(named: application, for: context.uniqueIdentifier),
+              let connection = try? NativeConnection(host) else { return nil }
+        connections[ObjectIdentifier(connection)] = connection
+        return connection
     }
 
     private func open(_ url: URL?, for context: WKWebExtensionContext) -> Pane? {
