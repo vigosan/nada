@@ -17,6 +17,13 @@ describe("home", () => {
   });
 });
 
+describe("demo", () => {
+  it("makes every palette command a button, so a visitor without a keyboard can still run one", () => {
+    const html = renderToStaticMarkup(<Home c={content.en} />);
+    expect(html.match(/<button[^>]*data-testid="demo-item"/g)).toHaveLength(4);
+  });
+});
+
 describe("page frame", () => {
   it("links privacy and support from every page footer, in the page's own language", () => {
     const html = renderToStaticMarkup(<Home c={content.es} />);

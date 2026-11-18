@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Content } from "@/content";
-import { apply, INITIAL, paletteItems } from "@/demo";
+import { apply, INITIAL, paletteItems, type Item } from "@/demo";
 import { Keys } from "./Keys";
 
 function Pane({ title }: { title: string | null }) {
@@ -37,6 +37,11 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
     setSelected(0);
   };
 
+  const run = (item: Item) => {
+    setState(apply(state, item.action));
+    show(false);
+  };
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -60,10 +65,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
     if (event.key === "Escape") show(false);
     if (event.key === "ArrowDown") setSelected((selected + 1) % items.length);
     if (event.key === "ArrowUp") setSelected((selected - 1 + items.length) % items.length);
-    if (event.key === "Enter" && items[selected]) {
-      setState(apply(state, items[selected].action));
-      show(false);
-    }
+    if (event.key === "Enter" && items[selected]) run(items[selected]);
     if (["ArrowDown", "ArrowUp"].includes(event.key)) event.preventDefault();
   };
 
@@ -116,14 +118,19 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
               spellCheck={false}
               className="w-full border-b border-line bg-transparent px-4 py-3 text-ink caret-accent outline-none placeholder:text-dim"
             />
-            <ul className="p-1.5 text-left">
+            <ul className="p-1.5 text-left" onMouseDown={(event) => event.preventDefault()}>
               {items.map((item, index) => (
-                <li
-                  key={item.title}
-                  className={`flex justify-between gap-3 rounded-md px-2.5 py-1.5 ${index === selected ? "bg-raised text-ink" : "text-dim"}`}
-                >
-                  <span className="truncate">{item.title}</span>
-                  <span>{item.keys}</span>
+                <li key={item.title}>
+                  <button
+                    type="button"
+                    data-testid="demo-item"
+                    tabIndex={-1}
+                    onClick={() => run(item)}
+                    className={`flex w-full cursor-pointer justify-between gap-3 rounded-md px-2.5 py-1.5 ${index === selected ? "bg-raised text-ink" : "text-dim"}`}
+                  >
+                    <span className="truncate">{item.title}</span>
+                    <span>{item.keys}</span>
+                  </button>
                 </li>
               ))}
             </ul>
