@@ -12,6 +12,16 @@ struct TabListTests {
         #expect(list.activeIndex == 1)
     }
 
+    @Test("una pestaña abierta en segundo plano queda junto a la actual y no quita de delante lo que se estaba leyendo")
+    func insertingInBackgroundKeepsTheActiveTab() {
+        var list = TabList<String>()
+        ["a", "b", "c"].forEach { list.append($0) }
+        list.select(0)
+        list.insertAfterActive("x")
+        #expect(list.tabs == ["a", "x", "b", "c"])
+        #expect(list.active == "a")
+    }
+
     @Test("al cerrar una pestaña intermedia se activa la que ocupa su hueco")
     func closingMiddleActivatesNeighbour() {
         var list = TabList<String>()

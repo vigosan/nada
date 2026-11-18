@@ -13,6 +13,10 @@ public struct TabList<Tab> {
         activeIndex = tabs.count - 1
     }
 
+    public mutating func insertAfterActive(_ tab: Tab) {
+        tabs.insert(tab, at: activeIndex.map { $0 + 1 } ?? tabs.count)
+    }
+
     public mutating func select(_ index: Int) {
         guard tabs.indices.contains(index) else { return }
         activeIndex = index

@@ -30,6 +30,12 @@ public enum ErrorPage {
     }
 }
 
+public enum LinkClick {
+    public static func opensNewTab(command: Bool, button: Int) -> Bool {
+        command || button == 2
+    }
+}
+
 public enum Downloads {
     public static func freeName(for suggested: String, exists: (String) -> Bool) -> String {
         let last = (suggested as NSString).lastPathComponent

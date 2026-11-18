@@ -19,6 +19,14 @@ struct PagesTests {
         #expect(html.contains("&lt;script&gt;"))
     }
 
+    @Test("un enlace pulsado con ⌘ o con el botón central se abre en otra pestaña; un clic normal sigue en la misma")
+    func modifiedClicksOpenANewTab() {
+        #expect(LinkClick.opensNewTab(command: true, button: 0))
+        #expect(LinkClick.opensNewTab(command: false, button: 2))
+        #expect(!LinkClick.opensNewTab(command: false, button: 0))
+        #expect(!LinkClick.opensNewTab(command: false, button: 1))
+    }
+
     @Test("una descarga nunca pisa un archivo que ya existe: se numera")
     func downloadsGetAFreeName() {
         let taken: Set<String> = ["informe.pdf", "informe 2.pdf", "datos"]

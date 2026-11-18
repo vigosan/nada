@@ -196,6 +196,13 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         focusPage()
     }
 
+    func openInBackground(_ request: URLRequest) {
+        let pane = makePane(configuration: WKWebViewConfiguration())
+        tabs.insertAfterActive(makeTab(pane))
+        pane.webView.load(request)
+        refresh()
+    }
+
     func pane(for webView: WKWebView) -> Pane? {
         tabs.tabs.flatMap(\.panes.values).first { $0.webView === webView }
     }

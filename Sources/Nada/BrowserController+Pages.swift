@@ -26,6 +26,15 @@ extension BrowserController: WKNavigationDelegate, WKDownloadDelegate {
         decidePolicyFor navigationAction: WKNavigationAction,
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
+        let newTab = navigationAction.navigationType == .linkActivated && LinkClick.opensNewTab(
+            command: navigationAction.modifierFlags.contains(.command),
+            button: navigationAction.buttonNumber
+        )
+        if newTab, !navigationAction.shouldPerformDownload {
+            openInBackground(navigationAction.request)
+            decisionHandler(.cancel)
+            return
+        }
         decisionHandler(navigationAction.shouldPerformDownload ? .download : .allow)
     }
 
