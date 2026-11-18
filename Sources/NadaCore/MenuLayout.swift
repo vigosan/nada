@@ -16,6 +16,7 @@ public enum MenuLayout {
             .system("about"),
             .separator,
             .command("settings", symbol: "gearshape"),
+            .command("reload_config", symbol: "arrow.triangle.2.circlepath"),
             .separator,
             .system("hide"),
             .system("hideOthers"),

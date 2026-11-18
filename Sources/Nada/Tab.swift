@@ -30,7 +30,7 @@ final class Pane {
         dim.frame = view.bounds
         dim.autoresizingMask = [.width, .height]
         dim.wantsLayer = true
-        dim.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.3).cgColor
+        dim.layer?.backgroundColor = Theme.veil.cgColor
         view.addSubview(dim)
     }
 

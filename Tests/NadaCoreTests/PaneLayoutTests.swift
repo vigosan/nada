@@ -111,9 +111,22 @@ struct PaneLayoutTests {
         #expect(layout.frames[right] == CGRect(x: 0.5, y: 0, width: 0.5, height: 1))
     }
 
-    @Test("al cambiar de panel la ampliación se mantiene: pasas al siguiente a pantalla entera, como en Ghostty")
-    func navigatingKeepsZoom() {
+    @Test("de fábrica, cambiar de panel deshace la ampliación, como en Ghostty")
+    func navigatingLeavesZoomByDefault() {
         var layout = PaneLayout()
+        _ = layout.split(.horizontal)
+        layout.toggleZoom()
+        layout.moveFocus(.left)
+        #expect(layout.frames.count == 2)
+        layout.toggleZoom()
+        layout.focusNext()
+        #expect(layout.frames.count == 2)
+    }
+
+    @Test("con split-preserve-zoom, al cambiar de panel pasas al siguiente a pantalla entera")
+    func navigatingKeepsZoomWhenAsked() {
+        var layout = PaneLayout()
+        layout.preservesZoom = true
         let right = layout.split(.horizontal)
         layout.toggleZoom()
         layout.moveFocus(.left)

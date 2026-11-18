@@ -26,7 +26,7 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
         field.isBordered = false
         field.drawsBackground = false
         field.focusRingType = .none
-        field.font = .monospacedSystemFont(ofSize: 15, weight: .regular)
+        field.font = Theme.mono(15)
         field.textColor = Theme.text
         field.delegate = self
         field.translatesAutoresizingMaskIntoConstraints = false
@@ -56,6 +56,7 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
     func restyle() {
         layer?.borderColor = Theme.raised.cgColor
         field.textColor = Theme.text
+        field.font = Theme.mono(15)
         render()
     }
 
@@ -115,7 +116,7 @@ final class PaletteView: NSVisualEffectView, NSTextFieldDelegate {
                 title: item.title,
                 shortcut: item.shortcut,
                 highlighted: index == selected,
-                font: .monospacedSystemFont(ofSize: 13, weight: .regular),
+                font: Theme.mono(13),
                 inset: 10
             )
             row.translatesAutoresizingMaskIntoConstraints = false

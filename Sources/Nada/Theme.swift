@@ -12,9 +12,17 @@ enum Theme {
     static var accent: NSColor { color(colors.accent) }
     static var dim: NSColor { color(colors.dim) }
 
-    static func load(_ choice: ThemeChoice) {
+    static var veil = NSColor.black
+    static var divider = NSColor.black
+    static var fontFamily: String?
+
+    static func mono(_ size: CGFloat) -> NSFont {
+        fontFamily.flatMap { NSFont(name: $0, size: size) } ?? .monospacedSystemFont(ofSize: size, weight: .regular)
+    }
+
+    static func load(_ config: Config) {
         let dark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        let wanted = choice.name(dark: dark)
+        let wanted = config.theme.name(dark: dark)
         let folders = [
             URL.homeDirectory.appending(path: ".config/nada/themes"),
             URL.homeDirectory.appending(path: ".config/ghostty/themes"),
@@ -34,6 +42,14 @@ enum Theme {
             colors = ThemeColors.builtIn[dark ? "nada" : "nada-light"].flatMap(ThemeColors.init(ghostty:)) ?? .fallback
             name = dark ? "nada" : "nada-light"
         }
+        finish(config)
+    }
+
+    private static func finish(_ config: Config) {
+        colors = colors.overriding(background: config.background, foreground: config.foreground)
+        fontFamily = config.fontFamily
+        veil = color(config.unfocusedSplitFill ?? colors.background).withAlphaComponent(1 - config.unfocusedSplitOpacity)
+        divider = config.splitDividerColor.map(color) ?? raised
     }
 
     private static func color(_ rgb: RGB) -> NSColor {

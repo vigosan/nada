@@ -59,6 +59,14 @@ struct ThemeTests {
         #expect(ThemeColors(ghostty: "background = nope\nforeground = #ffffff") == nil)
     }
 
+    @Test("un fondo o un texto de la configuración sustituyen a los del tema sin tocar el resto")
+    func colorsCanBeOverridden() throws {
+        let theme = try #require(ThemeColors(ghostty: tokyoNight)).overriding(background: RGB(0x101010), foreground: nil)
+        #expect(theme.background.hex == "#101010")
+        #expect(theme.foreground.hex == "#c0caf5")
+        #expect(theme.accent.hex == "#7aa2f7")
+    }
+
     @Test("los dos temas propios son temas válidos, uno oscuro y otro claro")
     func builtInThemesAreValid() throws {
         #expect(try #require(ThemeColors(ghostty: ThemeColors.builtIn["nada"] ?? "")).isDark)

@@ -10,7 +10,7 @@ final class PanesView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         wantsLayer = true
-        layer?.backgroundColor = Theme.raised.cgColor
+        layer?.backgroundColor = Theme.divider.cgColor
     }
 
     required init?(coder: NSCoder) {
@@ -18,7 +18,7 @@ final class PanesView: NSView {
     }
 
     func restyle() {
-        layer?.backgroundColor = Theme.raised.cgColor
+        layer?.backgroundColor = Theme.divider.cgColor
     }
 
     func show(_ panes: [(view: NSView, frame: CGRect)]) {

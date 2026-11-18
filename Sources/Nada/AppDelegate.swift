@@ -23,16 +23,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     ]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let config = (try? String(contentsOf: Config.file, encoding: .utf8)) ?? ""
-        let bindings = KeyBindings(config: config)
-        bindings.errors.forEach { NSLog("%@ %@", Config.file.path, $0) }
-        let theme = ThemeChoice(config: config)
-        Theme.load(theme)
-        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule()], bindings: bindings, theme: theme)
+        let config = loadConfig()
+        Theme.load(config)
+        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule()], config: config)
+        browser.onReloadConfig = { [weak self] in self?.reloadConfig() }
         self.browser = browser
-        NSApp.mainMenu = mainMenu(bindings)
+        NSApp.mainMenu = mainMenu(config.keyBindings)
         browser.window.makeKeyAndOrderFront(nil)
+        if config.startsMaximized { browser.window.zoom(nil) }
+        if config.startsFullscreen { browser.window.toggleFullScreen(nil) }
         NSApp.activate()
+    }
+
+    private func loadConfig() -> Config {
+        let folder = ConfigFile.url.deletingLastPathComponent()
+        let config = Config(text: (try? String(contentsOf: ConfigFile.url, encoding: .utf8)) ?? "") { path in
+            let file = path.hasPrefix("/") ? URL(fileURLWithPath: path) : folder.appending(path: path)
+            return try? String(contentsOf: file, encoding: .utf8)
+        }
+        config.errors.forEach { NSLog("%@ %@", ConfigFile.url.path, $0) }
+        return config
+    }
+
+    private func reloadConfig() {
+        let config = loadConfig()
+        menuActions = []
+        NSApp.mainMenu = mainMenu(config.keyBindings)
+        browser?.apply(config)
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {

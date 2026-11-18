@@ -2,8 +2,8 @@ import AppKit
 import NadaCore
 import WebKit
 
-enum Config {
-    static let file = URL.homeDirectory.appending(path: ".config/nada/config")
+enum ConfigFile {
+    static let url = URL.homeDirectory.appending(path: ".config/nada/config")
 }
 
 final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
@@ -24,8 +24,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var historySave: DispatchWorkItem?
     private var tabs = TabList<Tab>()
     private let modules: [BrowserModule]
-    private let bindings: KeyBindings
-    private let themeChoice: ThemeChoice
+    private var config: Config
+    var onReloadConfig: () -> Void = {}
     private var appearanceObservation: NSKeyValueObservation?
     private enum Mode: Equatable {
         case commands
@@ -55,10 +55,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         ] + modules.flatMap(\.settings)
     }
 
-    init(modules: [BrowserModule], bindings: KeyBindings, theme: ThemeChoice) {
+    init(modules: [BrowserModule], config: Config) {
         self.modules = modules
-        self.bindings = bindings
-        themeChoice = theme
+        self.config = config
         super.init()
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
@@ -78,7 +77,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         palette.itemsForQuery = { [unowned self] query in
             switch mode {
             case .settings(let section):
-                return Palette.settingsItems(query: query, settings: settings, bindings: self.bindings, section: section)
+                return Palette.settingsItems(query: query, settings: settings, bindings: config.keyBindings, section: section)
             case .find: return Palette.findItems(query: query)
             case .bookmarks(let category): return Palette.bookmarkItems(query: query, bookmarks: bookmarks, category: category)
             case .saveBookmark:
@@ -92,7 +91,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 activeTab: tabs.activeIndex,
                 moduleCommands: self.modules.flatMap(\.commands),
                 searchEngine: searchEngine,
-                bindings: self.bindings,
+                bindings: config.keyBindings,
                 history: history,
                 bookmarks: bookmarks
             )
@@ -169,8 +168,14 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in self?.applyTheme() }
     }
 
+    func apply(_ config: Config) {
+        self.config = config
+        tabs.tabs.forEach { $0.layout.preservesZoom = config.preservesZoomOnNavigation }
+        applyTheme()
+    }
+
     private func applyTheme() {
-        Theme.load(themeChoice)
+        Theme.load(config)
         window.appearance = NSAppearance(named: Theme.colors.isDark ? .darkAqua : .aqua)
         window.backgroundColor = Theme.window
         progressBar.layer?.backgroundColor = Theme.accent.cgColor
@@ -179,6 +184,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         palette.restyle()
         for pane in tabs.tabs.flatMap(\.panes.values) {
             pane.view.layer?.backgroundColor = Theme.window.cgColor
+            pane.dim.layer?.backgroundColor = Theme.veil.cgColor
         }
         refresh()
     }
@@ -197,6 +203,7 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     func saveState() {
         historySave?.cancel()
         save(history, to: historyFile)
+        guard config.restoresWindows else { return }
         let pages = tabs.tabs.map { tab in
             tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title) } }
         }
@@ -204,11 +211,12 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     }
 
     private func restoreSession() {
-        let session = try? JSONDecoder().decode(Session.self, from: Data(contentsOf: sessionFile))
+        let saved = try? JSONDecoder().decode(Session.self, from: Data(contentsOf: sessionFile))
+        let session = config.restoresWindows ? saved : nil
         for page in session?.tabs ?? [] {
             let pane = makePane(configuration: WKWebViewConfiguration())
             pane.pending = page
-            tabs.append(Tab(pane: pane))
+            tabs.append(makeTab(pane))
         }
         guard let session, !session.tabs.isEmpty else {
             addTab(configuration: WKWebViewConfiguration())
@@ -304,11 +312,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .findPrevious:
             run(lastFind.isEmpty ? .startFind : .find(lastFind, backwards: true))
         case .editKeyBindings:
-            if !FileManager.default.fileExists(atPath: Config.file.path) {
-                try? FileManager.default.createDirectory(at: Config.file.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try? KeyBindings.template.write(to: Config.file, atomically: true, encoding: .utf8)
+            if !FileManager.default.fileExists(atPath: ConfigFile.url.path) {
+                try? FileManager.default.createDirectory(at: ConfigFile.url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try? Config.template.write(to: ConfigFile.url, atomically: true, encoding: .utf8)
             }
-            NSWorkspace.shared.open(Config.file)
+            NSWorkspace.shared.open(ConfigFile.url)
         case .openSettingsSection(let section):
             openPalette(mode: .settings(section))
         case .bookmarkPage:
@@ -326,6 +334,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             guard let url = tabs.active?.focused?.webView.url else { return }
             bookmarks.remove(url: url)
             save(bookmarks, to: bookmarksFile)
+        case .reloadConfig:
+            onReloadConfig()
         case .clearHistory:
             history.clear()
             save(history, to: historyFile)
@@ -422,9 +432,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     @discardableResult
     private func addTab(configuration: WKWebViewConfiguration) -> Pane {
         let pane = makePane(configuration: configuration)
-        tabs.append(Tab(pane: pane))
+        tabs.append(makeTab(pane))
         showActiveTab()
         return pane
+    }
+
+    private func makeTab(_ pane: Pane) -> Tab {
+        let tab = Tab(pane: pane)
+        tab.layout.preservesZoom = config.preservesZoomOnNavigation
+        return tab
     }
 
     private func makePane(configuration: WKWebViewConfiguration) -> Pane {

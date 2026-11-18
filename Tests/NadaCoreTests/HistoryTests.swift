@@ -121,6 +121,7 @@ struct HistoryTests {
         #expect(items.map(\.action) == [
             .open(URL(string: "https://recargas.example/")!),
             .reload,
+            .reloadConfig,
             .open(URL(string: "https://example.com/guia")!),
             .open(AddressResolver.url(for: "recar")!),
         ])

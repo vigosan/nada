@@ -142,8 +142,8 @@ struct PaletteTests {
 
     @Test("buscar dentro de atajos encuentra una orden de cualquier grupo")
     func shortcutsSearchCrossesGroups() {
-        let found = Palette.settingsItems(query: "recargar", settings: [], section: .shortcuts)
-        #expect(found.map(\.title) == ["Recargar"])
+        let found = Palette.settingsItems(query: "igualar", settings: [], section: .shortcuts)
+        #expect(found.map(\.title) == ["Igualar paneles"])
     }
 
     @Test("buscar desde la raíz también encuentra atajos, sin tener que entrar antes en su sección")

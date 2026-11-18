@@ -76,6 +76,10 @@ public struct ThemeColors: Equatable, Sendable {
         accent = (values["accent"] ?? values["cursor-color"]).flatMap(RGB.init(hex:)) ?? foreground
     }
 
+    public func overriding(background: RGB?, foreground: RGB?) -> ThemeColors {
+        ThemeColors(background: background ?? self.background, foreground: foreground ?? self.foreground, accent: accent)
+    }
+
     public var isDark: Bool {
         background.luminance < 0.5
     }
@@ -98,20 +102,20 @@ public struct ThemeChoice: Equatable, Sendable {
     private let dark: String
 
     public init(config: String) {
+        self.init(value: Config(text: config).string("theme"))
+    }
+
+    public init(value: String?) {
         var light = "nada-light"
         var dark = "nada"
-        for line in config.split(separator: "\n") {
-            let parts = line.split(separator: "=", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
-            guard parts.count == 2, parts[0] == "theme" else { continue }
-            for name in parts[1].split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) {
-                if name.hasPrefix("light:") {
-                    light = String(name.dropFirst(6))
-                } else if name.hasPrefix("dark:") {
-                    dark = String(name.dropFirst(5))
-                } else {
-                    light = name
-                    dark = name
-                }
+        for name in (value ?? "").split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) {
+            if name.hasPrefix("light:") {
+                light = String(name.dropFirst(6))
+            } else if name.hasPrefix("dark:") {
+                dark = String(name.dropFirst(5))
+            } else {
+                light = name
+                dark = name
             }
         }
         self.light = light

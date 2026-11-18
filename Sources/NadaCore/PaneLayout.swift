@@ -23,6 +23,7 @@ public struct PaneLayout {
     }
 
     public private(set) var focused = 0
+    public var preservesZoom = false
     private var root = Node.leaf(0)
     private var nextID = 1
     private var zoomed = false
@@ -63,6 +64,7 @@ public struct PaneLayout {
     }
 
     public mutating func moveFocus(_ direction: Direction) {
+        zoomed = zoomed && preservesZoom
         let frames = allFrames
         guard let from = frames[focused] else { return }
         let tolerance = 0.0001
@@ -96,6 +98,7 @@ public struct PaneLayout {
         let order = Self.leaves(of: root)
         guard let index = order.firstIndex(of: focused) else { return }
         focused = order[(index + step + order.count) % order.count]
+        zoomed = zoomed && preservesZoom
     }
 
     public mutating func equalize() {

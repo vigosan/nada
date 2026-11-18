@@ -1,4 +1,4 @@
-public struct KeyCombo: Equatable {
+public struct KeyCombo: Equatable, Sendable {
     public struct Modifiers: OptionSet, Equatable, Sendable {
         public let rawValue: Int
         public static let control = Modifiers(rawValue: 1)
@@ -91,6 +91,7 @@ public struct Command: Sendable {
         Command(name: "resize_down", group: .panes, title: "Mover divisor abajo", action: .resizePane(.down)),
         Command(name: "zoom_pane", group: .panes, title: "Ampliar o restaurar panel", action: .zoomPane),
         Command(name: "fullscreen", group: .window, title: "Pantalla completa", action: .toggleFullscreen),
+        Command(name: "reload_config", group: .window, title: "Recargar configuración", action: .reloadConfig),
         Command(name: "next_tab", group: .tabs, title: "Pestaña siguiente", action: .nextTab),
         Command(name: "previous_tab", group: .tabs, title: "Pestaña anterior", action: .previousTab),
         Command(name: "reopen_tab", group: .tabs, title: "Reabrir pestaña cerrada", action: .reopenTab),
@@ -107,40 +108,32 @@ public struct Command: Sendable {
     ] + (1...9).map { Command(name: "goto_tab:\($0)", group: .tabs, title: "Pestaña \($0)", action: .selectTab($0 - 1)) }
 }
 
-public struct KeyBindings {
+public struct KeyBindings: Sendable {
     public private(set) var bindings: [(combo: KeyCombo, action: PaletteAction)] = []
     public private(set) var errors: [String] = []
 
     public init(config: String) {
+        self.init(entries: Config(text: config).entries)
+    }
+
+    public init(entries: [ConfigEntry]) {
         for (combo, name) in Self.defaults {
             bind(combo, to: name, line: 0)
         }
-        for (index, line) in config.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
-            let parts = line.split(separator: "=", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
-            guard parts.count == 2, parts[0] == "keybind", let separator = parts[1].lastIndex(of: "=") else { continue }
-            bind(
-                parts[1][..<separator].trimmingCharacters(in: .whitespaces),
-                to: parts[1][parts[1].index(after: separator)...].trimmingCharacters(in: .whitespaces),
-                line: index + 1
-            )
+        for entry in entries where entry.key == "keybind" {
+            if entry.value == "clear" {
+                bindings = []
+            } else if let separator = entry.value.lastIndex(of: "=") {
+                bind(
+                    entry.value[..<separator].trimmingCharacters(in: .whitespaces),
+                    to: entry.value[entry.value.index(after: separator)...].trimmingCharacters(in: .whitespaces),
+                    line: entry.line
+                )
+            } else {
+                errors.append("línea \(entry.line): atajo no válido «\(entry.value)»")
+            }
         }
     }
-
-    public static let template = ([
-        "# Configuración de Nada. Quita el # de una línea para activarla y reinicia Nada.",
-        "#",
-        "# Tema: el nombre de un tema de Ghostty, o uno para claro y otro para oscuro.",
-        "# theme = TokyoNight",
-        "# theme = light:TokyoNight Day,dark:TokyoNight",
-        "#",
-        "# keybind = ctrl+h=focus_left",
-        "# keybind = ctrl+shift+v=split_right",
-        "# keybind = cmd+w=unbind",
-        "#",
-        "# Modificadores: cmd, ctrl, opt, shift.",
-        "# Teclas: un carácter, o left, right, up, down, return, tab, plus.",
-        "# Órdenes (unbind libera una combinación):",
-    ] + Command.all.map { "#   \($0.name)  \($0.title)" }).joined(separator: "\n") + "\n"
 
     public func action(for combo: KeyCombo) -> PaletteAction? {
         bindings.first { $0.combo == combo }?.action
@@ -170,7 +163,7 @@ public struct KeyBindings {
     private static let defaults: [(String, String)] = [
         ("cmd+k", "palette"), ("cmd+l", "open_location"), ("cmd+t", "new_tab"), ("cmd+w", "close"),
         ("cmd+r", "reload"), ("cmd+left", "back"), ("cmd+right", "forward"), ("cmd+opt+i", "dev_tools"),
-        ("cmd+,", "settings"), ("cmd+d", "split_right"), ("cmd+shift+d", "split_down"),
+        ("cmd+,", "settings"), ("cmd+shift+,", "reload_config"), ("cmd+d", "split_right"), ("cmd+shift+d", "split_down"),
         ("cmd+opt+left", "focus_left"), ("cmd+opt+right", "focus_right"),
         ("cmd+opt+up", "focus_up"), ("cmd+opt+down", "focus_down"),
         ("cmd+]", "focus_next"), ("cmd+[", "focus_previous"),
