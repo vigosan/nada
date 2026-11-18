@@ -35,22 +35,15 @@ struct KeyBindingsTests {
         #expect(bindings.errors.isEmpty)
     }
 
-    @Test("atrás y adelante responden a las flechas además de a los corchetes, como en Brave")
-    func historyFollowsBrave() {
+    @Test("los corchetes cambian de panel como en Ghostty, y atrás y adelante van con las flechas como en Brave")
+    func bracketsCyclePanesAndArrowsGoThroughHistory() {
         let bindings = KeyBindings(config: "")
+        #expect(bindings.action(for: KeyCombo("cmd+[")!) == .cyclePane(forward: false))
+        #expect(bindings.action(for: KeyCombo("cmd+]")!) == .cyclePane(forward: true))
         #expect(bindings.action(for: KeyCombo("cmd+left")!) == .back)
         #expect(bindings.action(for: KeyCombo("cmd+right")!) == .forward)
-        #expect(bindings.action(for: KeyCombo("cmd+[")!) == .back)
-        #expect(bindings.action(for: KeyCombo("cmd+]")!) == .forward)
         #expect(bindings.label(for: .back) == "⌘←")
-    }
-
-    @Test("control con corchetes pasa al panel anterior y al siguiente, sin quitarle atrás y adelante a comando")
-    func bracketsCyclePanes() {
-        let bindings = KeyBindings(config: "")
-        #expect(bindings.action(for: KeyCombo("ctrl+]")!) == .cyclePane(forward: true))
-        #expect(bindings.action(for: KeyCombo("ctrl+[")!) == .cyclePane(forward: false))
-        #expect(bindings.action(for: KeyCombo("cmd+[")!) == .back)
+        #expect(bindings.action(for: KeyCombo("ctrl+[")!) == nil)
     }
 
     @Test("la tecla igual se puede reasignar aunque también separe la orden")
