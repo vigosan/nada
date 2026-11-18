@@ -72,6 +72,11 @@ struct PaletteTests {
         #expect(Palette.items(query: "x", tabTitles: [], moduleCommands: [ModuleCommand(id: "x", title: "x")]).first?.shortcut == "")
     }
 
+    @Test("cerrar todas las sesiones y borrar lo que los sitios guardan se hace desde la paleta, porque no hay ventana de ajustes")
+    func siteDataIsClearedFromThePalette() {
+        #expect(Palette.items(query: "borrar cookies", tabTitles: []).first?.action == .clearSiteData)
+    }
+
     @Test("los ajustes se abren desde la paleta además de con su atajo")
     func settingsAreReachableFromThePalette() {
         #expect(Palette.items(query: "ajustes", tabTitles: []).first?.action == .openSettings)

@@ -103,6 +103,7 @@ public struct Command: Sendable {
         Command(name: "find_next", group: .page, title: "Siguiente coincidencia", action: .findNext),
         Command(name: "find_previous", group: .page, title: "Coincidencia anterior", action: .findPrevious),
         Command(name: "clear_history", group: .page, title: "Borrar historial", action: .clearHistory),
+        Command(name: "clear_site_data", group: .page, title: "Borrar cookies y datos de sitios", action: .clearSiteData),
         Command(name: "bookmarks", group: .page, title: "Marcadores", action: .openBookmarks),
         Command(name: "bookmark_page", group: .page, title: "Guardar en marcadores", action: .bookmarkPage),
         Command(name: "downloads", group: .page, title: "Descargas", action: .openDownloads),

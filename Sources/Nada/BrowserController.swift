@@ -422,6 +422,18 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .clearHistory:
             history.clear()
             save(history, to: historyFile)
+        case .clearSiteData:
+            ask(
+                "¿Borrar cookies y datos de sitios?",
+                detail: "Se cerrarán todas tus sesiones y se borrará lo que los sitios han guardado en este Mac.",
+                buttons: ["Borrar", "Cancelar"]
+            ) { response in
+                guard response == .alertFirstButtonReturn else { return }
+                WKWebsiteDataStore.default().removeData(
+                    ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
+                    modifiedSince: .distantPast
+                ) {}
+            }
         case .find(let text, let backwards):
             lastFind = text
             let configuration = WKFindConfiguration()

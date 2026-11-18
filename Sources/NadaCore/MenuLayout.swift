@@ -70,6 +70,7 @@ public enum MenuLayout {
             .command("forward", symbol: "chevron.right"),
             .separator,
             .command("clear_history", symbol: "trash"),
+            .command("clear_site_data", symbol: "trash.slash"),
         ]),
         MenuSection(title: "Ventana", entries: [
             .system("minimize"),
