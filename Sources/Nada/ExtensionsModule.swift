@@ -30,8 +30,9 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
 
     var commands: [ModuleCommand] {
         contexts.map {
-            let name = $0.webExtension.displayShortName ?? $0.webExtension.displayName ?? $0.uniqueIdentifier
-            return ModuleCommand(id: "extension:\($0.uniqueIdentifier)", title: "Extensión: \(name)")
+            ModuleCommand(id: "extension:\($0.uniqueIdentifier)", title: "Extensión: \(name(of: $0))")
+        } + contexts.map {
+            ModuleCommand(id: "extensions.remove:\($0.uniqueIdentifier)", title: "Quitar extensión: \(name(of: $0))")
         } + [
             ModuleCommand(id: "extensions.install", title: "Instalar la extensión de esta página"),
             ModuleCommand(id: "extensions.folder", title: "Abrir carpeta de extensiones"),
@@ -56,7 +57,28 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
             NSWorkspace.shared.open(Self.folder)
             return
         }
+        if let removed = contexts.first(where: { "extensions.remove:\($0.uniqueIdentifier)" == commandID }) {
+            remove(removed)
+            return
+        }
         contexts.first { "extension:\($0.uniqueIdentifier)" == commandID }?.performAction(for: browser?.focusedPane)
+    }
+
+    private func name(of context: WKWebExtensionContext) -> String {
+        context.webExtension.displayShortName ?? context.webExtension.displayName ?? context.uniqueIdentifier
+    }
+
+    private func remove(_ context: WKWebExtensionContext) {
+        browser?.ask(
+            "¿Quitar «\(name(of: context))»?",
+            detail: "Se borrará la extensión de Nada.",
+            buttons: ["Quitar", "Cancelar"]
+        ) { [weak self] response in
+            guard let self, response == .alertFirstButtonReturn else { return }
+            try? controller.unload(context)
+            contexts.removeAll { $0 === context }
+            try? FileManager.default.removeItem(at: Self.folder.appending(path: context.uniqueIdentifier))
+        }
     }
 
     func webExtensionController(
@@ -148,8 +170,7 @@ final class ExtensionsModule: NSObject, BrowserModule, WKWebExtensionControllerD
             completion(false)
             return
         }
-        let name = context.webExtension.displayShortName ?? context.webExtension.displayName ?? context.uniqueIdentifier
-        browser.ask("«\(name)» pide permiso", detail: wanted.joined(separator: "\n"), buttons: ["Permitir", "No permitir"]) {
+        browser.ask("«\(name(of: context))» pide permiso", detail: wanted.joined(separator: "\n"), buttons: ["Permitir", "No permitir"]) {
             completion($0 == .alertFirstButtonReturn)
         }
     }
