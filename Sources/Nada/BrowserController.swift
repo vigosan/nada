@@ -286,14 +286,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         library.saveHistory()
         guard config.restoresWindows, !isPrivate else { return }
         let pages = tabs.tabs.map { tab in
-            tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title) } }
+            tab.focused.flatMap { pane in pane.address.map { SessionPage(url: $0, title: pane.title, state: pane.navigationState) } }
         }
-        Library.save(Session(pages: pages, active: tabs.activeIndex ?? 0), to: sessionFile)
+        Library.save(Session(pages: pages, active: tabs.activeIndex ?? 0, closed: closedPages), to: sessionFile)
     }
 
     private func restoreSession() {
         let saved = try? JSONDecoder().decode(Session.self, from: Data(contentsOf: sessionFile))
         let session = config.restoresWindows && restores ? saved : nil
+        closedPages = session?.closed ?? []
         for page in session?.tabs ?? [] {
             let pane = makePane(configuration: WKWebViewConfiguration())
             pane.pending = page
@@ -621,7 +622,11 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         for pane in tab?.panes.values ?? [:].values {
             guard let page = pane.pending else { continue }
             pane.pending = nil
-            pane.webView.load(URLRequest(url: page.url))
+            if let state = page.state {
+                pane.webView.interactionState = state
+            } else {
+                pane.webView.load(URLRequest(url: page.url))
+            }
         }
         container.show(tab?.layout.frames.compactMap { id, frame in
             tab?.panes[id].map { (view: $0.view, frame: frame) }

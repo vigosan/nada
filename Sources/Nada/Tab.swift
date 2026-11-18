@@ -45,6 +45,11 @@ final class Pane: NSObject {
         failedURL ?? pending?.url ?? webView.url
     }
 
+    var navigationState: Data? {
+        if let pending { return pending.state }
+        return failedURL == nil ? webView.interactionState as? Data : nil
+    }
+
     var title: String {
         if let title = webView.title, !title.isEmpty { return title }
         return pending?.title ?? webView.url?.host() ?? "Pestaña nueva"

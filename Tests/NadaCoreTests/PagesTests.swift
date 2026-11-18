@@ -64,4 +64,22 @@ struct PagesTests {
         #expect(session.active == 1)
         #expect(Session(pages: [nil, nil], active: 1).tabs.isEmpty)
     }
+
+    @Test("cada pestaña vuelve con su atrás y adelante, y las cerradas se pueden seguir reabriendo tras reiniciar")
+    func sessionKeepsNavigationAndClosedTabs() throws {
+        let page = SessionPage(url: URL(string: "https://a.example/")!, title: "A", state: Data([1, 2, 3]))
+        let closed = (1...30).map { URL(string: "https://cerrada.example/\($0)")! }
+        let session = Session(pages: [page], active: 0, closed: closed)
+        let restored = try JSONDecoder().decode(Session.self, from: JSONEncoder().encode(session))
+        #expect(restored.tabs == [page])
+        #expect(restored.closed == Array(closed.suffix(20)))
+    }
+
+    @Test("una sesión guardada por una versión anterior, sin esos datos, se sigue abriendo")
+    func olderSessionsStillOpen() throws {
+        let saved = Data(#"{"tabs":[{"url":"https://a.example/","title":"A"}],"active":0}"#.utf8)
+        let session = try JSONDecoder().decode(Session.self, from: saved)
+        #expect(session.tabs == [SessionPage(url: URL(string: "https://a.example/")!, title: "A")])
+        #expect(session.closed.isEmpty)
+    }
 }

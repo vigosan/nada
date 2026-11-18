@@ -69,20 +69,31 @@ public enum Downloads {
 public struct SessionPage: Codable, Equatable {
     public let url: URL
     public let title: String
+    public let state: Data?
 
-    public init(url: URL, title: String) {
+    public init(url: URL, title: String, state: Data? = nil) {
         self.url = url
         self.title = title
+        self.state = state
     }
 }
 
 public struct Session: Codable {
     public let tabs: [SessionPage]
     public let active: Int
+    public let closed: [URL]
 
-    public init(pages: [SessionPage?], active: Int) {
+    public init(pages: [SessionPage?], active: Int, closed: [URL] = []) {
         tabs = pages.compactMap { $0 }
         self.active = max(0, min(tabs.count - 1, pages.prefix(active).compactMap { $0 }.count))
+        self.closed = Array(closed.suffix(20))
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        tabs = try container.decode([SessionPage].self, forKey: .tabs)
+        active = try container.decode(Int.self, forKey: .active)
+        closed = try container.decodeIfPresent([URL].self, forKey: .closed) ?? []
     }
 }
 
