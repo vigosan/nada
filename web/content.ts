@@ -2,7 +2,7 @@ export const LANGS = ["en", "es"] as const;
 export type Lang = (typeof LANGS)[number];
 
 export const SITE_URL = "https://nada.vicent.io";
-export const DOWNLOAD: string | null = null;
+export const DOWNLOAD: string | null = "https://github.com/vigosan/nada/releases/latest/download/Nada.zip";
 export const CONTACT = "hello@vicent.io";
 export const REPO = "https://github.com/vigosan/nada";
 export const UPDATED = "2026-11-18";

@@ -3,6 +3,15 @@
     <channel>
         <title>Nada</title>
         <item>
+            <title>0.1.1</title>
+            <pubDate>Wed, 18 Nov 2026 08:29:57 +0100</pubDate>
+            <link>https://nada.vicent.io</link>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/vigosan/nada/releases/download/v0.1.1/Nada.zip" length="2996487" type="application/octet-stream" sparkle:edSignature="iTGnxC6S4nfAWnCxFRoKOdld30K88H/j1TAnwEp6XA6lAcf/WyPVRCHldn1J1ALo2MIszVBtlqZ588UgsnMCCA=="/>
+        </item>
+        <item>
             <title>0.1.0</title>
             <pubDate>Wed, 18 Nov 2026 08:17:21 +0100</pubDate>
             <link>https://nada.vicent.io</link>
