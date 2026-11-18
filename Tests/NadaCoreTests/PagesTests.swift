@@ -27,6 +27,15 @@ struct PagesTests {
         #expect(!LinkClick.opensNewTab(command: false, button: 1))
     }
 
+    @Test("un sitio que pide usuario y contraseña se pregunta a la persona, un certificado se revisa, y lo demás lo resuelve el sistema")
+    func challengesAreSortedByWhoAnswersThem() {
+        #expect(Challenge(method: NSURLAuthenticationMethodHTTPBasic) == .credentials)
+        #expect(Challenge(method: NSURLAuthenticationMethodHTTPDigest) == .credentials)
+        #expect(Challenge(method: NSURLAuthenticationMethodNTLM) == .credentials)
+        #expect(Challenge(method: NSURLAuthenticationMethodServerTrust) == .trust)
+        #expect(Challenge(method: NSURLAuthenticationMethodClientCertificate) == .system)
+    }
+
     @Test("una descarga nunca pisa un archivo que ya existe: se numera")
     func downloadsGetAFreeName() {
         let taken: Set<String> = ["informe.pdf", "informe 2.pdf", "datos"]

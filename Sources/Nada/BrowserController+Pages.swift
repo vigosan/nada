@@ -141,6 +141,34 @@ extension BrowserController: WKNavigationDelegate, WKDownloadDelegate {
         }
     }
 
+    func webView(
+        _ webView: WKWebView,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        let space = challenge.protectionSpace
+        guard Challenge(method: space.authenticationMethod) == .credentials else {
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+        let user = NSTextField(frame: NSRect(x: 0, y: 30, width: 260, height: 24))
+        user.placeholderString = "Usuario"
+        let password = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        password.placeholderString = "Contraseña"
+        user.nextKeyView = password
+        let fields = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 54))
+        fields.addSubview(user)
+        fields.addSubview(password)
+        ask("\(space.host) pide usuario y contraseña", detail: space.realm ?? "", buttons: ["Entrar", "Cancelar"], accessory: fields) {
+            guard $0 == .alertFirstButtonReturn else {
+                completionHandler(.performDefaultHandling, nil)
+                return
+            }
+            let credential = URLCredential(user: user.stringValue, password: password.stringValue, persistence: .forSession)
+            completionHandler(.useCredential, credential)
+        }
+    }
+
     private func showFailure(_ error: Error, in webView: WKWebView) {
         let error = error as NSError
         let interrupted = error.domain == "WebKitErrorDomain" && error.code == 102

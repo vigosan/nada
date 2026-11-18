@@ -36,6 +36,23 @@ public enum LinkClick {
     }
 }
 
+public enum Challenge: Equatable {
+    case credentials
+    case trust
+    case system
+
+    public init(method: String) {
+        switch method {
+        case NSURLAuthenticationMethodHTTPBasic, NSURLAuthenticationMethodHTTPDigest, NSURLAuthenticationMethodNTLM:
+            self = .credentials
+        case NSURLAuthenticationMethodServerTrust:
+            self = .trust
+        default:
+            self = .system
+        }
+    }
+}
+
 public enum Downloads {
     public static func freeName(for suggested: String, exists: (String) -> Bool) -> String {
         let last = (suggested as NSString).lastPathComponent
