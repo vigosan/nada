@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { content, LANGS } from "./content";
+import { CONFIG_SAMPLE, content, LANGS } from "./content";
 
 const keys = (value: unknown): string[] =>
   value && typeof value === "object"
@@ -16,5 +16,10 @@ describe("site content", () => {
       content[lang].home.shortcuts.map((group) => group.items.map((item) => item.keys));
     expect(shortcuts("es")).toEqual(shortcuts("en"));
     expect(shortcuts("en").flat().length).toBeGreaterThan(15);
+  });
+
+  it("configures more than keys in the sample, so nobody thinks the file is only for shortcuts", () => {
+    expect(CONFIG_SAMPLE).toContain("theme = ");
+    expect(CONFIG_SAMPLE).toContain("keybind = ");
   });
 });

@@ -1,9 +1,13 @@
 import AppKit
 import NadaCore
+import Sparkle
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var browser: BrowserController?
     private var menuActions: [PaletteAction] = []
+    private let updater = Bundle.main.bundleIdentifier.map { _ in
+        SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    }
 
     private let systemItems: [String: (title: String, action: Selector, key: String, modifiers: NSEvent.ModifierFlags, symbol: String)] = [
         "about": ("Acerca de Nada", #selector(NSApplication.orderFrontStandardAboutPanel(_:)), "", [], "info.circle"),
@@ -19,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         "selectAll": ("Seleccionar todo", #selector(NSText.selectAll(_:)), "a", .command, "character.textbox"),
         "minimize": ("Minimizar", #selector(NSWindow.performMiniaturize(_:)), "m", .command, "minus.rectangle"),
         "zoom": ("Zoom", #selector(NSWindow.performZoom(_:)), "", [], "arrow.up.left.and.arrow.down.right.rectangle"),
+        "updates": ("Buscar actualizaciones…", #selector(SPUStandardUpdaterController.checkForUpdates(_:)), "", [], "arrow.down.circle"),
         "support": ("Soporte de Nada", #selector(openSupport(_:)), "", [], "questionmark.circle"),
     ]
 
@@ -101,6 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 item.keyEquivalentModifierMask = system.modifiers
                 item.image = NSImage(systemSymbolName: system.symbol, accessibilityDescription: nil)
                 if id == "support" { item.target = self }
+                if id == "updates" { item.target = updater }
             case .submenu(let title, let symbol, let children):
                 let item = menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
                 item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)

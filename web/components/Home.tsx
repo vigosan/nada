@@ -58,7 +58,9 @@ export function Home({ c }: { c: Content }) {
       </article>
       <article className="flex flex-col gap-6">
         <h2 className={heading}>{c.home.configTitle}</h2>
-        <p className="max-w-2xl text-pretty">{c.home.configText}</p>
+        <p className="max-w-2xl text-pretty">
+          <Keys text={c.home.configText} />
+        </p>
         <pre className="overflow-x-auto rounded-xl border border-line bg-ground p-5 font-mono text-sm leading-relaxed text-ink">{CONFIG_SAMPLE}</pre>
       </article>
       <section data-testid="closing" className="flex flex-col items-center gap-6 border-t border-line pt-16 text-center">

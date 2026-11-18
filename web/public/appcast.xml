@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Nada</title>
+        <item>
+            <title>0.1.0</title>
+            <pubDate>Wed, 18 Nov 2026 08:17:21 +0100</pubDate>
+            <link>https://nada.vicent.io</link>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/vigosan/nada/releases/download/v0.1.0/Nada.zip" length="2994629" type="application/octet-stream" sparkle:edSignature="bMevGaCvCDzA7nW1+tO+bL57Rqc/CnKJeKFAp3jfdTsPBauIQMRMtkZEoZyfDZ21ZPtCm2Dogl4RUwYHXlxXAg=="/>
+        </item>
+    </channel>
+</rss>

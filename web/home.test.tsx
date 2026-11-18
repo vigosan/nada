@@ -34,9 +34,16 @@ describe("page frame", () => {
     expect(html).toContain(`aria-label="${content.en.theme.system}"`);
   });
 
-  it("keeps the demo window dark in the light page, because the app itself is always dark", () => {
+  it("lets the demo window follow the page theme, because the app itself follows the system", () => {
     const html = renderToStaticMarkup(<Home c={content.en} />);
-    expect(html).toContain('data-testid="demo-window" data-theme="dark"');
+    expect(html).toContain('data-testid="demo-window"');
+    expect(html).not.toContain('data-testid="demo-window" data-theme');
+  });
+
+  it("shows the reload shortcut as a key in the config section, so editing the file does not look like it needs a restart", () => {
+    const html = renderToStaticMarkup(<Home c={content.en} />);
+    const config = html.slice(html.indexOf(content.en.home.configTitle), html.indexOf('data-testid="closing"'));
+    expect(config).toContain(">⇧⌘,</kbd>");
   });
 });
 

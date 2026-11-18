@@ -14,6 +14,7 @@ public enum MenuLayout {
     public static let menus: [MenuSection] = [
         MenuSection(title: "Nada", entries: [
             .system("about"),
+            .system("updates"),
             .separator,
             .command("settings", symbol: "gearshape"),
             .command("reload_config", symbol: "arrow.triangle.2.circlepath"),

@@ -5,8 +5,11 @@ export const SITE_URL = "https://nada.vicent.io";
 export const DOWNLOAD: string | null = null;
 export const CONTACT = "hello@vicent.io";
 export const REPO = "https://github.com/vigosan/nada";
-export const UPDATED = "2026-11-17";
+export const UPDATED = "2026-11-18";
 export const CONFIG_SAMPLE = `# ~/.config/nada/config
+theme = light:TokyoNight Day,dark:TokyoNight
+font-family = MonoLisa
+unfocused-split-opacity = 0.7
 keybind = ctrl+h=focus_left
 keybind = ctrl+shift+v=split_right
 keybind = cmd+w=unbind`;
@@ -43,15 +46,27 @@ const en = {
     sections: [
       {
         title: "One box for everything",
-        text: "Press [⌘K] and type an address, a search, the name of an open tab or a command. That box is the whole interface.",
+        text: "Press [⌘K] and type an address, a search, the name of an open tab or a command. That box is the whole interface. Searches go to DuckDuckGo, Google or Brave Search, whichever you pick in the settings.",
+      },
+      {
+        title: "It remembers where you go",
+        text: "As you type, the palette suggests the pages you visit most, with a site's home page first. [⌘B] saves the page in a category of bookmarks and [⌥⌘B] browses them. When you open Nada again, your tabs are where you left them.",
       },
       {
         title: "Split it like your terminal",
-        text: "[⌘D] splits the tab to the right and [⇧⌘D] splits it down. Move between panes with [⌥⌘] and the arrow keys, resize them with [⌃⌘] and the arrows, and zoom one with [⇧⌘↩].",
+        text: "[⌘D] splits the tab to the right and [⇧⌘D] splits it down. Move between panes with [⌥⌘] and the arrow keys, resize them with [⌃⌘] and the arrows, and zoom one with [⇧⌘↩]. The panes without focus dim, so you always know where you are typing.",
+      },
+      {
+        title: "Leave the mouse alone",
+        text: "Press [f] and every link and button gets a label: type it to press it. [j] and [k] scroll, [d] and [u] move half a page, and [gg] and [G] jump to the top and the bottom, like in Vim.",
       },
       {
         title: "Ads never load",
         text: "Nada blocks ads and trackers before they download, with the EasyList and EasyPrivacy filter lists compiled by Brave's open-source engine. Turn it off from the settings when a site needs it.",
+      },
+      {
+        title: "Your terminal's colours",
+        text: "Nada has a light and a dark theme and follows the system. It also reads Ghostty theme files, so any theme you use in your terminal works here by its name.",
       },
       {
         title: "Developer tools included",
@@ -72,6 +87,7 @@ const en = {
           { keys: ["⌘R"], text: "Reload" },
           { keys: ["⌘←", "⌘→"], text: "Back and forward" },
           { keys: ["⌘F"], text: "Find in the page" },
+          { keys: ["⌘G", "⇧⌘G"], text: "Next and previous match" },
           { keys: ["⌘B"], text: "Bookmark the page in a category" },
           { keys: ["⌥⌘B"], text: "Browse your bookmarks" },
           { keys: ["⌘+", "⌘-", "⌘0"], text: "Zoom in, zoom out, actual size" },
@@ -83,7 +99,7 @@ const en = {
           { keys: ["⌘T"], text: "New tab" },
           { keys: ["⌘W"], text: "Close the pane, or the tab when it is the last one" },
           { keys: ["⌘1 – ⌘9"], text: "Go to a tab by its number" },
-          { keys: ["⌃⇥", "⌃⇧⇥"], text: "Next and previous tab" },
+          { keys: ["⌃⇥", "⌃⇧⇥", "⇧⌘]", "⇧⌘["], text: "Next and previous tab" },
           { keys: ["⇧⌘T"], text: "Reopen what you just closed" },
         ],
       },
@@ -116,11 +132,12 @@ const en = {
           { keys: ["⌘↩"], text: "Full screen" },
           { keys: ["⌥⌘I"], text: "Developer tools" },
           { keys: ["⌘,"], text: "Settings" },
+          { keys: ["⇧⌘,"], text: "Reload the configuration" },
         ],
       },
     ],
-    configTitle: "Make the keys yours",
-    configText: "Every shortcut can be changed, added or removed from a plain text file.",
+    configTitle: "One text file, like Ghostty",
+    configText: "The theme, the font, the panes and every shortcut live in a plain text file with Ghostty's syntax. Save it and press [⇧⌘,] to apply it without restarting.",
     closingTitle: "Nothing to learn but [⌘K]",
   },
   privacy: {
@@ -132,7 +149,7 @@ const en = {
         body: [
           "Nada does not collect, store or share any personal data. It has no accounts, analytics or telemetry.",
           "Like any browser, Nada connects to the sites you open and to the search engine you choose in the settings. Those sites receive what any browser sends them, such as your IP address.",
-          "Your history, cookies and site data stay on your Mac, in the app's own storage. Nada never sends them anywhere.",
+          "Your history, bookmarks, cookies and site data stay on your Mac, in the app's own storage. Nada never sends them anywhere.",
           "The ad and tracker filters are lists stored on your Mac. Nada does not report what it blocks or which pages you visit.",
         ],
       },
@@ -151,7 +168,7 @@ const en = {
     email: "Email support",
     body: [
       `For help, bug reports or ideas, write to ${CONTACT}. Please include your macOS version and, if a page misbehaves, its address.`,
-      "Every keyboard shortcut is listed on the home page and can be changed in ~/.config/nada/config.",
+      "Every keyboard shortcut is listed on the home page and can be changed in ~/.config/nada/config, along with the theme and the font.",
     ],
   },
   footer: { privacy: "Privacy", support: "Support", github: "GitHub", by: "Made by" },
@@ -191,15 +208,27 @@ const es: Content = {
     sections: [
       {
         title: "Una caja para todo",
-        text: "Pulsa [⌘K] y escribe una dirección, una búsqueda, el nombre de una pestaña abierta o una orden. Esa caja es toda la interfaz.",
+        text: "Pulsa [⌘K] y escribe una dirección, una búsqueda, el nombre de una pestaña abierta o una orden. Esa caja es toda la interfaz. Las búsquedas van a DuckDuckGo, Google o Brave Search, el que elijas en los ajustes.",
+      },
+      {
+        title: "Recuerda por dónde vas",
+        text: "Mientras escribes, la paleta sugiere las páginas que más visitas, con la portada de cada web primero. [⌘B] guarda la página en una categoría de marcadores y [⌥⌘B] los recorre. Al abrir Nada de nuevo, tus pestañas están donde las dejaste.",
       },
       {
         title: "Divídelo como tu terminal",
-        text: "[⌘D] divide la pestaña a la derecha y [⇧⌘D] la divide hacia abajo. Muévete entre paneles con [⌥⌘] y las flechas, cambia su tamaño con [⌃⌘] y las flechas, y amplía uno con [⇧⌘↩].",
+        text: "[⌘D] divide la pestaña a la derecha y [⇧⌘D] la divide hacia abajo. Muévete entre paneles con [⌥⌘] y las flechas, cambia su tamaño con [⌃⌘] y las flechas, y amplía uno con [⇧⌘↩]. Los paneles sin foco se oscurecen, para que siempre sepas dónde escribes.",
+      },
+      {
+        title: "Deja el ratón quieto",
+        text: "Pulsa [f] y cada enlace y botón recibe una etiqueta: escríbela para pulsarlo. [j] y [k] desplazan la página, [d] y [u] mueven media página, y [gg] y [G] saltan al principio y al final, como en Vim.",
       },
       {
         title: "Los anuncios no llegan a cargar",
         text: "Nada bloquea anuncios y rastreadores antes de que se descarguen, con las listas EasyList y EasyPrivacy compiladas por el motor de código abierto de Brave. Desactívalo desde los ajustes cuando una web lo necesite.",
+      },
+      {
+        title: "Los colores de tu terminal",
+        text: "Nada tiene un tema claro y uno oscuro y sigue al sistema. También lee los archivos de tema de Ghostty, así que cualquier tema que uses en tu terminal funciona aquí por su nombre.",
       },
       {
         title: "Con herramientas de desarrollador",
@@ -220,6 +249,7 @@ const es: Content = {
           { keys: ["⌘R"], text: "Recargar" },
           { keys: ["⌘←", "⌘→"], text: "Atrás y adelante" },
           { keys: ["⌘F"], text: "Buscar en la página" },
+          { keys: ["⌘G", "⇧⌘G"], text: "Coincidencia siguiente y anterior" },
           { keys: ["⌘B"], text: "Guardar la página en una categoría de marcadores" },
           { keys: ["⌥⌘B"], text: "Explorar tus marcadores" },
           { keys: ["⌘+", "⌘-", "⌘0"], text: "Acercar, alejar y tamaño real" },
@@ -231,7 +261,7 @@ const es: Content = {
           { keys: ["⌘T"], text: "Pestaña nueva" },
           { keys: ["⌘W"], text: "Cerrar el panel, o la pestaña si es el último" },
           { keys: ["⌘1 – ⌘9"], text: "Ir a una pestaña por su número" },
-          { keys: ["⌃⇥", "⌃⇧⇥"], text: "Pestaña siguiente y anterior" },
+          { keys: ["⌃⇥", "⌃⇧⇥", "⇧⌘]", "⇧⌘["], text: "Pestaña siguiente y anterior" },
           { keys: ["⇧⌘T"], text: "Reabrir lo que acabas de cerrar" },
         ],
       },
@@ -264,11 +294,12 @@ const es: Content = {
           { keys: ["⌘↩"], text: "Pantalla completa" },
           { keys: ["⌥⌘I"], text: "Herramientas de desarrollador" },
           { keys: ["⌘,"], text: "Ajustes" },
+          { keys: ["⇧⌘,"], text: "Recargar la configuración" },
         ],
       },
     ],
-    configTitle: "Haz tuyas las teclas",
-    configText: "Cada atajo se puede cambiar, añadir o quitar desde un archivo de texto.",
+    configTitle: "Un archivo de texto, como Ghostty",
+    configText: "El tema, la fuente, los paneles y cada atajo viven en un archivo de texto con la sintaxis de Ghostty. Guárdalo y pulsa [⇧⌘,] para aplicarlo sin reiniciar.",
     closingTitle: "Nada que aprender salvo [⌘K]",
   },
   privacy: {
@@ -280,7 +311,7 @@ const es: Content = {
         body: [
           "Nada no recoge, guarda ni comparte ningún dato personal. No tiene cuentas, analítica ni telemetría.",
           "Como cualquier navegador, Nada se conecta a las webs que abres y al buscador que eliges en los ajustes. Esas webs reciben lo que les envía cualquier navegador, como tu dirección IP.",
-          "Tu historial, tus cookies y los datos de las webs se quedan en tu Mac, en el almacenamiento propio de la app. Nada nunca los envía a ningún sitio.",
+          "Tu historial, tus marcadores, tus cookies y los datos de las webs se quedan en tu Mac, en el almacenamiento propio de la app. Nada nunca los envía a ningún sitio.",
           "Los filtros de anuncios y rastreadores son listas guardadas en tu Mac. Nada no informa de lo que bloquea ni de las páginas que visitas.",
         ],
       },
@@ -299,7 +330,7 @@ const es: Content = {
     email: "Escribir a soporte",
     body: [
       `Para pedir ayuda, avisar de un fallo o proponer ideas, escribe a ${CONTACT}. Incluye tu versión de macOS y, si una página falla, su dirección.`,
-      "Todos los atajos de teclado están en la página de inicio y se pueden cambiar en ~/.config/nada/config.",
+      "Todos los atajos de teclado están en la página de inicio y se pueden cambiar en ~/.config/nada/config, igual que el tema y la fuente.",
     ],
   },
   footer: { privacy: "Privacidad", support: "Soporte", github: "GitHub", by: "Hecho por" },
