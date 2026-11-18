@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let config = loadConfig()
         Theme.load(config)
-        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule()], config: config)
+        let browser = BrowserController(modules: [AdBlockModule(), VimKeysModule(), ExtensionsModule()], config: config)
         browser.onReloadConfig = { [weak self] in self?.reloadConfig() }
         self.browser = browser
         NSApp.mainMenu = mainMenu(config.keyBindings)
