@@ -152,6 +152,21 @@ struct PaneLayoutTests {
         #expect(layout.frames[bottom]!.height == 0.5)
     }
 
+    @Test("panel siguiente y anterior recorren todos en orden de lectura y dan la vuelta")
+    func cyclingVisitsEveryPane() {
+        var layout = PaneLayout()
+        let right = layout.split(.horizontal)
+        let bottom = layout.split(.vertical)
+        layout.focusNext()
+        #expect(layout.focused == 0)
+        layout.focusNext()
+        #expect(layout.focused == right)
+        layout.focusPrevious()
+        #expect(layout.focused == 0)
+        layout.focusPrevious()
+        #expect(layout.focused == bottom)
+    }
+
     @Test("un clic en otro panel le da el foco")
     func focusCanBeSetDirectly() {
         var layout = PaneLayout()

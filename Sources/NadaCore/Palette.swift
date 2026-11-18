@@ -17,6 +17,7 @@ public enum PaletteAction: Equatable, Sendable {
     case split(SplitAxis)
     case focusPane(Direction)
     case resizePane(Direction)
+    case cyclePane(forward: Bool)
     case toggleFullscreen
     case zoomPane
     case nextTab
@@ -210,7 +211,7 @@ public enum Palette {
             PaletteItem(title: "Ir a pestaña: \(title)", shortcut: bindings.label(for: .selectTab(index)), action: .selectTab(index))
         } + Command.all.filter { command in
             switch command.action {
-            case .selectTab, .focusPane, .resizePane, .togglePalette, .openLocation: false
+            case .selectTab, .focusPane, .resizePane, .cyclePane, .togglePalette, .openLocation: false
             default: true
             }
         }.map {

@@ -243,6 +243,13 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         case .focusPane(let direction):
             tabs.active?.layout.moveFocus(direction)
             showActiveTab()
+        case .cyclePane(let forward):
+            if forward {
+                tabs.active?.layout.focusNext()
+            } else {
+                tabs.active?.layout.focusPrevious()
+            }
+            showActiveTab()
         case .resizePane(let direction):
             tabs.active?.layout.resize(direction)
             showActiveTab()

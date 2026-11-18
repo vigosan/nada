@@ -45,6 +45,14 @@ struct KeyBindingsTests {
         #expect(bindings.label(for: .back) == "⌘←")
     }
 
+    @Test("control con corchetes pasa al panel anterior y al siguiente, sin quitarle atrás y adelante a comando")
+    func bracketsCyclePanes() {
+        let bindings = KeyBindings(config: "")
+        #expect(bindings.action(for: KeyCombo("ctrl+]")!) == .cyclePane(forward: true))
+        #expect(bindings.action(for: KeyCombo("ctrl+[")!) == .cyclePane(forward: false))
+        #expect(bindings.action(for: KeyCombo("cmd+[")!) == .back)
+    }
+
     @Test("la tecla igual se puede reasignar aunque también separe la orden")
     func equalsKeyCanBeBound() {
         let bindings = KeyBindings(config: "keybind = cmd+opt+==zoom_in")

@@ -85,6 +85,21 @@ public struct PaneLayout {
         focused = nearest?.key ?? focused
     }
 
+    public mutating func focusNext() {
+        cycle(by: 1)
+    }
+
+    public mutating func focusPrevious() {
+        cycle(by: -1)
+    }
+
+    private mutating func cycle(by step: Int) {
+        let order = Self.leaves(of: root)
+        guard let index = order.firstIndex(of: focused) else { return }
+        focused = order[(index + step + order.count) % order.count]
+        zoomed = false
+    }
+
     public mutating func equalize() {
         root = Self.equalized(root)
     }
@@ -147,6 +162,13 @@ public struct PaneLayout {
     private static func weight(of node: Node, along axis: SplitAxis) -> Int {
         guard case .split(axis, _, let first, let second) = node else { return 1 }
         return weight(of: first, along: axis) + weight(of: second, along: axis)
+    }
+
+    private static func leaves(of node: Node) -> [Int] {
+        switch node {
+        case .leaf(let id): [id]
+        case .split(_, _, let first, let second): leaves(of: first) + leaves(of: second)
+        }
     }
 
     private static func firstLeaf(of node: Node) -> Int {
