@@ -85,3 +85,13 @@ public struct Session: Codable {
         self.active = max(0, min(tabs.count - 1, pages.prefix(active).compactMap { $0 }.count))
     }
 }
+
+public enum TabLabel {
+    public static func text(title: String, address: URL?, active: Bool) -> String {
+        guard active, let address, let scheme = address.scheme, ["http", "https"].contains(scheme),
+              let host = address.host(percentEncoded: false) else { return title }
+        let bare = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+        let site = scheme == "http" ? "http://\(bare)" : bare
+        return title == host || title == bare ? site : "\(site) — \(title)"
+    }
+}

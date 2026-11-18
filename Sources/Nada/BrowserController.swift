@@ -601,7 +601,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     }
 
     private func refresh() {
-        strip.update(titles: tabs.tabs.map(\.title), active: tabs.activeIndex)
+        let labels = tabs.tabs.enumerated().map { index, tab in
+            TabLabel.text(title: tab.title, address: tab.focused?.address, active: index == tabs.activeIndex)
+        }
+        strip.update(titles: labels, active: tabs.activeIndex)
         if let tab = tabs.active {
             for (id, pane) in tab.panes {
                 pane.webView.isHidden = pane.isBlank
