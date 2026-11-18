@@ -10,6 +10,7 @@
   --color-body: #50536a;
   --color-dim: #72758c;
   --color-accent: #1583bd;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 [data-theme="dark"] {
