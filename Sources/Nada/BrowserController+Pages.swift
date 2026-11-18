@@ -15,6 +15,12 @@ extension BrowserController: WKNavigationDelegate, WKDownloadDelegate {
         showFailure(error, in: webView)
     }
 
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        guard let pane = pane(for: webView), let url = pane.address else { return }
+        pane.failedURL = url
+        webView.loadHTMLString(ErrorPage.html(url: url, reason: "La página se ha cerrado inesperadamente."), baseURL: nil)
+    }
+
     func webView(
         _ webView: WKWebView,
         decidePolicyFor navigationAction: WKNavigationAction,
