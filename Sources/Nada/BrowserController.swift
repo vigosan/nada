@@ -38,7 +38,9 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private var mode = Mode.commands
     private var lastFind = ""
     private var closedPages: [URL] = []
-    var downloads: [ObjectIdentifier: URL] = [:]
+    var downloads = DownloadList()
+    var downloadFiles: [Int: URL] = [:]
+    var activeDownloads: [ObjectIdentifier: (id: Int, download: WKDownload, observation: NSKeyValueObservation)] = [:]
     var trustedHosts: Set<String> = []
     private let sessionFile = URL.applicationSupportDirectory.appending(path: "Nada/session.json")
     private let historyFile = URL.applicationSupportDirectory.appending(path: "Nada/history.json")
@@ -530,9 +532,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
                 pane.view.layer?.borderWidth = tab.panes.count > 1 && focused ? 1 : 0
             }
         }
+        refreshProgress()
+    }
+
+    func refreshProgress() {
         let webView = tabs.active?.focused?.webView
-        progressBar.isHidden = webView?.isLoading != true
-        progressWidth.constant = container.bounds.width * (webView?.estimatedProgress ?? 0)
+        let loading = webView?.isLoading == true ? webView?.estimatedProgress : nil
+        let progress = loading ?? downloads.progress.map { max(0.03, $0) }
+        progressBar.isHidden = progress == nil
+        progressWidth.constant = container.bounds.width * (progress ?? 0)
     }
 
     private func closePalette() {
