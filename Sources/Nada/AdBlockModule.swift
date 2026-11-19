@@ -7,6 +7,7 @@ final class AdBlockModule: BrowserModule {
     private var enabled = !UserDefaults.standard.bool(forKey: "adblock.disabled")
 
     init() {
+        content.addUserScript(WKUserScript(source: ConsentWalls.unlockScroll, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         load()
     }
 
