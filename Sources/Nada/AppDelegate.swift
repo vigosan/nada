@@ -119,6 +119,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             editor.keyDown(with: event)
             return
         }
+        if [.back, .forward].contains(action), let browser, let event = NSApp.currentEvent, event.type == .keyDown,
+           let webView = browser.focusedPane?.webView, (browser.window.firstResponder as? NSView)?.isDescendant(of: webView) == true {
+            webView.evaluateJavaScript(PageFocus.isTyping) { typing, _ in
+                if typing as? Bool == true {
+                    webView.keyDown(with: event)
+                } else {
+                    browser.run(action)
+                }
+            }
+            return
+        }
         browser?.run(action)
     }
 
