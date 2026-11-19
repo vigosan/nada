@@ -40,7 +40,9 @@ public struct History: Codable {
             .filter { !SearchEngine.isResultsPage($0.url) }
             .sorted { ($0.visits, $0.lastVisit) > ($1.visits, $1.lastVisit) }
         let matchingHost = ranked.filter { Self.host(of: $0).hasPrefix(text) }
-        let strong = matchingHost.filter(Self.isSiteRoot) + matchingHost.filter { !Self.isSiteRoot($0) }
+        var proposed: Set<String> = []
+        let strong = (matchingHost.filter(Self.isSiteRoot) + matchingHost.filter { !Self.isSiteRoot($0) })
+            .filter { proposed.insert(Self.host(of: $0)).inserted }
         let weak = ranked.filter { entry in
             !Self.host(of: entry).hasPrefix(text) && [entry.url.absoluteString, entry.title].contains {
                 $0.range(of: text, options: [.caseInsensitive, .diacriticInsensitive]) != nil

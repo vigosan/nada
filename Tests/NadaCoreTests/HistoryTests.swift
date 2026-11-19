@@ -70,22 +70,34 @@ struct HistoryTests {
         #expect(history.entries.isEmpty)
     }
 
-    @Test("al escribir el principio de un sitio gana su portada, aunque una página interior tenga más visitas")
-    func siteRootBeatsDeeperPages() {
+    @Test("al escribir el principio de un sitio se propone solo su portada: quien teclea el dominio quiere el sitio, no cada artículo que leyó en él")
+    func aSiteIsProposedOnceByItsRoot() {
         let history = history([
-            ("https://github.com/vigosan/nada/issues", "Issues", 9),
-            ("https://github.com/", "GitHub", 1),
+            ("https://elpais.com/espana/voto-tactico.html", "El mapa del voto táctico", 9),
+            ("https://elpais.com/", "EL PAÍS", 1),
+            ("https://www.elpais.com/", "EL PAÍS", 3),
         ])
-        #expect(history.matches(for: "git").strong.map(\.title) == ["GitHub", "Issues"])
+        #expect(history.matches(for: "elpa").strong.map(\.url.absoluteString) == ["https://www.elpais.com/"])
     }
 
-    @Test("entre coincidencias iguales gana la página más visitada")
-    func moreVisitsRankHigher() {
+    @Test("si nunca se visitó la portada, el sitio se propone por su página más visitada, para no dejarlo sin entrada")
+    func aSiteWithoutRootIsProposedByItsBestPage() {
         let history = history([
             ("https://github.com/a", "A", 1),
             ("https://github.com/b", "B", 4),
         ])
-        #expect(history.matches(for: "git").strong.map(\.title) == ["B", "A"])
+        #expect(history.matches(for: "git").strong.map(\.title) == ["B"])
+    }
+
+    @Test("los huecos que dejan las páginas interiores los ocupan otros sitios que empiezan igual")
+    func severalSitesShareThePrefix() {
+        let history = history([
+            ("https://elpais.com/", "EL PAÍS", 5),
+            ("https://elpais.com/a", "A", 4),
+            ("https://elpais.com/b", "B", 3),
+            ("https://elmundo.es/", "El Mundo", 1),
+        ])
+        #expect(history.matches(for: "el").strong.map(\.title) == ["EL PAÍS", "El Mundo"])
     }
 
     @Test("se encuentra una página por su título sin tildes ni mayúsculas")
