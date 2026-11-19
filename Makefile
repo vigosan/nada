@@ -8,7 +8,7 @@ PRODUCTS := .build/out/Products/Release
 SPARKLE := $(APP)/Contents/Frameworks/Sparkle.framework
 SIGN := --force --timestamp --options runtime --sign "$(SIGN_ID)"
 RELEASES := https://github.com/vigosan/nada/releases/download
-LISTS := .build/lists/easylist.txt .build/lists/easyprivacy.txt .build/lists/cookies.txt
+LISTS := .build/lists/easylist.txt .build/lists/easyprivacy.txt .build/lists/annoyances.txt .build/lists/spanish.txt
 
 .PHONY: build test run filters app archive notarize appcast web web-dev
 
@@ -26,7 +26,8 @@ filters:
 	mkdir -p .build/lists
 	curl -fsSL -o .build/lists/easylist.txt https://easylist.to/easylist/easylist.txt
 	curl -fsSL -o .build/lists/easyprivacy.txt https://easylist.to/easylist/easyprivacy.txt
-	curl -fsSL -o .build/lists/cookies.txt https://secure.fanboy.co.nz/fanboy-cookiemonster.txt
+	curl -fsSL -o .build/lists/annoyances.txt https://secure.fanboy.co.nz/fanboy-annoyance.txt
+	curl -fsSL -o .build/lists/spanish.txt https://easylist-downloads.adblockplus.org/easylistspanish.txt
 	rm -rf "$(FILTERS_DIR)"
 	cargo run --release --manifest-path filters/Cargo.toml -- "$(FILTERS_DIR)" $(LISTS)
 
