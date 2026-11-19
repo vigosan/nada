@@ -13,17 +13,15 @@ public struct RemoteUsage: Error {
     public init() {}
 }
 
-public enum RemoteRequest: Codable, Equatable {
+public enum RemoteRequest: Codable, Equatable, Sendable {
     case open(String)
     case tabs(json: Bool)
     case eval(String)
     case text
     case screenshot(String)
 
-    private static let names = ["open", "tabs", "eval", "text", "screenshot", "help"]
-
     public static func isCommand(_ word: String) -> Bool {
-        names.contains(word)
+        !word.hasPrefix("-")
     }
 
     public init(arguments: [String], folder: String) throws {
@@ -48,7 +46,7 @@ public enum RemoteRequest: Codable, Equatable {
     }
 }
 
-public struct RemoteResponse: Codable, Equatable {
+public struct RemoteResponse: Codable, Equatable, Sendable {
     public var ok: Bool
     public var output: String
 
@@ -66,7 +64,7 @@ public struct RemoteResponse: Codable, Equatable {
     }
 }
 
-public struct RemoteTab: Codable, Equatable {
+public struct RemoteTab: Codable, Equatable, Sendable {
     public var index: Int
     public var title: String
     public var url: String
@@ -86,7 +84,7 @@ public struct RemoteTab: Codable, Equatable {
             return (try? encoder.encode(tabs)).map { String(decoding: $0, as: UTF8.self) } ?? "[]"
         }
         return tabs.map { tab in
-            let title = tab.title.replacing(/\s/, with: " ")
+            let title = tab.title.replacing(#/\s/#, with: " ")
             return "\(tab.index)\t\(tab.active ? "*" : " ")\t\(title)\t\(tab.url)"
         }.joined(separator: "\n")
     }

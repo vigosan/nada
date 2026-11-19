@@ -5,6 +5,7 @@ import Sparkle
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var browsers: [BrowserController] = []
     private let library = Library()
+    private var remote: RemoteServer?
     private lazy var modules: [BrowserModule] = [AdBlockModule(), VimKeysModule(), ExtensionsModule()]
     private var browser: BrowserController? {
         browsers.first { $0.window.isKeyWindow } ?? browsers.first { $0.window.isMainWindow } ?? browsers.last
@@ -36,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let config = loadConfig()
         Theme.load(config)
         let browser = openWindow(config, isPrivate: false, restores: true)
+        listen(config)
         NSApp.mainMenu = mainMenu(config.keyBindings)
         if config.startsMaximized { browser.window.zoom(nil) }
         if config.startsFullscreen { browser.window.toggleFullScreen(nil) }
@@ -84,6 +86,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuActions = []
         NSApp.mainMenu = mainMenu(config.keyBindings)
         browsers.forEach { $0.apply(config) }
+        listen(config)
+    }
+
+    private func listen(_ config: Config) {
+        guard config.allowsRemoteControl else {
+            remote = nil
+            return
+        }
+        remote = remote ?? RemoteServer { [weak self] request in
+            let target = self?.browser.flatMap { $0.isPrivate ? nil : $0 } ?? self?.browsers.last { !$0.isPrivate }
+            return await target?.answer(request) ?? RemoteResponse(ok: false, output: "no hay ninguna ventana que no sea privada")
+        }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {

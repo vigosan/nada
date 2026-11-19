@@ -36,10 +36,11 @@ struct RemoteTests {
         #expect(RemoteUsage().text.contains("nada eval"))
     }
 
-    @Test("solo las palabras que son órdenes se toman por órdenes: macOS arranca las apps con argumentos propios")
+    @Test("cualquier palabra tras nada es una orden, también la mal escrita: si no, una errata abriría otro navegador")
     func tellsCommandsFromLaunchArguments() {
         #expect(RemoteRequest.isCommand("tabs"))
         #expect(RemoteRequest.isCommand("help"))
+        #expect(RemoteRequest.isCommand("tbas"))
         #expect(!RemoteRequest.isCommand("-NSDocumentRevisionsDebugMode"))
         #expect(!RemoteRequest.isCommand("-psn_0_12345"))
     }

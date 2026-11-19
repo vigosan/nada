@@ -266,6 +266,16 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         tabs.active?.focused
     }
 
+    var remoteTabs: [RemoteTab] {
+        tabs.tabs.enumerated().map { index, tab in
+            RemoteTab(index: index + 1, title: tab.title, url: tab.focused?.webView.url?.absoluteString ?? "", active: index == tabs.activeIndex)
+        }
+    }
+
+    func resolve(_ address: String) -> URL? {
+        AddressResolver.url(for: address, searchEngine: searchEngine)
+    }
+
     func activate(_ pane: Pane) {
         guard let index = tabs.tabs.firstIndex(where: { $0.panes.values.contains { $0 === pane } }),
               let id = tabs.tabs[index].panes.first(where: { $0.value === pane })?.key else { return }
