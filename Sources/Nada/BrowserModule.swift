@@ -7,4 +7,11 @@ protocol BrowserModule: AnyObject {
     func configure(_ configuration: WKWebViewConfiguration)
     func run(_ commandID: String)
     func changeSetting(_ settingID: String)
+    func whenReady(_ action: @escaping () -> Void)
+}
+
+extension BrowserModule {
+    func whenReady(_ action: @escaping () -> Void) {
+        action()
+    }
 }

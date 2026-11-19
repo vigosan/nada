@@ -215,9 +215,21 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         refresh()
     }
 
+    private func whenModulesReady(_ action: @escaping () -> Void) {
+        var remaining = modules.count
+        guard remaining > 0 else { return action() }
+        for module in modules {
+            module.whenReady {
+                remaining -= 1
+                if remaining == 0 { action() }
+            }
+        }
+    }
+
     func open(_ url: URL) {
         let blank = tabs.active?.focused.flatMap { $0.isBlank ? $0 : nil }
-        (blank ?? addTab(configuration: WKWebViewConfiguration())).webView.load(URLRequest(url: url))
+        let webView = (blank ?? addTab(configuration: WKWebViewConfiguration())).webView
+        whenModulesReady { webView.load(URLRequest(url: url)) }
         palette.isHidden = true
         focusPage()
     }
@@ -655,12 +667,15 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
     private func showActiveTab() {
         let tab = tabs.active
         for pane in tab?.panes.values ?? [:].values {
-            guard let page = pane.pending else { continue }
-            pane.pending = nil
-            if let state = page.state {
-                pane.webView.interactionState = state
-            } else {
-                pane.webView.load(URLRequest(url: page.url))
+            guard pane.pending != nil else { continue }
+            whenModulesReady { [weak pane] in
+                guard let pane, let page = pane.pending else { return }
+                pane.pending = nil
+                if let state = page.state {
+                    pane.webView.interactionState = state
+                } else {
+                    pane.webView.load(URLRequest(url: page.url))
+                }
             }
         }
         container.show(tab?.layout.frames.compactMap { id, frame in

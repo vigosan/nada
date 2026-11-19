@@ -5,6 +5,8 @@ final class AdBlockModule: BrowserModule {
     private let content = WKUserContentController()
     private var lists: [WKContentRuleList] = []
     private var enabled = !UserDefaults.standard.bool(forKey: "adblock.disabled")
+    private var loading = 0
+    private var waiting: [() -> Void] = []
 
     init() {
         content.addUserScript(WKUserScript(source: ConsentWalls.unlockScroll, injectionTime: .atDocumentStart, forMainFrameOnly: true))
@@ -24,6 +26,22 @@ final class AdBlockModule: BrowserModule {
     }
 
     func run(_ commandID: String) {}
+
+    func whenReady(_ action: @escaping () -> Void) {
+        if loading == 0 {
+            action()
+        } else {
+            waiting.append(action)
+        }
+    }
+
+    private func loaded(_ list: WKContentRuleList?) {
+        list.map(add)
+        loading -= 1
+        guard loading == 0 else { return }
+        waiting.forEach { $0() }
+        waiting = []
+    }
 
     func changeSetting(_ settingID: String) {
         toggle()
@@ -52,6 +70,7 @@ final class AdBlockModule: BrowserModule {
             return
         }
         let identifiers = files.map(identifier)
+        loading = files.count
         store.getAvailableContentRuleListIdentifiers { available in
             for stale in available ?? [] where !identifiers.contains(stale) {
                 store.removeContentRuleList(forIdentifier: stale) { _ in }
@@ -60,18 +79,19 @@ final class AdBlockModule: BrowserModule {
         for (file, identifier) in zip(files, identifiers) {
             store.lookUpContentRuleList(forIdentifier: identifier) { [weak self] cached, _ in
                 if let cached {
-                    self?.add(cached)
+                    self?.loaded(cached)
                     return
                 }
                 guard let json = try? String(contentsOf: file, encoding: .utf8) else {
                     NSLog("Bloqueo de anuncios: no se puede leer %@", file.path)
+                    self?.loaded(nil)
                     return
                 }
                 store.compileContentRuleList(forIdentifier: identifier, encodedContentRuleList: json) { compiled, error in
                     if let error {
                         NSLog("Bloqueo de anuncios: %@ no compila: %@", file.lastPathComponent, "\(error)")
                     }
-                    compiled.map { self?.add($0) }
+                    self?.loaded(compiled)
                 }
             }
         }
