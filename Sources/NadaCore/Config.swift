@@ -10,7 +10,7 @@ public struct Config: Sendable {
     public static let keys = [
         "theme", "background", "foreground", "font-family",
         "unfocused-split-opacity", "unfocused-split-fill", "split-divider-color", "split-preserve-zoom",
-        "window-save-state", "fullscreen", "maximize", "config-file", "keybind",
+        "window-save-state", "fullscreen", "maximize", "remote-control", "config-file", "keybind",
     ]
 
     public static let template = ([
@@ -28,6 +28,7 @@ public struct Config: Sendable {
         "# window-save-state = default",
         "# fullscreen = false",
         "# maximize = false",
+        "# remote-control = false",
         "# config-file = ?otro-archivo",
         "# keybind = ctrl+h=focus_left",
         "#",
@@ -105,13 +106,17 @@ public struct Config: Sendable {
         string("maximize") == "true"
     }
 
+    public var allowsRemoteControl: Bool {
+        string("remote-control") == "true"
+    }
+
     private static func accepts(_ entry: ConfigEntry) -> Bool {
         switch entry.key {
         case "unfocused-split-opacity": Double(entry.value) != nil
         case "background", "foreground", "unfocused-split-fill", "split-divider-color": RGB(hex: entry.value) != nil
         case "split-preserve-zoom": ["navigation", "no-navigation"].contains(entry.value)
         case "window-save-state": ["default", "never", "always"].contains(entry.value)
-        case "fullscreen", "maximize": ["true", "false"].contains(entry.value)
+        case "fullscreen", "maximize", "remote-control": ["true", "false"].contains(entry.value)
         default: true
         }
     }
