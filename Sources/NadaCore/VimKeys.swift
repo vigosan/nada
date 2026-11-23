@@ -4,7 +4,8 @@ public enum VimKeys {
       if (window.__nadaVimKeys) return;
       window.__nadaVimKeys = true;
 
-      const chars = "sadfjklewcmpgh";
+      const hintKey = "f";
+      const chars = "sadjklewcmpghr";
       const selector = [
         "a[href]", "button", "input:not([type=hidden])", "textarea", "select", "summary",
         "[role=button]", "[role=link]", "[role=tab]", "[role=menuitem]", "[role=checkbox]",
@@ -119,6 +120,7 @@ public enum VimKeys {
       const onHintKey = (event) => {
         if (modifiers.includes(event.key)) return;
         const key = event.key.toLowerCase();
+        if (key === hintKey) return hideHints();
         if (event.key === "Backspace") hints.typed = hints.typed.slice(0, -1);
         else if (key.length === 1 && chars.includes(key)) hints.typed += key;
         else return hideHints();
@@ -153,8 +155,8 @@ public enum VimKeys {
           d: () => scroll(0, innerHeight / 2, true),
           u: () => scroll(0, -innerHeight / 2, true),
           G: () => jump(false),
-          f: () => showHints(false),
-          F: () => showHints(true),
+          [hintKey]: () => showHints(false),
+          [hintKey.toUpperCase()]: () => showHints(true),
           g: () => {
             if (Date.now() - lastG < 600) jump(true);
             lastG = Date.now() - lastG < 600 ? 0 : Date.now();

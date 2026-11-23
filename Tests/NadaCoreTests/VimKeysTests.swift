@@ -75,6 +75,30 @@ struct VimKeysTests {
         #expect(Set(labels.map(\.count)) == [2])
     }
 
+    @Test("ninguna etiqueta usa la f, porque la f está reservada para quitar las etiquetas")
+    func hintsNeverUseTheToggleKey() async throws {
+        let many = (0..<200).map { "<a href='#m\($0)' style='display:inline-block;width:20px;height:20px'>·</a>" }.joined()
+        let webView = try await page(many)
+        try await press("f", in: webView)
+        let labels: [String] = try #require(await evaluate(
+            "[...document.getElementById('nada-hints').shadowRoot.querySelectorAll('span')].map((tag) => tag.textContent)",
+            in: webView
+        ))
+        #expect(labels.count == 200)
+        #expect(!labels.contains { $0.contains("f") })
+    }
+
+    @Test("f con las etiquetas a la vista las quita sin pulsar ningún enlace, igual que las puso")
+    func fTogglesHintsOff() async throws {
+        let few = (0..<5).map { "<a href='#p\($0)' onclick='window.clicked=\($0)' style='display:block;height:20px'>enlace \($0)</a>" }.joined()
+        for opener in ["f", "F"] {
+            let webView = try await page(few)
+            try await press(opener, "f", in: webView)
+            #expect(try await evaluate("!!document.getElementById('nada-hints')", in: webView) == false)
+            #expect(try await evaluate("window.clicked === undefined", in: webView) == true)
+        }
+    }
+
     @Test("las etiquetas de enlaces pegados no se pisan, porque una etiqueta tapada no se puede leer")
     func hintsDoNotOverlap() async throws {
         let crowded = (0..<12).map { "<a href='#c\($0)' style='display:inline-block;width:8px;height:8px'></a>" }.joined()
