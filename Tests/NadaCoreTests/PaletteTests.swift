@@ -29,6 +29,16 @@ struct PaletteTests {
         #expect(!actions.contains(.togglePalette))
     }
 
+    @Test("la dirección de la página se copia y se edita desde la paleta, porque la barra de pestañas solo la enseña")
+    func addressActionsAreInThePalette() {
+        let items = Palette.items(query: "", tabTitles: [])
+        let copy = items.first { $0.action == .copyAddress }
+        #expect(copy?.title == "Copiar dirección")
+        #expect(copy?.shortcut == "⇧⌘C")
+        #expect(items.contains { $0.action == .openLocation && $0.shortcut == "⌘L" })
+        #expect(Palette.items(query: "copiar dir", tabTitles: []).first?.action == .copyAddress)
+    }
+
     @Test("una dirección se abre con intro aunque también coincida con una orden")
     func addressComesFirst() {
         let items = Palette.items(query: "example.com", tabTitles: ["example.com"])

@@ -70,6 +70,7 @@ public struct Command: Sendable {
     public static let all: [Command] = [
         Command(name: "palette", group: .page, title: "Paleta de órdenes", action: .togglePalette),
         Command(name: "open_location", group: .page, title: "Abrir dirección", action: .openLocation),
+        Command(name: "copy_url", group: .page, title: "Copiar dirección", action: .copyAddress),
         Command(name: "new_tab", group: .tabs, title: "Pestaña nueva", action: .newTab),
         Command(name: "new_window", group: .window, title: "Ventana nueva", action: .newWindow(private: false)),
         Command(name: "new_private_window", group: .window, title: "Ventana privada nueva", action: .newWindow(private: true)),
@@ -171,7 +172,7 @@ public struct KeyBindings: Sendable {
     }
 
     private static let defaults: [(String, String)] = [
-        ("cmd+k", "palette"), ("cmd+l", "open_location"), ("cmd+t", "new_tab"), ("cmd+n", "new_window"), ("cmd+shift+n", "new_private_window"),
+        ("cmd+k", "palette"), ("cmd+l", "open_location"), ("cmd+shift+c", "copy_url"), ("cmd+t", "new_tab"), ("cmd+n", "new_window"), ("cmd+shift+n", "new_private_window"),
         ("cmd+w", "close"),
         ("cmd+r", "reload"), ("cmd+left", "back"), ("cmd+right", "forward"), ("cmd+opt+i", "dev_tools"),
         ("cmd+,", "settings"), ("cmd+shift+,", "reload_config"), ("cmd+d", "split_right"), ("cmd+shift+d", "split_down"),

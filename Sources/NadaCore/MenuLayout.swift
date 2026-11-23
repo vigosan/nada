@@ -49,6 +49,7 @@ public enum MenuLayout {
             .system("copy"),
             .system("paste"),
             .system("selectAll"),
+            .command("copy_url", symbol: "doc.on.doc"),
             .separator,
             .submenu("Buscar", symbol: "text.page.badge.magnifyingglass", [
                 .command("find", symbol: "magnifyingglass"),

@@ -395,6 +395,10 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             }
         case .openLocation:
             openPalette(prefill: tabs.active?.focused?.address?.absoluteString ?? "")
+        case .copyAddress:
+            guard let address = tabs.active?.focused?.address else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(address.absoluteString, forType: .string)
         case .split(let axis):
             split(axis)
         case .focusPane(let direction):
