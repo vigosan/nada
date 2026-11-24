@@ -38,8 +38,7 @@ final class VimKeysModule: NSObject, BrowserModule, WKScriptMessageHandler {
         enabled.toggle()
         UserDefaults.standard.set(!enabled, forKey: "vimkeys.disabled")
         for controller in controllers.allObjects {
-            controller.removeAllUserScripts()
-            if enabled { controller.addUserScript(script) }
+            controller.setUserScript(script, enabled: enabled)
         }
     }
 }
