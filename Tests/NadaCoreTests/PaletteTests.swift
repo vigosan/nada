@@ -47,6 +47,14 @@ struct PaletteTests {
         #expect(Palette.items(query: "video a toda", tabTitles: []).first?.action == .fillVideo)
     }
 
+    @Test("el vídeo sale a flotar desde la paleta y con su atajo, para seguir viéndolo mientras se trabaja en otra app")
+    func pictureInPictureIsInThePalette() {
+        let float = Palette.items(query: "", tabTitles: []).first { $0.action == .pictureInPicture }
+        #expect(float?.title == "Vídeo flotante")
+        #expect(float?.shortcut == "⌥⌘P")
+        #expect(Palette.items(query: "video flot", tabTitles: []).first?.action == .pictureInPicture)
+    }
+
     @Test("una dirección se abre con intro aunque también coincida con una orden")
     func addressComesFirst() {
         let items = Palette.items(query: "example.com", tabTitles: ["example.com"])

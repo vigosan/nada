@@ -512,6 +512,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             panesInOrder.forEach { $0.webView.pauseAllMediaPlayback() }
         case .fillVideo:
             tabs.active?.focused?.webView.evaluateJavaScript(VideoFill.toggle)
+        case .pictureInPicture:
+            tabs.active?.focused?.webView.evaluateJavaScript(PictureInPicture.toggle)
         case .clearSiteData:
             ask(
                 "¿Borrar cookies y datos de sitios?",

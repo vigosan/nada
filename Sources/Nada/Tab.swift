@@ -22,6 +22,7 @@ final class Pane: NSObject {
     init(configuration: WKWebViewConfiguration, extensionPage: Bool = false) {
         configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
         configuration.preferences.isElementFullscreenEnabled = true
+        configuration.preferences.setValue(true, forKey: "allowsPictureInPictureMediaPlayback")
         if !extensionPage { configuration.applicationNameForUserAgent = "Version/26.0 Safari/605.1.15" }
         webView = WKWebView(frame: view.bounds, configuration: configuration)
         super.init()
