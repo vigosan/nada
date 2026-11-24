@@ -60,6 +60,7 @@ public enum MenuLayout {
         MenuSection(title: "Ver", entries: [
             .command("reload", symbol: "arrow.clockwise"),
             .command("pause_media", symbol: "speaker.slash"),
+            .command("fill_video", symbol: "arrow.up.backward.and.arrow.down.forward.rectangle"),
             .separator,
             .command("reset_zoom", symbol: "textformat.size"),
             .command("zoom_in", symbol: "textformat.size.larger"),

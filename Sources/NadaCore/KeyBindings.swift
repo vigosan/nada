@@ -113,6 +113,7 @@ public struct Command: Sendable {
         Command(name: "clear_site_data", group: .page, title: "Borrar cookies y datos de sitios", action: .clearSiteData),
         Command(name: "print", group: .page, title: "Imprimir o guardar como PDF", action: .printPage),
         Command(name: "pause_media", group: .page, title: "Pausar todo lo que suena", action: .pauseMedia),
+        Command(name: "fill_video", group: .page, title: "Vídeo a toda la ventana", action: .fillVideo),
         Command(name: "bookmarks", group: .page, title: "Marcadores", action: .openBookmarks),
         Command(name: "bookmark_page", group: .page, title: "Guardar en marcadores", action: .bookmarkPage),
         Command(name: "downloads", group: .page, title: "Descargas", action: .openDownloads),
@@ -188,6 +189,6 @@ public struct KeyBindings: Sendable {
         ("cmd+shift+t", "reopen_tab"), ("cmd+ctrl+=", "equalize_panes"),
         ("cmd+=", "zoom_in"), ("cmd+plus", "zoom_in"), ("cmd+-", "zoom_out"), ("cmd+0", "reset_zoom"),
         ("cmd+p", "print"), ("cmd+b", "bookmark_page"), ("cmd+opt+b", "bookmarks"), ("cmd+opt+l", "downloads"),
-        ("cmd+f", "find"), ("cmd+g", "find_next"), ("cmd+shift+g", "find_previous"),
+        ("cmd+f", "find"), ("cmd+shift+f", "fill_video"), ("cmd+g", "find_next"), ("cmd+shift+g", "find_previous"),
     ] + (1...9).map { ("cmd+\($0)", "goto_tab:\($0)") }
 }

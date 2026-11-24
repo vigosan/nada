@@ -39,6 +39,14 @@ struct PaletteTests {
         #expect(Palette.items(query: "copiar dir", tabTitles: []).first?.action == .copyAddress)
     }
 
+    @Test("el vídeo se lleva a toda la ventana desde la paleta y con su atajo, porque YouTube solo ofrece modo cine o pantalla completa")
+    func videoFillIsInThePalette() {
+        let fill = Palette.items(query: "", tabTitles: []).first { $0.action == .fillVideo }
+        #expect(fill?.title == "Vídeo a toda la ventana")
+        #expect(fill?.shortcut == "⇧⌘F")
+        #expect(Palette.items(query: "video a toda", tabTitles: []).first?.action == .fillVideo)
+    }
+
     @Test("una dirección se abre con intro aunque también coincida con una orden")
     func addressComesFirst() {
         let items = Palette.items(query: "example.com", tabTitles: ["example.com"])

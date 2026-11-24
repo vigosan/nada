@@ -510,6 +510,8 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
             operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
         case .pauseMedia:
             panesInOrder.forEach { $0.webView.pauseAllMediaPlayback() }
+        case .fillVideo:
+            tabs.active?.focused?.webView.evaluateJavaScript(VideoFill.toggle)
         case .clearSiteData:
             ask(
                 "¿Borrar cookies y datos de sitios?",
