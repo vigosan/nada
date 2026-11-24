@@ -8,8 +8,19 @@ import WebKit
 struct VimKeysTests {
     private let links = (0..<30).map { "<a href='#l\($0)' onclick='window.clicked=\($0)' style='display:block;height:20px'>enlace \($0)</a>" }.joined()
 
+    private final class Messages: NSObject, WKScriptMessageHandler {
+        var received: [String] = []
+
+        func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+            (message.body as? String).map { received.append($0) }
+        }
+    }
+
+    private let messages = Messages()
+
     private func page(_ body: String) async throws -> WKWebView {
         let configuration = WKWebViewConfiguration()
+        configuration.userContentController.add(messages, name: VimKeys.openInPaneMessage)
         configuration.userContentController.addUserScript(
             WKUserScript(source: VimKeys.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
         )
@@ -130,6 +141,20 @@ struct VimKeysTests {
         ))
         try await press(String(label.first!), String(label.last!), in: webView)
         #expect(try await evaluate("window.clicked", in: webView) == 7.0)
+        #expect(try await evaluate("!!document.getElementById('nada-hints')", in: webView) == false)
+    }
+
+    @Test("v y una etiqueta abren el enlace en un panel al lado, para leerlo sin perder la página de la que viene")
+    func vOpensTheLinkInAPane() async throws {
+        let webView = try await page(links)
+        try await press("v", in: webView)
+        let label: String = try #require(await evaluate(
+            "document.getElementById('nada-hints').shadowRoot.querySelectorAll('span')[7].textContent",
+            in: webView
+        ))
+        try await press(String(label.first!), String(label.last!), in: webView)
+        #expect(messages.received == ["https://example.com/#l7"])
+        #expect(try await evaluate("window.clicked === undefined", in: webView) == true)
         #expect(try await evaluate("!!document.getElementById('nada-hints')", in: webView) == false)
     }
 

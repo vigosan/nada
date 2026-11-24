@@ -6,7 +6,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var browsers: [BrowserController] = []
     private let library = Library()
     private var remote: RemoteServer?
-    private lazy var modules: [BrowserModule] = [AdBlockModule(), VimKeysModule(), ExtensionsModule()]
+    private lazy var modules: [BrowserModule] = [
+        AdBlockModule(),
+        VimKeysModule { [weak self] url, webView in self?.browsers.forEach { $0.openInPane(url, from: webView) } },
+        ExtensionsModule(),
+    ]
     private var browser: BrowserController? {
         browsers.first { $0.window.isKeyWindow } ?? browsers.first { $0.window.isMainWindow } ?? browsers.last
     }

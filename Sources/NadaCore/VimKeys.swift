@@ -1,4 +1,6 @@
 public enum VimKeys {
+    public static let openInPaneMessage = "nadaOpenInPane"
+
     public static let script = #"""
     (() => {
       if (window.__nadaVimKeys) return;
@@ -61,7 +63,7 @@ public enum VimKeys {
         return style.visibility !== "hidden" && style.opacity !== "0";
       };
 
-      const showHints = (newTab) => {
+      const showHints = (mode) => {
         const targets = [...document.querySelectorAll(selector)].filter(visible);
         if (!targets.length) return;
         const host = document.createElement("div");
@@ -99,7 +101,7 @@ public enum VimKeys {
           placed.push({ left, top, right: left + tag.offsetWidth, bottom });
           return { el, tag, label: names[index] };
         });
-        hints = { host, items, typed: "", newTab };
+        hints = { host, items, typed: "", mode };
       };
 
       const hideHints = () => {
@@ -107,8 +109,10 @@ public enum VimKeys {
         hints = null;
       };
 
-      const activate = (el, newTab) => {
-        if (newTab && el.href) {
+      const activate = (el, mode) => {
+        if (mode === "pane" && el.href) {
+          webkit.messageHandlers.\#(openInPaneMessage).postMessage(el.href);
+        } else if (mode === "tab" && el.href) {
           if (!window.open(el.href, "_blank")) location.href = el.href;
         } else if (takesText(el)) {
           el.focus();
@@ -129,9 +133,9 @@ public enum VimKeys {
         if (!matching.length) return hideHints();
         if (matching.length === 1 && matching[0].label === hints.typed) {
           const { el } = matching[0];
-          const newTab = hints.newTab;
+          const mode = hints.mode;
           hideHints();
-          activate(el, newTab);
+          activate(el, mode);
         }
       };
 
@@ -155,8 +159,9 @@ public enum VimKeys {
           d: () => scroll(0, innerHeight / 2, true),
           u: () => scroll(0, -innerHeight / 2, true),
           G: () => jump(false),
-          [hintKey]: () => showHints(false),
-          [hintKey.toUpperCase()]: () => showHints(true),
+          [hintKey]: () => showHints("click"),
+          [hintKey.toUpperCase()]: () => showHints("tab"),
+          v: () => showHints("pane"),
           g: () => {
             if (Date.now() - lastG < 600) jump(true);
             lastG = Date.now() - lastG < 600 ? 0 : Date.now();

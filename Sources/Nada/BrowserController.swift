@@ -583,6 +583,16 @@ final class BrowserController: NSObject, WKUIDelegate, NSWindowDelegate {
         webView.pageZoom = library.zoom.factor(for: webView.url)
     }
 
+    func openInPane(_ url: URL, from webView: WKWebView) {
+        guard let tab = tabs.active, tab.focused?.webView === webView else { return }
+        let pane = makePane(configuration: WKWebViewConfiguration())
+        tab.panes[tab.layout.split(.horizontal)] = pane
+        extensions?.didOpenTab(pane)
+        showActiveTab()
+        whenModulesReady { pane.webView.load(URLRequest(url: url)) }
+        focusPage()
+    }
+
     private func split(_ axis: SplitAxis) {
         guard let tab = tabs.active else { return }
         let pane = makePane(configuration: WKWebViewConfiguration())
