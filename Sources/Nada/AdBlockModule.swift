@@ -10,6 +10,7 @@ final class AdBlockModule: BrowserModule {
 
     init() {
         content.addUserScript(WKUserScript(source: ConsentWalls.unlockScroll, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        content.addUserScript(WKUserScript(source: ConsentWalls.rejectYouTube, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         load()
     }
 

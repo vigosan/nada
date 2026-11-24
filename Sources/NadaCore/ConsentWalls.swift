@@ -9,4 +9,18 @@ public enum ConsentWalls {
       document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
     })();
     """#
+
+    public static let rejectYouTube = #"""
+    (() => {
+      if (!/(^|\.)youtube\.com$/.test(location.hostname)) return;
+      const observer = new MutationObserver(() => {
+        const reject = document.querySelector("ytd-consent-bump-v2-lightbox .eom-buttons button");
+        if (!reject) return;
+        observer.disconnect();
+        reject.click();
+      });
+      observer.observe(document, { childList: true, subtree: true });
+      setTimeout(() => observer.disconnect(), 30000);
+    })();
+    """#
 }
