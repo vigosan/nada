@@ -55,6 +55,15 @@ struct PaletteTests {
         #expect(Palette.items(query: "video flot", tabTitles: []).first?.action == .pictureInPicture)
     }
 
+    @Test("la velocidad del vídeo se cambia desde la paleta y con atajos que no chocan con los de YouTube")
+    func playbackSpeedIsInThePalette() {
+        let items = Palette.items(query: "", tabTitles: [])
+        #expect(items.first { $0.action == .playbackSpeed(faster: true) }?.title == "Acelerar vídeo")
+        #expect(items.first { $0.action == .playbackSpeed(faster: true) }?.shortcut == "⌥⌘.")
+        #expect(items.first { $0.action == .playbackSpeed(faster: false) }?.title == "Frenar vídeo")
+        #expect(items.first { $0.action == .playbackSpeed(faster: false) }?.shortcut == "⌥⌘,")
+    }
+
     @Test("una dirección se abre con intro aunque también coincida con una orden")
     func addressComesFirst() {
         let items = Palette.items(query: "example.com", tabTitles: ["example.com"])

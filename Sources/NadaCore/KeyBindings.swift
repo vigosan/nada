@@ -115,6 +115,8 @@ public struct Command: Sendable {
         Command(name: "pause_media", group: .page, title: "Pausar todo lo que suena", action: .pauseMedia),
         Command(name: "fill_video", group: .page, title: "Vídeo a toda la ventana", action: .fillVideo),
         Command(name: "picture_in_picture", group: .page, title: "Vídeo flotante", action: .pictureInPicture),
+        Command(name: "faster_video", group: .page, title: "Acelerar vídeo", action: .playbackSpeed(faster: true)),
+        Command(name: "slower_video", group: .page, title: "Frenar vídeo", action: .playbackSpeed(faster: false)),
         Command(name: "bookmarks", group: .page, title: "Marcadores", action: .openBookmarks),
         Command(name: "bookmark_page", group: .page, title: "Guardar en marcadores", action: .bookmarkPage),
         Command(name: "downloads", group: .page, title: "Descargas", action: .openDownloads),
@@ -190,6 +192,6 @@ public struct KeyBindings: Sendable {
         ("cmd+shift+t", "reopen_tab"), ("cmd+ctrl+=", "equalize_panes"),
         ("cmd+=", "zoom_in"), ("cmd+plus", "zoom_in"), ("cmd+-", "zoom_out"), ("cmd+0", "reset_zoom"),
         ("cmd+p", "print"), ("cmd+b", "bookmark_page"), ("cmd+opt+b", "bookmarks"), ("cmd+opt+l", "downloads"),
-        ("cmd+f", "find"), ("cmd+shift+f", "fill_video"), ("cmd+opt+p", "picture_in_picture"), ("cmd+g", "find_next"), ("cmd+shift+g", "find_previous"),
+        ("cmd+f", "find"), ("cmd+shift+f", "fill_video"), ("cmd+opt+p", "picture_in_picture"), ("cmd+opt+.", "faster_video"), ("cmd+opt+,", "slower_video"), ("cmd+g", "find_next"), ("cmd+shift+g", "find_previous"),
     ] + (1...9).map { ("cmd+\($0)", "goto_tab:\($0)") }
 }

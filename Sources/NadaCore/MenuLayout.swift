@@ -62,6 +62,8 @@ public enum MenuLayout {
             .command("pause_media", symbol: "speaker.slash"),
             .command("fill_video", symbol: "arrow.up.backward.and.arrow.down.forward.rectangle"),
             .command("picture_in_picture", symbol: "pip.enter"),
+            .command("faster_video", symbol: "hare"),
+            .command("slower_video", symbol: "tortoise"),
             .separator,
             .command("reset_zoom", symbol: "textformat.size"),
             .command("zoom_in", symbol: "textformat.size.larger"),

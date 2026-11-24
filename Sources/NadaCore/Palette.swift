@@ -40,6 +40,7 @@ public enum PaletteAction: Equatable, Sendable {
     case pauseMedia
     case fillVideo
     case pictureInPicture
+    case playbackSpeed(faster: Bool)
     case printPage
     case makeDefaultBrowser
     case reloadConfig
