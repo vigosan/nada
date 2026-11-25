@@ -10,7 +10,8 @@ struct PageFocusTests {
         let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         webView.loadHTMLString("<body>\(body)</body>", baseURL: URL(string: "https://example.com/"))
         while webView.isLoading { try await Task.sleep(for: .milliseconds(20)) }
-        return try #require(try await webView.evaluateJavaScript(PageFocus.isTyping) as? Bool)
+        let typing = try await webView.evaluateJavaScript(PageFocus.isTyping) as? Bool
+        return try #require(typing as Bool?)
     }
 
     @Test("con el cursor en un campo de texto se está escribiendo, y ir atrás tiraría lo escrito")
