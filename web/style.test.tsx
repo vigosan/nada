@@ -42,3 +42,24 @@ describe("type", () => {
     }
   });
 });
+
+describe("links", () => {
+  it("gives every link the shared link style, so they all answer hover, press and keyboard focus the same way", () => {
+    for (const html of pages) {
+      for (const anchor of html.match(/<a [^>]*>/g)!) expect(anchor).toMatch(/class="[^"]*\blink\b/);
+    }
+  });
+
+  it("only paints hover backgrounds on devices that can hover, so a tap on a phone does not leave a link highlighted", () => {
+    expect(css).toMatch(/@media \(hover: hover\) and \(pointer: fine\)\s*{\s*\.link:hover/);
+  });
+
+  it("acknowledges a press at once, so a link feels like it heard the click", () => {
+    expect(css).toMatch(/\.link:active\s*{[^}]*transition-duration: 0ms/);
+  });
+
+  it("rings links for keyboard users only, so clicking with a mouse does not flash an outline", () => {
+    expect(css).toContain(".link:focus-visible");
+    expect(css).not.toMatch(/\.link:focus\s*{/);
+  });
+});

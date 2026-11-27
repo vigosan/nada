@@ -1,5 +1,5 @@
 import { CONTACT, type Content } from "@/content";
-import { button, Page, Paragraph } from "./Page";
+import { link, Page, Paragraph } from "./Page";
 
 export function Privacy({ c }: { c: Content }) {
   return (
@@ -28,9 +28,14 @@ export function Support({ c }: { c: Content }) {
         {c.support.body.map((text) => (
           <Paragraph key={text} text={text} />
         ))}
-        <a data-testid="support-email" href={`mailto:${CONTACT}`} className={`${button} self-start`}>
-          {c.support.email}
-        </a>
+        <p>
+          <span aria-hidden className="mr-3 text-accent">
+            →
+          </span>
+          <a data-testid="support-email" href={`mailto:${CONTACT}`} className={link}>
+            {c.support.email}
+          </a>
+        </p>
       </article>
     </Page>
   );

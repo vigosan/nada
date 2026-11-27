@@ -30,6 +30,27 @@
   --color-accent: #6cc4f2;
 }
 
+.link {
+  border-radius: 0.25rem;
+  outline: none;
+  transition: background-color 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    background-color: var(--color-wash);
+  }
+}
+
+.link:active {
+  background-color: var(--color-press);
+  transition-duration: 0ms;
+}
+
+.link:focus-visible {
+  box-shadow: 0 0 0 1px var(--color-ring);
+}
+
 @theme inline {
   --font-mono: var(--font-geist-mono);
 }
