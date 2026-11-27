@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Home } from "./components/Home";
 import { Privacy, Support } from "./components/Legal";
-import { content, LANGS } from "./content";
+import { content, DOWNLOAD, LANGS } from "./content";
 
 const css = readFileSync(new URL("./app/globals.css", import.meta.url), "utf8");
 
@@ -84,6 +84,14 @@ describe("links", () => {
   it("gives every link the shared link style, so they all answer hover, press and keyboard focus the same way", () => {
     for (const html of pages) {
       for (const anchor of html.match(/<a [^>]*>/g)!) expect(anchor).toMatch(/class="[^"]*\blink\b/);
+    }
+  });
+
+  it("marks links that leave the site with ↗, so nobody is surprised to land on GitHub", () => {
+    for (const html of pages) {
+      const external = [...html.matchAll(/<a [^>]*href="(https?:[^"]+)"[^>]*>(.*?)<\/a>/g)].filter(([, href]) => href !== DOWNLOAD);
+      expect(external.length).toBeGreaterThan(0);
+      for (const [, , text] of external) expect(text).toContain("↗");
     }
   });
 

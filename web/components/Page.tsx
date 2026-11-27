@@ -35,12 +35,12 @@ export function Page({ c, current, children }: { c: Content; current: Route; chi
           {c.footer.support}
         </Link>
         <a href={REPO} className={quiet}>
-          {c.footer.github}
+          {c.footer.github} <span aria-hidden>↗</span>
         </a>
         <span className="sm:ml-auto">
           {c.footer.by}{" "}
           <a href="https://vicent.io" className={quiet}>
-            Vicent Gozalbes
+            Vicent Gozalbes <span aria-hidden>↗</span>
           </a>
         </span>
       </footer>
