@@ -32,6 +32,31 @@ describe("colors", () => {
   });
 });
 
+describe("frame", () => {
+  it("names the product and says what it is at the top of every page, so someone landing on support knows where they are", () => {
+    for (const lang of LANGS) {
+      for (const page of [<Home key="home" c={content[lang]} />, <Privacy key="privacy" c={content[lang]} />, <Support key="support" c={content[lang]} />]) {
+        const html = renderToStaticMarkup(page);
+        const header = html.slice(html.indexOf("<header"), html.indexOf("</header>"));
+        expect(header).toContain(">Nada<");
+        expect(header).toContain(content[lang].home.tagline);
+      }
+    }
+  });
+
+  it("gives the home page one top heading, the product's name, so search engines and screen readers know what the page is about", () => {
+    for (const lang of LANGS) {
+      const html = renderToStaticMarkup(<Home c={content[lang]} />);
+      expect(html.match(/<h1[^>]*>.*?<\/h1>/g)).toHaveLength(1);
+      expect(html).toMatch(/<h1[^>]*>Nada<\/h1>/);
+    }
+  });
+
+  it("never spreads headings apart, since Geist Mono is already wide", () => {
+    for (const html of pages) expect(html).not.toMatch(/tracking-(wide|wider|widest)/);
+  });
+});
+
 describe("surfaces", () => {
   it("draws the demo, the screenshot and the keys flat with a 1px line, so the product is shown plainly and nothing floats above the text", () => {
     for (const html of pages) expect(html).not.toMatch(/\bshadow-/);

@@ -137,7 +137,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
           </div>
         )}
       </div>
-      <p className="text-center text-sm text-muted">
+      <p className="text-sm text-muted">
         <Keys text={labels.hint} />
       </p>
     </div>

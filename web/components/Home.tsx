@@ -4,43 +4,34 @@ import { Download } from "./Download";
 import { key, Keys } from "./Keys";
 import { Page } from "./Page";
 
-const wide = "lg:-mx-24 xl:-mx-40";
-
-const heading = "text-2xl font-semibold tracking-tight text-balance text-ink";
+const heading = "text-lg font-medium text-ink";
 
 export function Home({ c }: { c: Content }) {
   return (
     <Page c={c} current="home">
-      <section className="flex flex-col items-center gap-6 text-center lg:pt-4">
-        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance text-ink sm:text-5xl">{c.home.tagline}</h1>
-        <p className="max-w-xl text-lg text-pretty">
+      <section className="flex flex-col gap-6">
+        <p className="max-w-2xl text-pretty">
           <Keys text={c.home.intro} />
         </p>
-        <div>
-          <Download home={c.home} url={DOWNLOAD} />
-        </div>
-        <div className={`mt-6 self-stretch ${wide}`}>
-          <Demo labels={c.demo} />
-        </div>
+        <Download home={c.home} url={DOWNLOAD} />
+        <Demo labels={c.demo} />
       </section>
       {c.home.sections.map((section) => (
         <article key={section.title} className="flex flex-col gap-6">
           <h2 className={heading}>{section.title}</h2>
-          <p className="max-w-2xl text-pretty leading-relaxed">
+          <p className="max-w-2xl text-pretty">
             <Keys text={section.text} />
           </p>
           {"shot" in section && (
-            <div className={wide}>
-              <img
-                data-testid="panes-shot"
-                src="/panes.webp"
-                alt={section.shot}
-                width={2400}
-                height={1500}
-                loading="lazy"
-                className="h-auto w-full border border-line"
-              />
-            </div>
+            <img
+              data-testid="panes-shot"
+              src="/panes.webp"
+              alt={section.shot}
+              width={2400}
+              height={1500}
+              loading="lazy"
+              className="h-auto w-full border border-line"
+            />
           )}
         </article>
       ))}
@@ -73,9 +64,9 @@ export function Home({ c }: { c: Content }) {
         <p className="max-w-2xl text-pretty">
           <Keys text={c.home.configText} />
         </p>
-        <pre className="overflow-x-auto rounded-xl border border-line bg-wash p-5 text-sm leading-relaxed text-ink">{CONFIG_SAMPLE}</pre>
+        <pre className="overflow-x-auto border border-line p-4 text-sm leading-relaxed text-ink">{CONFIG_SAMPLE}</pre>
       </article>
-      <section data-testid="closing" className="flex flex-col items-center gap-6 border-t border-line pt-16 text-center">
+      <section data-testid="closing" className="flex flex-col gap-6">
         <h2 className={heading}>
           <Keys text={c.home.closingTitle} />
         </h2>
