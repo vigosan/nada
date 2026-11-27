@@ -73,7 +73,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
     <div data-testid="demo" className="flex flex-col gap-4">
       <div
         data-testid="demo-window"
-        className="relative overflow-hidden rounded-xl border border-line bg-wash text-sm shadow-2xl shadow-black/30"
+        className="relative overflow-hidden rounded-xl border border-line bg-wash text-sm"
       >
         <div className="flex items-center gap-3 px-3 py-2">
           <div aria-hidden className="flex gap-2">
@@ -102,7 +102,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
           {tab.split && <Pane title={null} />}
         </button>
         {open && (
-          <div className="absolute inset-x-0 top-16 mx-auto w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-xl border border-line bg-canvas shadow-2xl shadow-black/60">
+          <div className="absolute inset-x-0 top-16 mx-auto w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-xl border border-line bg-canvas">
             <input
               ref={input}
               value={query}

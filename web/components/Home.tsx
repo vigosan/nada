@@ -38,7 +38,7 @@ export function Home({ c }: { c: Content }) {
                 width={2400}
                 height={1500}
                 loading="lazy"
-                className="h-auto w-full rounded-xl border border-line shadow-2xl shadow-black/30"
+                className="h-auto w-full border border-line"
               />
             </div>
           )}

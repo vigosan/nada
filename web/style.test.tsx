@@ -32,6 +32,12 @@ describe("colors", () => {
   });
 });
 
+describe("surfaces", () => {
+  it("draws the demo, the screenshot and the keys flat with a 1px line, so the product is shown plainly and nothing floats above the text", () => {
+    for (const html of pages) expect(html).not.toMatch(/\bshadow-/);
+  });
+});
+
 describe("type", () => {
   it("sets every page in one monospace, so the site reads like the terminal tools Nada sits beside", () => {
     expect(css).toContain("--font-mono: var(--font-geist-mono)");
