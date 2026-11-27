@@ -3,7 +3,7 @@ import { link } from "./Page";
 
 export function Download({ home, url }: { home: Content["home"]; url: string | null }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 border-l-2 border-accent pl-4 sm:pl-6">
       {url ? (
         <p>
           <span aria-hidden className="mr-3 text-accent">

@@ -37,9 +37,13 @@ export function Home({ c }: { c: Content }) {
       ))}
       <article className="flex flex-col gap-6">
         <h2 className={heading}>{c.home.shortcutsTitle}</h2>
-        <div className="border-b border-line">
+        <ul className="flex flex-col gap-8">
           {c.home.shortcuts.map((group) => (
-            <section key={group.title} className="grid gap-4 border-t border-line py-6 sm:grid-cols-[9rem_1fr] sm:gap-8">
+            <li
+              key={group.title}
+              data-testid="shortcut-group"
+              className="flex flex-col gap-4 border-l-2 border-line pl-4 hover:border-line-strong sm:pl-6"
+            >
               <h3 className="font-medium text-ink">{group.title}</h3>
               <ul className="flex flex-col gap-3">
                 {group.items.map((item) => (
@@ -55,9 +59,9 @@ export function Home({ c }: { c: Content }) {
                   </li>
                 ))}
               </ul>
-            </section>
+            </li>
           ))}
-        </div>
+        </ul>
       </article>
       <article className="flex flex-col gap-6">
         <h2 className={heading}>{c.home.configTitle}</h2>

@@ -107,3 +107,19 @@ describe("motion", () => {
     expect(css).not.toContain("animation-timeline");
   });
 });
+
+describe("lists", () => {
+  it("lists the shortcut groups as one list, so a screen reader announces how many groups there are", () => {
+    for (const lang of LANGS) {
+      const html = renderToStaticMarkup(<Home c={content[lang]} />);
+      expect(html.match(/<li[^>]*data-testid="shortcut-group"/g)).toHaveLength(content[lang].home.shortcuts.length);
+    }
+  });
+
+  it("keeps the accent bar for the download alone, so the blue points at the one thing to do", () => {
+    for (const lang of LANGS) {
+      expect(renderToStaticMarkup(<Home c={content[lang]} />).match(/\bborder-accent\b/g)).toHaveLength(2);
+      expect(renderToStaticMarkup(<Support c={content[lang]} />)).not.toMatch(/\bborder-accent\b/);
+    }
+  });
+});
