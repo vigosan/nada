@@ -63,3 +63,16 @@ describe("links", () => {
     expect(css).not.toMatch(/\.link:focus\s*{/);
   });
 });
+
+describe("motion", () => {
+  it("shows the content on the first frame, so nobody waits for words to slide in before reading them", () => {
+    for (const html of pages) {
+      const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+      expect(main).not.toContain("starting:");
+    }
+  });
+
+  it("does not tie decoration to scrolling, so the page stays still while it is read", () => {
+    expect(css).not.toContain("animation-timeline");
+  });
+});

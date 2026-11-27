@@ -6,26 +6,20 @@ import { Page } from "./Page";
 
 const wide = "lg:-mx-24 xl:-mx-40";
 
-const rise =
-  "transition-[opacity,translate] duration-300 ease-out starting:translate-y-2 starting:opacity-0 motion-reduce:starting:translate-y-0";
-
 const heading = "text-2xl font-semibold tracking-tight text-balance text-ink";
 
 export function Home({ c }: { c: Content }) {
   return (
     <Page c={c} current="home">
-      <div aria-hidden className="scroll-playhead">
-        <div className="scroll-playhead-head" />
-      </div>
       <section className="flex flex-col items-center gap-6 text-center lg:pt-4">
-        <h1 className={`${rise} max-w-2xl text-4xl font-semibold tracking-tight text-balance text-ink sm:text-5xl`}>{c.home.tagline}</h1>
-        <p className={`${rise} max-w-xl text-lg text-pretty delay-50`}>
+        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance text-ink sm:text-5xl">{c.home.tagline}</h1>
+        <p className="max-w-xl text-lg text-pretty">
           <Keys text={c.home.intro} />
         </p>
-        <div className={`${rise} delay-90`}>
+        <div>
           <Download home={c.home} url={DOWNLOAD} />
         </div>
-        <div className={`${rise} mt-6 self-stretch delay-120 ${wide}`}>
+        <div className={`mt-6 self-stretch ${wide}`}>
           <Demo labels={c.demo} />
         </div>
       </section>
