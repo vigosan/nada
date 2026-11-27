@@ -70,7 +70,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
   };
 
   return (
-    <div data-testid="demo" className="flex flex-col gap-4">
+    <div data-testid="demo" className="flex w-full max-w-2xl flex-col gap-4">
       <div
         data-testid="demo-window"
         className="relative overflow-hidden rounded-xl border border-line bg-wash text-sm"

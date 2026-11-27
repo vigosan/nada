@@ -33,6 +33,13 @@ describe("colors", () => {
 });
 
 describe("frame", () => {
+  it("keeps the demo window as wide as the text, so the browser reads as part of the page instead of a banner overpowering it", () => {
+    const html = renderToStaticMarkup(<Home c={content.en} />);
+    const demo = html.match(/<div data-testid="demo"[^>]*>/)![0];
+
+    expect(demo).toContain("max-w-2xl");
+  });
+
   it("names the product and says what it is at the top of every page, so someone landing on support knows where they are", () => {
     for (const lang of LANGS) {
       for (const page of [<Home key="home" c={content[lang]} />, <Privacy key="privacy" c={content[lang]} />, <Support key="support" c={content[lang]} />]) {
