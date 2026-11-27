@@ -7,12 +7,12 @@ import { Keys } from "./Keys";
 
 function Pane({ title }: { title: string | null }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-3 bg-canvas p-5 text-left">
+    <div className="flex min-w-0 flex-1 flex-col gap-3 bg-ground p-5 text-left">
       {title && (
         <>
-          <span className="truncate text-lg font-medium text-ink">{title}</span>
+          <span className="truncate font-sans text-lg font-semibold text-ink">{title}</span>
           {[92, 97, 80, 60].map((width) => (
-            <span key={width} className="h-2 rounded-full bg-press" style={{ width: `${width}%` }} />
+            <span key={width} className="h-2 rounded-full bg-raised" style={{ width: `${width}%` }} />
           ))}
         </>
       )}
@@ -70,10 +70,10 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
   };
 
   return (
-    <div data-testid="demo" className="flex w-full max-w-2xl flex-col gap-4">
+    <div data-testid="demo" className="flex flex-col gap-4">
       <div
         data-testid="demo-window"
-        className="relative overflow-hidden rounded-xl border border-line bg-wash text-sm"
+        className="relative overflow-hidden rounded-xl border border-line bg-ground font-mono text-sm shadow-2xl shadow-black/30"
       >
         <div className="flex items-center gap-3 px-3 py-2">
           <div aria-hidden className="flex gap-2">
@@ -81,11 +81,11 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
             <span className="size-3 rounded-full bg-[#febc2e]" />
             <span className="size-3 rounded-full bg-[#28c840]" />
           </div>
-          <div className="flex min-w-0 flex-1 gap-0.5 rounded-lg bg-press p-0.5 text-xs">
+          <div className="flex min-w-0 flex-1 gap-0.5 rounded-lg bg-bar p-0.5 font-sans text-xs">
             {state.tabs.map((item, index) => (
               <div
                 key={index}
-                className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-2.5 py-1 ${index === state.active ? "bg-canvas text-ink" : "text-muted"}`}
+                className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-2.5 py-1 ${index === state.active ? "bg-raised text-ink" : "text-dim"}`}
               >
                 <span className="truncate">{item.title ?? labels.blank}</span>
                 <span className="hidden sm:inline">⌘{index + 1}</span>
@@ -96,13 +96,13 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
         <button
           type="button"
           onClick={() => show(true)}
-          className={`flex h-72 w-full gap-px bg-line sm:h-96 ${tab.split === "down" ? "flex-col" : ""} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent`}
+          className={`flex h-72 w-full gap-px bg-raised sm:h-96 ${tab.split === "down" ? "flex-col" : ""} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent`}
         >
           <Pane title={tab.title} />
           {tab.split && <Pane title={null} />}
         </button>
         {open && (
-          <div className="absolute inset-x-0 top-16 mx-auto w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-xl border border-line bg-canvas">
+          <div className="absolute inset-x-0 top-16 mx-auto w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-xl border border-line bg-bar shadow-2xl shadow-black/60">
             <input
               ref={input}
               value={query}
@@ -116,7 +116,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
               aria-label={labels.placeholder}
               autoComplete="off"
               spellCheck={false}
-              className="w-full border-b border-line bg-transparent px-4 py-3 text-base text-ink sm:text-sm caret-accent outline-none placeholder:text-muted"
+              className="w-full border-b border-line bg-transparent px-4 py-3 text-base text-ink sm:text-sm caret-accent outline-none placeholder:text-dim"
             />
             <ul className="p-1.5 text-left" onMouseDown={(event) => event.preventDefault()}>
               {items.map((item, index) => (
@@ -126,7 +126,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
                     data-testid="demo-item"
                     tabIndex={-1}
                     onClick={() => run(item)}
-                    className={`flex w-full cursor-pointer justify-between gap-3 rounded-md px-2.5 py-1.5 ${index === selected ? "bg-wash text-ink" : "text-muted"}`}
+                    className={`flex w-full cursor-pointer justify-between gap-3 rounded-md px-2.5 py-1.5 ${index === selected ? "bg-raised text-ink" : "text-dim"}`}
                   >
                     <span className="truncate">{item.title}</span>
                     <span>{item.keys}</span>
@@ -137,7 +137,7 @@ export function Demo({ labels }: { labels: Content["demo"] }) {
           </div>
         )}
       </div>
-      <p className="text-sm text-muted">
+      <p className="text-center text-sm text-dim">
         <Keys text={labels.hint} />
       </p>
     </div>

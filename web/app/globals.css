@@ -1,60 +1,71 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: white;
-  --color-ink: var(--color-gray-800);
-  --color-body: var(--color-gray-600);
-  --color-muted: var(--color-gray-500);
-  --color-faint: var(--color-gray-400);
-  --color-line: var(--color-gray-300);
-  --color-line-strong: var(--color-gray-500);
-  --color-wash: var(--color-gray-100);
-  --color-press: var(--color-gray-200);
-  --color-ring: var(--color-gray-400);
+  --color-desk: #ffffff;
+  --color-ground: #f5f5f8;
+  --color-bar: #ececf1;
+  --color-raised: #e0e1e9;
+  --color-line: #d6d7e0;
+  --color-ink: #1b1c27;
+  --color-body: #50536a;
+  --color-dim: #72758c;
   --color-accent: #1583bd;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --color-canvas: var(--color-gray-950);
-  --color-ink: var(--color-gray-100);
-  --color-body: var(--color-gray-300);
-  --color-muted: var(--color-gray-400);
-  --color-faint: var(--color-gray-500);
-  --color-line: var(--color-gray-700);
-  --color-line-strong: var(--color-gray-400);
-  --color-wash: var(--color-gray-800);
-  --color-press: var(--color-gray-700);
-  --color-ring: var(--color-gray-500);
+  --color-desk: #13141c;
+  --color-ground: #1b1c27;
+  --color-bar: #22232f;
+  --color-raised: #2b2d3b;
+  --color-line: #34364a;
+  --color-ink: #cdd0e6;
+  --color-body: #a3a7c2;
+  --color-dim: #7d819c;
   --color-accent: #6cc4f2;
 }
 
-.link {
-  border-radius: 0.25rem;
-  outline: none;
-  transition: background-color 150ms ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .link:hover {
-    background-color: var(--color-wash);
-  }
-}
-
-.link:active {
-  background-color: var(--color-press);
-  transition-duration: 0ms;
-}
-
-.link:focus-visible {
-  box-shadow: 0 0 0 1px var(--color-ring);
-}
-
 @theme inline {
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-::selection {
-  background-color: color-mix(in srgb, var(--color-accent) 25%, transparent);
+.scroll-playhead {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .scroll-playhead {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      height: 6px;
+      pointer-events: none;
+      background: repeating-linear-gradient(to right, rgb(0 0 0 / 0.14) 0 1px, transparent 1px 24px);
+    }
+
+    [data-theme="dark"] .scroll-playhead {
+      background: repeating-linear-gradient(to right, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 24px);
+    }
+
+    .scroll-playhead-head {
+      height: 100%;
+      border-left: 2px solid var(--color-accent);
+      will-change: transform;
+      animation: playhead linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+@keyframes playhead {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% - 2px));
+  }
 }
