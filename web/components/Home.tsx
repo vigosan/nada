@@ -79,7 +79,7 @@ export function Home({ c }: { c: Content }) {
         <p className="max-w-2xl text-pretty">
           <Keys text={c.home.configText} />
         </p>
-        <pre className="overflow-x-auto rounded-xl border border-line bg-ground p-5 font-mono text-sm leading-relaxed text-ink">{CONFIG_SAMPLE}</pre>
+        <pre className="overflow-x-auto rounded-xl border border-line bg-wash p-5 text-sm leading-relaxed text-ink">{CONFIG_SAMPLE}</pre>
       </article>
       <section data-testid="closing" className="flex flex-col items-center gap-6 border-t border-line pt-16 text-center">
         <h2 className={heading}>

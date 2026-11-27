@@ -15,7 +15,7 @@ export function Download({ home, url }: { home: Content["home"]; url: string | n
           {home.soon}
         </p>
       )}
-      <p className="text-sm text-dim">{home.requirements}</p>
+      <p className="text-sm text-muted">{home.requirements}</p>
     </div>
   );
 }

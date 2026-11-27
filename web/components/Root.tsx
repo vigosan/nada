@@ -1,5 +1,4 @@
 import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
 import type { Lang } from "@/content";
 import { THEME_SCRIPT } from "@/theme";
 
@@ -11,7 +10,7 @@ export function Root({ lang, children }: { lang: Lang; children: React.ReactNode
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} bg-desk`}>{children}</body>
+      <body className={`${GeistMono.variable} bg-canvas font-mono`}>{children}</body>
     </html>
   );
 }

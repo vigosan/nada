@@ -9,13 +9,13 @@ export const link = `${focus} font-medium text-ink underline-offset-4 hover:unde
 const quiet = `${focus} transition-colors duration-150 hover:text-ink`;
 
 export const button =
-  "inline-flex items-center rounded-lg bg-ink px-5 py-2.5 font-medium text-desk transition-[opacity,transform] duration-150 ease-out hover:opacity-85 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-desk";
+  "inline-flex items-center rounded-lg bg-ink px-5 py-2.5 font-medium text-canvas transition-[opacity,transform] duration-150 ease-out hover:opacity-85 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
 
 type Route = keyof Content["routes"];
 
 export function Page({ c, current, children }: { c: Content; current: Route; children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-10 px-6 py-12 font-sans text-body antialiased lg:gap-16 lg:py-16">
+    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-10 px-6 py-12 text-body antialiased lg:gap-16 lg:py-16">
       <header className="flex items-center justify-between">
         <Link href={c.routes.home} className={`flex items-center gap-3 ${focus}`}>
           <img src="/icon.svg" alt="" width={36} height={36} />

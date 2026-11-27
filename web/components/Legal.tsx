@@ -6,7 +6,7 @@ export function Privacy({ c }: { c: Content }) {
     <Page c={c} current="privacy">
       <article className="flex flex-col gap-6">
         <h1 className="text-2xl font-medium text-ink">{c.privacy.title}</h1>
-        <p className="text-sm text-dim">{c.privacy.updated}</p>
+        <p className="text-sm text-muted">{c.privacy.updated}</p>
         {c.privacy.sections.map((section) => (
           <section key={section.heading} className="flex flex-col gap-4">
             <h2 className="text-lg font-medium text-ink">{section.heading}</h2>

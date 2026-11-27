@@ -38,7 +38,7 @@ export function ThemeToggle({ labels }: { labels: Record<ThemeChoice, string> })
       onClick={toggle}
       aria-label={labels[choice]}
       title={labels[choice]}
-      className="grid size-8 cursor-pointer place-items-center rounded-md text-dim transition-[background-color,color,scale] duration-150 ease-out hover:bg-bar hover:text-ink active:scale-[0.97] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      className="grid size-8 cursor-pointer place-items-center rounded-md text-muted transition-[background-color,color,scale] duration-150 ease-out hover:bg-wash hover:text-ink active:scale-[0.97] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <svg
         key={choice}
