@@ -25,7 +25,7 @@ export function Home({ c }: { c: Content }) {
         <div className={`${rise} delay-90`}>
           <Download home={c.home} url={DOWNLOAD} />
         </div>
-        <div className={`${rise} mt-6 self-stretch delay-120 ${wide}`}>
+        <div className={`${rise} mt-6 self-stretch delay-120`}>
           <Demo labels={c.demo} />
         </div>
       </section>

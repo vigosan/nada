@@ -11,6 +11,13 @@ describe("home", () => {
     expect(html.indexOf('data-testid="demo"')).toBeLessThan(html.indexOf(content.en.home.sections[0].title));
   });
 
+  it("keeps the demo inside the page column, so the window lines up with the header instead of spilling past it", () => {
+    const html = renderToStaticMarkup(<Home c={content.en} />);
+    const before = html.slice(0, html.indexOf('data-testid="demo"'));
+    const wrapper = before.slice(before.lastIndexOf("<div", before.lastIndexOf("<div") - 1));
+    expect(wrapper).not.toMatch(/-mx-/);
+  });
+
   it("links the Spanish page from the English one, so nobody is stuck in the wrong language", () => {
     const html = renderToStaticMarkup(<Home c={content.en} />);
     expect(html).toContain('href="/es"');
