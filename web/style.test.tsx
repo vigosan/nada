@@ -63,6 +63,12 @@ describe("surfaces", () => {
   });
 });
 
+describe("selection", () => {
+  it("tints selected text with Nada's blue, so copying a shortcut feels like the product and not the browser default", () => {
+    expect(css).toMatch(/::selection\s*{[^}]*var\(--color-accent\)/);
+  });
+});
+
 describe("type", () => {
   it("sets every page in one monospace, so the site reads like the terminal tools Nada sits beside", () => {
     expect(css).toContain("--font-mono: var(--font-geist-mono)");
